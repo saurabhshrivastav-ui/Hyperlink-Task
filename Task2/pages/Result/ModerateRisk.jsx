@@ -17,7 +17,7 @@ import { Text } from "../../Components/TextWrapper";
 
 const { width } = Dimensions.get("window");
 
-const ResultScreen = () => {
+const ModerateRisk = () => {
   const navigation = useNavigation();
   const animationRef = useRef(null);
 
@@ -33,9 +33,10 @@ const ResultScreen = () => {
           style={styles.headerGradient}
         >
           <View style={styles.animationContainer}>
+            {/* ✅ ALERT ANIMATION FOR MODERATE RISK */}
             <LottieView
               ref={animationRef}
-              source={require("../../assets/Done.json")}
+              source={require("../../assets/Alert.json")}
               autoPlay
               loop
               style={styles.animation}
@@ -102,12 +103,13 @@ const ResultScreen = () => {
         <ReportBanner />
       </ScrollView>
 
-      <ResultBottomMenu active="sakshi" />
+      {/* ✅ FIXED ACTIVE TAB */}
+      <ResultBottomMenu active="moderate" />
     </View>
   );
 };
 
-export default ResultScreen;
+export default ModerateRisk;
 
 /* STYLES */
 const styles = StyleSheet.create({

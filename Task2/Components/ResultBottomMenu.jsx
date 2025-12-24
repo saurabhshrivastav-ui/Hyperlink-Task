@@ -1,43 +1,84 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Feather } from "@expo/vector-icons";
 import { Text } from "./TextWrapper";
 
 const ResultBottomMenu = ({ active }) => {
   const navigation = useNavigation();
+  const [selected, setSelected] = useState(active);
+
+  // Sync state when screen changes
+  useEffect(() => {
+    setSelected(active);
+  }, [active]);
+
+  const handlePress = (key, route) => {
+    setSelected(key);
+    navigation.navigate(route);
+  };
 
   return (
     <View style={styles.container}>
       <MenuButton
-        title="Sakshi"
-        active={active === "sakshi"}
-        onPress={() => navigation.navigate("Result")}
+        icon="check-circle"
+        label="Low"
+        isActive={selected === "low"}
+        onPress={() => handlePress("low", "LowRisk")}
       />
+
       <MenuButton
-        title="Aditya"
-        active={active === "aditya"}
-        onPress={() => navigation.navigate("ResultAditya")}
+        icon="alert-circle"
+        label="Moderate"
+        isActive={selected === "moderate"}
+        onPress={() => handlePress("moderate", "ModerateRisk")}
       />
+
       <MenuButton
-        title="Saurabh"
-        active={active === "saurabh"}
-        onPress={() => navigation.navigate("ResultSaurabh")}
+        icon="alert-triangle"
+        label="High"
+        isActive={selected === "high"}
+        onPress={() => handlePress("high", "HighRisk")}
       />
     </View>
   );
 };
 
-const MenuButton = ({ title, onPress, active }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    style={[styles.button, active && styles.activeButton]}
-    activeOpacity={0.8}
-  >
-    <Text style={[styles.text, active && styles.activeText]} weight="700">
-      {title}
-    </Text>
-  </TouchableOpacity>
-);
+const MenuButton = ({ icon, label, onPress, isActive }) => {
+  const Content = (
+    <>
+      <Feather
+        name={icon}
+        size={18}
+        color={isActive ? "#fff" : "#553fb5"}
+      />
+      <Text
+        style={[styles.text, isActive && styles.activeText]}
+        weight="700"
+      >
+        {label}
+      </Text>
+    </>
+  );
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+      {isActive ? (
+        <LinearGradient
+          colors={["#6a5af9", "#553fb5"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.activeButton}
+        >
+          {Content}
+        </LinearGradient>
+      ) : (
+        <View style={styles.button}>{Content}</View>
+      )}
+    </TouchableOpacity>
+  );
+};
 
 export default ResultBottomMenu;
 
@@ -51,16 +92,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   button: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 25,
+    backgroundColor: "#f2f2f2",
   },
   activeButton: {
-    backgroundColor: "#553fb5",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 25,
   },
   text: {
     fontSize: 14,
-    color: "#444",
+    color: "#553fb5",
   },
   activeText: {
     color: "#fff",

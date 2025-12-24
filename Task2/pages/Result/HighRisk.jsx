@@ -17,7 +17,7 @@ import { Text } from "../../Components/TextWrapper";
 
 const { width } = Dimensions.get("window");
 
-const ResultScreen = () => {
+const HighRisk = () => {
   const navigation = useNavigation();
   const animationRef = useRef(null);
 
@@ -33,9 +33,10 @@ const ResultScreen = () => {
           style={styles.headerGradient}
         >
           <View style={styles.animationContainer}>
+            {/* 🔴 RISK ANIMATION */}
             <LottieView
               ref={animationRef}
-              source={require("../../assets/Done.json")}
+              source={require("../../assets/Risky.json")}
               autoPlay
               loop
               style={styles.animation}
@@ -97,12 +98,13 @@ const ResultScreen = () => {
         <ReportBanner />
       </ScrollView>
 
-      <ResultBottomMenu active="sakshi" />
+      {/* ✅ FIXED ACTIVE TAB */}
+      <ResultBottomMenu active="high" />
     </View>
   );
 };
 
-export default ResultScreen;
+export default HighRisk;
 
 /* STYLES */
 const styles = StyleSheet.create({
