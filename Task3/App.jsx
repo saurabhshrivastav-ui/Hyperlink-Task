@@ -1,12 +1,16 @@
 import React from "react";
-import { StatusBar } from "expo-status-bar";
-import SelfSenseHome from "./src/screens/SelfSenseHome";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import SelfSense from "./src/screens/SelfSense";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <>
-      <StatusBar style="dark" />
-      <SelfSenseHome />
-    </>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="SelfSense" component={SelfSense} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
