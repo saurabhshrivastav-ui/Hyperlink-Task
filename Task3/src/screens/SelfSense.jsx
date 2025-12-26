@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   Image,
   TouchableOpacity,
   Dimensions,
   StatusBar,
-  ActivityIndicator,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+  Animated,
+  Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,13 +21,11 @@ import {
   Ionicons,
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFonts, Outfit_600SemiBold } from "@expo-google-fonts/outfit";
+import { Text } from "../../components/TextWrapper";
 
-/* ---------------- CONSTANTS ---------------- */
 const { width } = Dimensions.get("window");
 const SCREEN_PADDING = 20;
 
-/* 🔥 COLOR PALETTE */
 const COLORS = {
   brandBlue: "#0B6EDC",
   heroPink: "#FF4F9A",
@@ -32,140 +33,188 @@ const COLORS = {
   subtitleDark: "#1E1E1E",
   cardTitle: "#4B3CC4",
   iconBlue: "#1F73D1",
+  iconBgCircle: "#5D9CEC",
   footerBg: "#E6DCFF",
   footerText: "#5B3DF5",
+  footerBgActive: "#D4C4FC",
   bgLight: "#F8F9FD",
   gridBg: "#F7F9FC",
 };
 
-/* ---------------- SCREEN ---------------- */
-export default function SelfSense({ navigation }) {
-  const [fontsLoaded] = useFonts({
-    Outfit: Outfit_600SemiBold,
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
+
+const GridItem = ({ icon, label, material }) => {
+  const Icon = material ? MaterialCommunityIcons : FontAwesome5;
+
+  return (
+    <View style={styles.gridItem}>
+      <View style={styles.gridIcon}>
+        <Icon name={icon} size={22} color="#FFF" />
+      </View>
+      <Text weight="500" style={styles.gridLabel}>{label}</Text>
+    </View>
+  );
+};
+
+const HealthCard = ({ id, title, subtitle, desc, image, items, expandedCard, onToggle }) => {
+  const open = expandedCard === id;
+  
+  const animValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animValue, {
+      toValue: open ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+    }).start();
+  }, [open]);
+
+  const arrowRotation = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg']
   });
 
-  const [expandedCard, setExpandedCard] = useState(null);
-  const toggleCard = (id) =>
-    setExpandedCard(expandedCard === id ? null : id);
+  const contentOpacity = animValue.interpolate({
+    inputRange: [0, 0.3, 1],
+    outputRange: [0, 0, 1]
+  });
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={COLORS.heroPink} />
-      </View>
-    );
-  }
+  const contentTranslate = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-20, 0]
+  });
 
-  /* ---------------- GRID ITEM ---------------- */
-  const GridItem = ({ icon, label, material }) => {
-    const Icon = material ? MaterialCommunityIcons : FontAwesome5;
-
-    return (
-      <View style={styles.gridItem}>
-        <View style={styles.gridIcon}>
-          <Icon name={icon} size={26} color={COLORS.iconBlue} />
-        </View>
-        <Text style={styles.gridLabel}>{label}</Text>
-      </View>
-    );
-  };
-
-  /* ---------------- CARD ---------------- */
-  const HealthCard = ({ id, title, subtitle, desc, image, items }) => {
-    const open = expandedCard === id;
-
-    return (
-      <View style={styles.card}>
-        <View style={styles.cardBody}>
-          <View style={styles.cardTop}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{title}</Text>
-              <Text style={styles.cardSubtitle}>{subtitle}</Text>
-              <Text style={styles.cardDesc}>{desc}</Text>
-            </View>
-            <Image source={image} style={styles.cardImage} />
+  return (
+    <View style={[styles.card, open && styles.cardActiveBorder]}>
+      <View style={styles.cardBody}>
+        <View style={styles.cardTop}>
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text weight="700" style={styles.cardTitle}>{title}</Text>
+            <Text weight="600" style={styles.cardSubtitle}>{subtitle}</Text>
+            <Text weight="500" style={styles.cardDesc}>{desc}</Text>
           </View>
-
-          {open && (
-            <View style={styles.gridContainer}>
-              {items.map((i, idx) => (
-                <GridItem key={idx} {...i} />
-              ))}
-            </View>
-          )}
+          <Image source={image} style={styles.cardImage} />
         </View>
 
-        <TouchableOpacity
-          style={styles.cardFooter}
-          onPress={() => toggleCard(id)}
-        >
-          <Text style={styles.footerText}>
-            {open ? "Close Checks" : "Explore Checks"}
-          </Text>
+        {open && (
+          <Animated.View 
+            style={[
+              styles.gridContainer, 
+              { 
+                opacity: contentOpacity,
+                transform: [{ translateY: contentTranslate }]
+              }
+            ]}
+          >
+            {items.map((i, idx) => (
+              <GridItem key={idx} {...i} />
+            ))}
+          </Animated.View>
+        )}
+      </View>
+
+      <TouchableOpacity
+        style={[styles.cardFooter, open && styles.cardFooterActive]}
+        onPress={() => onToggle(id)}
+        activeOpacity={0.9}
+      >
+        <Text weight="700" style={styles.footerText}>
+          {open ? "Close Checks" : "Explore Checks"}
+        </Text>
+        <Animated.View style={{ transform: [{ rotate: arrowRotation }] }}>
           <Entypo
-            name={open ? "chevron-up" : "chevron-down"}
+            name="chevron-down"
             size={18}
             color={COLORS.footerText}
           />
-        </TouchableOpacity>
-      </View>
-    );
+        </Animated.View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default function SelfSense({ navigation }) {
+  const [expandedCard, setExpandedCard] = useState(null);
+
+  const toggleCard = (id) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedCard(expandedCard === id ? null : id);
   };
 
-  /* ---------------- UI ---------------- */
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="dark-content" backgroundColor="#E8DFFF" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ---------- HERO ---------- */}
         <LinearGradient
           colors={["#8DBCF2", "#E6F1FF", "#E8DFFF"]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
           style={styles.heroContainer}
         >
-          <SafeAreaView>
+          <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.navRow}>
-              <TouchableOpacity onPress={() => navigation?.goBack()}>
-                <Ionicons name="arrow-back" size={26} color={COLORS.brandBlue} />
+              <TouchableOpacity 
+                onPress={() => navigation?.goBack()}
+                style={styles.backButtonWrapper} 
+              >
+                <Ionicons name="arrow-back" size={32} color={COLORS.brandBlue} />
               </TouchableOpacity>
-              <View style={{ marginLeft: 14 }}>
-                <Text style={styles.navTitle}>SELF SENSE</Text>
-                <Text style={styles.navSubtitle}>
+              
+              <View style={styles.navTextContainer}>
+                <Text weight="700" style={styles.navTitle}>SELF SENSE</Text> 
+                <Text 
+                  weight="500"
+                  style={styles.navSubtitle} 
+                  numberOfLines={1} 
+                  adjustsFontSizeToFit={true}
+                  minimumFontScale={0.8}
+                >
                   Early awareness. Guided self-checks. Clear next steps.
                 </Text>
               </View>
             </View>
 
             <View style={styles.heroContent}>
-              <Text style={styles.heroMainText}>
-                Early{"\n"}
-                <Text style={{ color: COLORS.heroPink }}>Awareness</Text>
-                {"\n"}Starts Here.
-              </Text>
-
+              <View style={styles.heroTextWrapper}>
+                <Text weight="700" style={styles.heroMainText}>
+                  Early{"\n"}
+                  Awareness{"\n"}
+                  Starts Here.
+                </Text>
+              </View>
               <Image
-                source={require("../../assets/Hero.png")}
+                source={require("../../assets/Hero.webp")}
                 style={styles.heroImage}
               />
             </View>
           </SafeAreaView>
         </LinearGradient>
 
-        {/* ---------- CONTENT ---------- */}
         <View style={styles.content}>
+          <View style={styles.sectionHeader}>
+            <Text weight="700" style={styles.sectionTitle}>Select Health Area</Text>
+            <Text weight="500" style={styles.sectionSubtitle}>Tap a category to begin guided assessment.</Text>
+          </View>
+
           <HealthCard
             id="chronic"
             title="Chronic Conditions"
-            subtitle="Long-term lifestyle-linked conditions"
-            desc="Understand risks linked to diabetes, PCOS, blood pressure, and more."
-            image={require("../../assets/chronic.png")}
+            subtitle="Lifestyle & Long-term Care"
+            desc="Assess risks for Diabetes, BP, Thyroid, and heart health."
+            image={require("../../assets/chronic.webp")}
+            expandedCard={expandedCard}
+            onToggle={toggleCard}
             items={[
-              { label: "Diabetes", icon: "blood-bag", material: true },
+              { label: "Diabetes", icon: "water", material: true }, 
               { label: "Hypertension", icon: "heart-pulse", material: true },
-              { label: "PCOS", icon: "female", material: true },
-              { label: "Thyroid", icon: "butterfly", material: true },
+              { label: "PCOS", icon: "record-circle-outline", material: true }, 
+              { label: "Thyroid", icon: "butterfly", material: true }, 
               { label: "Heart", icon: "heart", material: true },
               { label: "Obesity", icon: "scale-bathroom", material: true },
             ]}
@@ -174,155 +223,244 @@ export default function SelfSense({ navigation }) {
           <HealthCard
             id="cancer"
             title="Cancer Awareness"
-            subtitle="Early warning signs & risk factors"
-            desc="Self-checks for common cancer related symptoms."
-            image={require("../../assets/cancer.png")}
+            subtitle="Early Signs & Symptoms"
+            desc="Guidance on self-checks for breast, oral, and lung health."
+            image={require("../../assets/cancer.webp")}
+            expandedCard={expandedCard}
+            onToggle={toggleCard}
             items={[
-              { label: "Breast", icon: "ribbon" },
-              { label: "Lung", icon: "lungs" },
-              { label: "Oral", icon: "grimace" },
+              { label: "Breast", icon: "ribbon", material: true }, 
+              { label: "Lung", icon: "lungs", material: true }, 
+              { label: "Oral", icon: "emoticon-open-mouth", material: true }, 
+              { label: "Skin", icon: "theme-light-dark", material: true }, 
+              { label: "Prostate", icon: "gender-male", material: true },
+              { label: "Colon", icon: "record-circle", material: true }, 
             ]}
           />
 
           <HealthCard
             id="mental"
             title="Mental Wellbeing"
-            subtitle="Emotional & mental awareness"
-            desc="Check stress levels, emotional patterns and burnout indicators."
-            image={require("../../assets/MentalWell.png")}
+            subtitle="Emotional Balance"
+            desc="Track stress, anxiety levels, and burnout symptoms."
+            image={require("../../assets/MentalWell.webp")}
+            expandedCard={expandedCard}
+            onToggle={toggleCard}
             items={[
-              { label: "Stress", icon: "brain" },
-              { label: "Sleep", icon: "bed" },
-              { label: "Mood", icon: "smile" },
+              { label: "Stress", icon: "brain", material: true }, 
+              { label: "Anxiety", icon: "weather-windy", material: true }, 
+              { label: "Sleep", icon: "bed", material: true },
+              { label: "Burnout", icon: "battery-alert", material: true },
+              { label: "Mood", icon: "emoticon-happy", material: true },
+              { label: "Focus", icon: "target", material: true },
             ]}
           />
 
           <HealthCard
             id="sensory"
-            title="Hearing & Sensory Health"
-            subtitle="Hearing health & exposure awareness"
-            desc="Understand hearing loss risk and ear health concerns."
-            image={require("../../assets/ears.png")}
+            title="Sensory Health"
+            subtitle="Hearing & Vision"
+            desc="Check for hearing loss, tinnitus, and eye strain."
+            image={require("../../assets/ears.webp")}
+            expandedCard={expandedCard}
+            onToggle={toggleCard}
             items={[
-              { label: "Hearing", icon: "deaf" },
-              { label: "Tinnitus", icon: "bell-slash" },
-              { label: "Vision", icon: "eye" },
+              { label: "Hearing", icon: "ear-hearing", material: true },
+              { label: "Tinnitus", icon: "bell-off", material: true },
+              { label: "Vision", icon: "eye", material: true },
+              { label: "Smell", icon: "scent", material: true }, 
+              { label: "Taste", icon: "silverware-fork-knife", material: true },
+              { label: "Touch", icon: "fingerprint", material: true },
             ]}
           />
         </View>
+        <View style={{height: 40}} />
       </ScrollView>
     </View>
   );
 }
 
-/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bgLight },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   heroContainer: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    paddingTop: 10,
+    paddingBottom: 0, 
+    borderBottomLeftRadius: 50,  
+    borderBottomRightRadius: 50,
     overflow: "hidden",
+    minHeight: 280, 
   },
 
-  navRow: { flexDirection: "row", alignItems: "center", marginBottom: 22 },
+  navRow: { 
+    flexDirection: "row", 
+    alignItems: "flex-start", 
+    marginBottom: 10,
+    marginTop: 6,
+    zIndex: 10, 
+  },
+  
+  backButtonWrapper: {
+    marginTop: -2,
+    marginLeft: -6,
+    marginRight: 4,
+  },
 
+  navTextContainer: {
+    flex: 1, 
+    paddingRight: 10,
+  },
+  
   navTitle: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: 22, 
     color: COLORS.brandBlue,
-    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    lineHeight: 26,
   },
-
+  
   navSubtitle: {
-    fontSize: 15,
-    color: COLORS.subtitleDark,
-    marginTop: 4,
-    maxWidth: width - 90,
-    lineHeight: 22,
+    fontSize: 14,
+    color: "#000000",
+    lineHeight: 20,
+    marginTop: 2,
+    marginLeft: -4, 
   },
 
   heroContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    position: 'relative', 
+    height: 180, 
+    marginTop: 10,
+  },
+
+  heroTextWrapper: {
+    width: '60%', 
+    zIndex: 2, 
+    paddingTop: 10,
+    marginLeft: -6, 
   },
 
   heroMainText: {
-    fontSize: 34,
-    fontWeight: "800",
-    lineHeight: 44,
-    color: COLORS.heroDark,
+    fontSize: 28,
+    lineHeight: 36,
+    color: COLORS.heroPink, 
   },
 
-  heroImage: { width: 170, height: 190, resizeMode: "contain" },
+  heroImage: { 
+    position: 'absolute',
+    right: -35,  
+    bottom: -60,  
+    width: width * 0.65,  
+    height: width * 0.75, 
+    resizeMode: "contain",
+    zIndex: 1,
+  },
 
-  content: { padding: SCREEN_PADDING },
+  content: { padding: SCREEN_PADDING, marginTop: 20 },
+
+  sectionHeader: { marginBottom: 16, paddingHorizontal: 4 },
+  
+  sectionTitle: { 
+    fontSize: 20, 
+    color: "#2D2D2D", 
+    marginBottom: 4 
+  },
+  
+  sectionSubtitle: { 
+    fontSize: 14, 
+    color: "#666", 
+  },
 
   card: {
     backgroundColor: "#fff",
     borderRadius: 20,
     marginBottom: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.02)",
   },
 
-  cardBody: { padding: 16 },
-  cardTop: { flexDirection: "row" },
+  cardActiveBorder: {
+    borderColor: COLORS.brandBlue,
+    borderWidth: 1.5,
+  },
+
+  cardBody: { padding: 18 },
+  cardTop: { flexDirection: "row", justifyContent: "space-between" },
   cardImage: { width: 70, height: 70, resizeMode: "contain" },
 
-  cardTitle: { fontSize: 16, fontWeight: "800", color: COLORS.cardTitle },
-  cardSubtitle: { fontSize: 12, fontWeight: "600", marginTop: 2 },
-  cardDesc: { fontSize: 12, color: "#666", marginTop: 6 },
-
-  /* 🔥 SAME GRID FOR ALL SECTIONS */
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 16,
+  cardTitle: { 
+    fontSize: 17, 
+    color: COLORS.cardTitle 
+  },
+  
+  cardSubtitle: { 
+    fontSize: 13, 
+    marginTop: 4, 
+    color: "#444" 
+  },
+  
+  cardDesc: { 
+    fontSize: 12, 
+    color: "#777", 
+    marginTop: 6, 
+    lineHeight: 18, 
+    maxWidth: '95%' 
   },
 
-  gridItem: {
-    width: "30%",
-    aspectRatio: 1,
-    backgroundColor: COLORS.gridBg,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 14,
+  gridContainer: { 
+    flexDirection: "row", 
+    flexWrap: "wrap", 
+    justifyContent: "space-between", 
+    marginTop: 22 
   },
+
+  gridItem: { width: "30%", backgroundColor: "transparent", justifyContent: "flex-start", alignItems: "center", marginBottom: 16 },
 
   gridIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#EFF6FF",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.iconBgCircle, 
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+    shadowColor: COLORS.iconBgCircle,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
   },
 
-  gridLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    textAlign: "center",
+  gridLabel: { 
+    fontSize: 12, 
+    textAlign: "center", 
+    color: "#444" 
   },
 
   cardFooter: {
     backgroundColor: COLORS.footerBg,
-    paddingVertical: 12,
+    paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "center",
     gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(91, 61, 245, 0.05)",
   },
 
-  footerText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: COLORS.footerText,
+  cardFooterActive: {
+    backgroundColor: COLORS.footerBgActive,
+  },
+
+  footerText: { 
+    fontSize: 13, 
+    color: COLORS.footerText 
   },
 });
