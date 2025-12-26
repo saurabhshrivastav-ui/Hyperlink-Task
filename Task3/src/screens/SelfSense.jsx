@@ -48,12 +48,12 @@ if (Platform.OS === 'android') {
 }
 
 const GridItem = ({ icon, label, material }) => {
-  const Icon = material ? MaterialCommunityIcons : FontAwesome5;
+  const IconComponent = material ? MaterialCommunityIcons : FontAwesome5;
 
   return (
     <View style={styles.gridItem}>
       <View style={styles.gridIcon}>
-        <Icon name={icon} size={22} color="#FFF" />
+        <IconComponent name={icon} size={22} color="#FFFFFF" />
       </View>
       <Text weight="500" style={styles.gridLabel}>{label}</Text>
     </View>
@@ -422,7 +422,13 @@ const styles = StyleSheet.create({
     marginTop: 22 
   },
 
-  gridItem: { width: "30%", backgroundColor: "transparent", justifyContent: "flex-start", alignItems: "center", marginBottom: 16 },
+  gridItem: { 
+    width: "30%", 
+    backgroundColor: "transparent", 
+    justifyContent: "flex-start", 
+    alignItems: "center", 
+    marginBottom: 16 
+  },
 
   gridIcon: {
     width: 52,
@@ -437,6 +443,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 4,
+    zIndex: 10,
   },
 
   gridLabel: { 
