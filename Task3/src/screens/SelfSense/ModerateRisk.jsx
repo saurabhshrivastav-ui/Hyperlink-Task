@@ -10,6 +10,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
+// 🔥 ADDED AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import ReportBanner from "../../../components/ReportBanner";
 import { Text } from "../../../components/TextWrapper";
@@ -21,14 +23,61 @@ const ModerateRisk = () => {
   const route = useRoute();
   const animationRef = useRef(null);
 
-  // 🔥 EXTRACT DATA
   const { assessment } = route.params || {};
   const conditionName = assessment?.conditionName || "Health";
   const message = assessment?.message || "Please consult a doctor.";
 
+  // 🔥 SAVE RESULT TO HISTORY AUTOMATICALLY
   useEffect(() => {
     animationRef.current?.play();
+
+    const saveToHistory = async () => {
+      try {
+        const idStr = await AsyncStorage.getItem("activeUserId");
+        if (!idStr) return;
+        const activeId = JSON.parse(idStr);
+
+        const usersStr = await AsyncStorage.getItem("users");
+        if (!usersStr) return;
+        let users = JSON.parse(usersStr);
+
+        const newRecord = {
+          id: Date.now(),
+          conditionName: conditionName,
+          date: new Date().toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          riskLevel: "Moderate Risk",
+          totalScore: assessment?.totalScore || 0,
+          maxScore: assessment?.maxPossibleScore || 40,
+        };
+
+        const updatedUsers = users.map((u) => {
+          if (u.id === activeId) {
+             const alreadyExists = u.history?.some(
+              (h) => h.id === newRecord.id || (h.conditionName === newRecord.conditionName && h.date === newRecord.date)
+            );
+            if (!alreadyExists) {
+              return { ...u, history: [...(u.history || []), newRecord] };
+            }
+          }
+          return u;
+        });
+
+        await AsyncStorage.setItem("users", JSON.stringify(updatedUsers));
+      } catch (error) {
+        console.error("Failed to save history", error);
+      }
+    };
+
+    saveToHistory();
   }, []);
+
+  const handleViewRecords = () => {
+    navigation.navigate("SelfSensePersonalDetails");
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -61,25 +110,20 @@ const ModerateRisk = () => {
           </View>
 
           <View style={styles.resultCard}>
-            <Text style={styles.resultCardText}>
-              {message}
-            </Text>
+            <Text style={styles.resultCardText}>{message}</Text>
           </View>
         </LinearGradient>
 
         <View style={styles.tipsContainer}>
           <Text style={styles.subheading}>What You Should Do</Text>
-
           <View style={styles.tipItem}>
             <Feather name="activity" size={20} color="#e67e22" />
             <Text style={styles.tipText}>Increase physical activity</Text>
           </View>
-
           <View style={styles.tipItem}>
             <Ionicons name="nutrition-outline" size={20} color="#e67e22" />
             <Text style={styles.tipText}>Improve dietary habits</Text>
           </View>
-
           <View style={styles.tipItem}>
             <Ionicons name="time-outline" size={20} color="#e67e22" />
             <Text style={styles.tipText}>Schedule regular health checkups</Text>
@@ -88,20 +132,19 @@ const ModerateRisk = () => {
 
         <View style={styles.consultContainer}>
           <Text style={styles.subheading}>Consult a Doctor</Text>
-
           <TouchableOpacity
             style={styles.bookBtn}
             onPress={() => navigation.navigate("Consultation")}
           >
             <Text style={styles.bookBtnText}>Book Consultation</Text>
           </TouchableOpacity>
-
-          <View style={styles.consultOptions}>
-            <FontAwesome5 name="video" size={26} color="#e67e22" />
-            <Ionicons name="chatbox-ellipses" size={26} color="#e67e22" />
-            <Feather name="file-text" size={26} color="#e67e22" />
-          </View>
         </View>
+
+        {/* 🔥 VIEW RECORDS BUTTON */}
+        <TouchableOpacity style={styles.historyBtn} onPress={handleViewRecords}>
+          <Text style={styles.historyBtnText}>View Past Records</Text>
+          <Feather name="arrow-right" size={18} color="#e67e22" />
+        </TouchableOpacity>
 
         <ReportBanner />
         <View style={{ height: 40 }} />
@@ -119,17 +162,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     alignItems: "center",
   },
-  animationContainer: {
-    width: width * 0.55,
-    height: width * 0.55,
-  },
+  animationContainer: { width: width * 0.55, height: width * 0.55 },
   animation: { width: "100%", height: "100%" },
-  headerTitle: { 
-    fontSize: 26, 
-    color: "#fff", 
-    marginTop: 10,
-    textAlign: "center" 
-  },
+  headerTitle: { fontSize: 26, color: "#fff", marginTop: 10, textAlign: "center" },
   headerSubtitle: { color: "#fff3e0", marginBottom: 12 },
   riskBadge: {
     flexDirection: "row",
@@ -158,6 +193,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   bookBtnText: { color: "#fff", textAlign: "center", fontWeight: "700" },
+  historyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+    backgroundColor: "#fff3e0",
+    marginHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+    gap: 10,
+  },
+  historyBtnText: {
+    color: "#e67e22",
+    fontWeight: "700",
+    fontSize: 16,
+  },
   consultOptions: {
     flexDirection: "row",
     justifyContent: "space-around",

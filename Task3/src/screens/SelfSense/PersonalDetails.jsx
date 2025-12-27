@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -8,7 +8,14 @@ import {
   Modal,
   Alert,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+// 🔥 ADDED useIsFocused to refresh data when returning from quiz
+import {
+  useNavigation,
+  useRoute,
+  useIsFocused,
+} from "@react-navigation/native";
+// 🔥 ADDED AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Feather,
@@ -22,15 +29,15 @@ import CounsellingDetailsBG from "../../../assets/counsellingdetailsbg.svg";
 const PersonalDetails = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const isFocused = useIsFocused(); // Check if screen is active
 
-  // Receive data from previous screen
   const { conditionId, conditionName } = route.params || {
     conditionId: "diabetes",
     conditionName: "Diabetes",
   };
 
-  // 1. Main User State (Removed weight/height)
-  const [users, setUsers] = useState([
+  // Default Mock Data (used only if storage is empty)
+  const INITIAL_USERS = [
     {
       id: 1,
       name: "SAKSHI NISHAD",
@@ -38,18 +45,18 @@ const PersonalDetails = () => {
       gender: "female",
       email: "sakshi@example.com",
       phone: "+91 9876543210",
+      history: [],
     },
-  ]);
+  ];
 
+  const [users, setUsers] = useState(INITIAL_USERS);
   const [activeUserId, setActiveUserId] = useState(1);
   const activeUser = users.find((user) => user.id === activeUserId) || users[0];
 
-  // 2. UI State
+  // UI State
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);
-
-  // 3. Form State
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -57,11 +64,42 @@ const PersonalDetails = () => {
     phone: "",
   });
 
-  // --- Handlers ---
+  // 🔥 LOAD DATA FROM STORAGE
+  const loadUsersFromStorage = async () => {
+    try {
+      const storedUsers = await AsyncStorage.getItem("users");
+      const storedActiveId = await AsyncStorage.getItem("activeUserId");
 
-  const handleFormChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+      if (storedUsers) {
+        setUsers(JSON.parse(storedUsers));
+      }
+      if (storedActiveId) {
+        setActiveUserId(JSON.parse(storedActiveId));
+      }
+    } catch (error) {
+      console.error("Failed to load users", error);
+    }
   };
+
+  // 🔥 RELOAD WHEN SCREEN IS FOCUSED (Updates History)
+  useEffect(() => {
+    if (isFocused) {
+      loadUsersFromStorage();
+    }
+  }, [isFocused]);
+
+  // 🔥 SAVE DATA TO STORAGE HELPER
+  const saveUsersToStorage = async (updatedUsers) => {
+    try {
+      setUsers(updatedUsers); // Update UI immediately
+      await AsyncStorage.setItem("users", JSON.stringify(updatedUsers));
+    } catch (error) {
+      console.error("Failed to save users", error);
+    }
+  };
+
+  const handleFormChange = (field, value) =>
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
   const openAddUserModal = () => {
     setFormData({ name: "", age: "", gender: "female", phone: "" });
@@ -80,59 +118,66 @@ const PersonalDetails = () => {
     setModalVisible(true);
   };
 
-  const handleSaveUser = () => {
+  // 🔥 SAVE USER (ADD/EDIT) + PERSISTENCE
+  const handleSaveUser = async () => {
     if (!formData.name || !formData.age) {
       Alert.alert("Missing Info", "Please enter a Name and Age.");
       return;
     }
 
+    let updatedUsers;
     if (isEditingMode) {
-      // UPDATE Existing User
-      setUsers(
-        users.map((user) =>
-          user.id === activeUserId ? { ...user, ...formData } : user
-        )
+      updatedUsers = users.map((user) =>
+        user.id === activeUserId ? { ...user, ...formData } : user
       );
     } else {
-      // CREATE New User
       const newId =
         users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1;
       const newUser = {
         id: newId,
         ...formData,
         email: "",
+        history: [],
       };
-      setUsers([...users, newUser]);
+      updatedUsers = [...users, newUser];
       setActiveUserId(newId);
+      await AsyncStorage.setItem("activeUserId", JSON.stringify(newId));
     }
 
+    saveUsersToStorage(updatedUsers);
     setModalVisible(false);
   };
 
+  // 🔥 DELETE USER + PERSISTENCE
   const confirmRemoveUser = (id) => {
     if (users.length <= 1) {
       Alert.alert("Action Denied", "You must have at least one user profile.");
       return;
     }
 
-    Alert.alert(
-      "Delete Profile",
-      "Are you sure you want to remove this user?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            const updatedUsers = users.filter((u) => u.id !== id);
-            setUsers(updatedUsers);
-            if (activeUserId === id) {
-              setActiveUserId(updatedUsers[0].id);
-            }
-          },
+    Alert.alert("Delete Profile", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          const updatedUsers = users.filter((u) => u.id !== id);
+          saveUsersToStorage(updatedUsers);
+          if (activeUserId === id) {
+            const nextId = updatedUsers[0].id;
+            setActiveUserId(nextId);
+            await AsyncStorage.setItem("activeUserId", JSON.stringify(nextId));
+          }
         },
-      ]
-    );
+      },
+    ]);
+  };
+
+  const getRiskColor = (risk) => {
+    if (!risk) return "#aaa";
+    if (risk.includes("High")) return "#dc3545";
+    if (risk.includes("Moderate")) return "#ffc107";
+    return "#28a745";
   };
 
   return (
@@ -197,7 +242,7 @@ const PersonalDetails = () => {
       {/* 🔹 Personal Details Section */}
       <View style={styles.detailsContainer}>
         <Text style={styles.detailsHeading} weight="700">
-          Personal Details
+          Personal Details & History
         </Text>
 
         {/* ACTIVE PROFILE CARD */}
@@ -219,10 +264,10 @@ const PersonalDetails = () => {
                 </View>
                 <View>
                   <Text style={styles.profileName} weight="700">
-                    {activeUser.name}
+                    {activeUser?.name || "User"}
                   </Text>
                   <Text style={styles.profileDetails} weight="400">
-                    {activeUser.age} yrs, {activeUser.gender}
+                    {activeUser?.age || "--"} yrs, {activeUser?.gender || "--"}
                   </Text>
                 </View>
               </View>
@@ -234,7 +279,6 @@ const PersonalDetails = () => {
                 >
                   <Feather name="edit-2" size={18} color="#fff" />
                 </TouchableOpacity>
-
                 <Ionicons
                   name={isProfileExpanded ? "chevron-up" : "chevron-down"}
                   size={22}
@@ -257,8 +301,12 @@ const PersonalDetails = () => {
                   styles.userItem,
                   u.id === activeUserId && styles.userActive,
                 ]}
-                onPress={() => {
+                onPress={async () => {
                   setActiveUserId(u.id);
+                  await AsyncStorage.setItem(
+                    "activeUserId",
+                    JSON.stringify(u.id)
+                  );
                   setIsProfileExpanded(false);
                 }}
               >
@@ -279,7 +327,6 @@ const PersonalDetails = () => {
                 )}
               </TouchableOpacity>
             ))}
-
             <TouchableOpacity
               style={styles.addUserButton}
               onPress={openAddUserModal}
@@ -291,6 +338,67 @@ const PersonalDetails = () => {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* 🔥 HISTORY SECTION - DISPLAYS STORED RESPONSES */}
+        <View style={styles.historySection}>
+          <Text style={styles.historyTitle} weight="600">
+            Past Assessment History
+          </Text>
+          {!activeUser?.history || activeUser.history.length === 0 ? (
+            <View style={styles.noHistory}>
+              <Text style={{ color: "#aaa", fontStyle: "italic" }}>
+                No past assessments found for {activeUser?.name}.
+              </Text>
+            </View>
+          ) : (
+            // Show recent first
+            [...activeUser.history].reverse().map((item, index) => (
+              <View key={index} style={styles.historyCard}>
+                <View style={styles.historyHeader}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <FontAwesome5
+                      name="notes-medical"
+                      size={14}
+                      color="#4a5568"
+                    />
+                    <Text weight="700" style={styles.historyCondition}>
+                      {item.conditionName}
+                    </Text>
+                  </View>
+                  <Text style={styles.historyDate}>{item.date}</Text>
+                </View>
+
+                <View style={styles.historyFooter}>
+                  <View
+                    style={[
+                      styles.riskBadge,
+                      { backgroundColor: getRiskColor(item.riskLevel) + "20" },
+                    ]}
+                  >
+                    <Text
+                      weight="700"
+                      style={{
+                        color: getRiskColor(item.riskLevel),
+                        fontSize: 12,
+                      }}
+                    >
+                      {item.riskLevel}
+                    </Text>
+                  </View>
+                  <Text style={styles.historyScore}>
+                    Risk Score: {item.totalScore}/{item.maxScore}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
 
         {/* 🔹 UNIFIED MODAL (ADD & EDIT) */}
         <Modal visible={modalVisible} animationType="fade" transparent>
@@ -372,6 +480,7 @@ const PersonalDetails = () => {
             navigation.navigate("QuestionnairesScreen", {
               conditionId: conditionId,
               conditionName: conditionName,
+              activeUserId: activeUserId, // 🔥 Pass ID so quiz knows who to save to
             });
           }}
         >
@@ -379,6 +488,17 @@ const PersonalDetails = () => {
             Start Assessment
           </Text>
         </TouchableOpacity>
+
+        {/* 🔥 NEW: CHOOSE SYMPTOMS BUTTON */}
+        <TouchableOpacity
+          style={styles.chooseSymptomsBtn}
+          onPress={() => navigation.navigate("SelfSense")}
+        >
+          <Text weight="600" style={styles.chooseSymptomsText}>
+            Choose Symptoms / Change Disease
+          </Text>
+        </TouchableOpacity>
+
       </View>
     </ScrollView>
   );
@@ -388,8 +508,6 @@ export default PersonalDetails;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f7fafc" },
-
-  // HERO SECTION
   heroContainer: {
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
@@ -418,8 +536,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
   },
-
-  // INFO CARD
   infoCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -447,12 +563,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   tagText: { color: "#553fb5", fontSize: 13, fontWeight: "500" },
-
-  // PERSONAL DETAILS
   detailsContainer: { padding: 20 },
   detailsHeading: { fontSize: 17, color: "#1e293b", marginBottom: 10 },
-
-  // PROFILE CARD
   profileWrapper: {
     borderRadius: 16,
     overflow: "hidden",
@@ -488,8 +600,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginLeft: 5,
   },
-
-  // EXPANDED USER LIST
   userList: { marginTop: 5, marginBottom: 15 },
   switchUserLabel: {
     fontSize: 12,
@@ -508,9 +618,7 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   userActive: { backgroundColor: "#ebf4ff", borderColor: "#667eea" },
-  deleteIconArea: {
-    padding: 8,
-  },
+  deleteIconArea: { padding: 8 },
   addUserButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -524,7 +632,54 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // MODAL
+  // HISTORY STYLES
+  historySection: { marginTop: 15, marginBottom: 15 },
+  historyTitle: {
+    fontSize: 15,
+    color: "#4a5568",
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  noHistory: {
+    padding: 15,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 12,
+    alignItems: "center",
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  historyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    shadowColor: "#000",
+    shadowOpacity: 0.03,
+    shadowRadius: 5,
+    elevation: 1,
+  },
+  historyHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    alignItems: "center",
+  },
+  historyCondition: { fontSize: 15, color: "#2d3748" },
+  historyDate: { fontSize: 12, color: "#a0aec0" },
+  historyFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#f7fafc",
+  },
+  riskBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  historyScore: { fontSize: 13, color: "#718096", fontWeight: "600" },
+
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -568,7 +723,6 @@ const styles = StyleSheet.create({
   },
   genderText: { color: "#1e293b" },
   genderTextSelected: { color: "#fff" },
-
   formActions: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -587,18 +741,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#cbd5e0",
   },
-
-  // START BUTTON
   startButton: {
     backgroundColor: "#553fb5",
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 15,
     shadowColor: "#553fb5",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
     elevation: 5,
+  },
+  // 🔥 NEW BUTTON STYLE
+  chooseSymptomsBtn: {
+    backgroundColor: "transparent",
+    borderRadius: 12,
+    padding: 14,
+    alignItems: "center",
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderColor: "#553fb5",
+    borderStyle: "solid",
+  },
+  chooseSymptomsText: {
+    color: "#553fb5",
+    fontSize: 15,
   },
 });
