@@ -17,9 +17,9 @@ import QuestionnairesHero from "../../../assets/QuestionnairesHero.svg";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// 🔥 1. EMBEDDED JSON DATA
 const HEALTH_DATA = {
   health_assessments: [
+    // --- CHRONIC CONDITIONS ---
     {
       category: "Chronic Condition",
       conditions: [
@@ -32,14 +32,8 @@ const HEALTH_DATA = {
               question_text:
                 "Do you have a family history of Type 2 Diabetes? (Parent, sibling)",
               options: [
-                {
-                  text: "Yes, in immediate family (parent/sibling)",
-                  score: 10,
-                },
-                {
-                  text: "Yes, in extended family (grandparent/uncle/aunt)",
-                  score: 5,
-                },
+                { text: "Yes, immediate family", score: 10 },
+                { text: "Yes, extended family", score: 5 },
                 { text: "No known history", score: 0 },
                 { text: "Not sure", score: 2 },
               ],
@@ -49,17 +43,16 @@ const HEALTH_DATA = {
               question_text:
                 "Have you ever been diagnosed with high blood sugar or prediabetes?",
               options: [
-                { text: "Yes, diagnosed by a doctor", score: 10 },
-                { text: "No, never diagnosed", score: 0 },
+                { text: "Yes, diagnosed", score: 10 },
+                { text: "No, never", score: 0 },
                 { text: "Not sure", score: 5 },
               ],
             },
             {
               id: 3,
-              question_text:
-                "How often do you exercise or engage in physical activity?",
+              question_text: "How often do you exercise?",
               options: [
-                { text: "Daily (30 minutes or more)", score: 0 },
+                { text: "Daily", score: 0 },
                 { text: "3–5 times a week", score: 3 },
                 { text: "Rarely", score: 7 },
                 { text: "Never", score: 10 },
@@ -67,11 +60,10 @@ const HEALTH_DATA = {
             },
             {
               id: 4,
-              question_text:
-                "Have you or your family ever experienced obesity-related conditions?",
+              question_text: "Do you experience frequent thirst or urination?",
               options: [
-                { text: "Yes, in immediate family", score: 10 },
-                { text: "Yes, in extended family", score: 5 },
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
                 { text: "No", score: 0 },
                 { text: "Not sure", score: 2 },
               ],
@@ -80,22 +72,57 @@ const HEALTH_DATA = {
         },
         {
           id: "hypertension",
-          name: "Hypertension (High BP)",
+          name: "Hypertension",
           questions: [
             {
               id: 1,
               question_text:
-                "How often do you consume processed or high-salt foods?",
+                "Is your blood pressure consistently above 120/80?",
               options: [
-                { text: "Daily / Very Often", score: 10 },
-                { text: "Occasionally", score: 5 },
-                { text: "Rarely", score: 0 },
+                { text: "Yes", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+                { text: "I don't check", score: 3 },
               ],
             },
             {
               id: 2,
               question_text:
-                "Do you experience frequent headaches or dizziness?",
+                "Do you consume high-salt or processed foods often?",
+              options: [
+                { text: "Daily", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "Rarely", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you have a family history of High BP?",
+              options: [
+                { text: "Yes, immediate family", score: 10 },
+                { text: "Yes, extended family", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text:
+                "Do you experience frequent headaches or dizzy spells?",
+              options: [
+                { text: "Yes, frequently", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "pcos",
+          name: "PCOS",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do you experience irregular periods?",
               options: [
                 { text: "Yes, frequently", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -103,22 +130,162 @@ const HEALTH_DATA = {
               ],
             },
             {
-              id: 3,
+              id: 2,
               question_text:
-                "Is your resting blood pressure usually above 120/80?",
+                "Have you noticed excess facial/body hair or acne?",
               options: [
-                { text: "Yes, consistently higher", score: 10 },
-                { text: "Sometimes / Borderline", score: 5 },
-                { text: "No, it is normal", score: 0 },
-                { text: "I don't check it", score: 3 },
+                { text: "Yes, significant", score: 10 },
+                { text: "Mild", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you struggle with unexplained weight gain?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Somewhat", score: 5 },
+                { text: "No", score: 0 },
               ],
             },
             {
               id: 4,
-              question_text: "Do you smoke or consume alcohol regularly?",
+              question_text: "Is there a family history of PCOS?",
               options: [
-                { text: "Yes, both or heavily", score: 10 },
-                { text: "Ideally moderate / Socially", score: 5 },
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 2 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "thyroid",
+          name: "Thyroid",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Do you experience unexplained fatigue or weakness?",
+              options: [
+                { text: "Yes, constantly", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Have you noticed sudden weight changes (gain or loss)?",
+              options: [
+                { text: "Yes, significant", score: 10 },
+                { text: "Mild", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you have sensitivity to cold or heat?",
+              options: [
+                { text: "Yes, very sensitive", score: 10 },
+                { text: "Somewhat", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Is there a family history of Thyroid disorders?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 2 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "heart",
+          name: "Heart Health",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Do you experience chest pain or shortness of breath?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Only with heavy exertion", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Do you have high cholesterol levels?",
+              options: [
+                { text: "Yes, diagnosed", score: 10 },
+                { text: "Borderline", score: 5 },
+                { text: "No", score: 0 },
+                { text: "Not sure", score: 2 },
+              ],
+            },
+            {
+              id: 3,
+              question_text:
+                "Do you smoke or have a family history of heart disease?",
+              options: [
+                { text: "Yes, both/either", score: 10 },
+                { text: "Used to smoke", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "How would you rate your diet?",
+              options: [
+                { text: "High fat/sugar", score: 10 },
+                { text: "Average", score: 5 },
+                { text: "Healthy", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "obesity",
+          name: "Obesity",
+          questions: [
+            {
+              id: 1,
+              question_text: "Is your BMI over 30?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Between 25-30 (Overweight)", score: 5 },
+                { text: "No / Normal", score: 0 },
+                { text: "Not sure", score: 2 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Do you have difficulty with physical movement?",
+              options: [
+                { text: "Yes, significant", score: 10 },
+                { text: "Mild difficulty", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you eat large portions or snack frequently?",
+              options: [
+                { text: "Yes, frequently", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Is there a family history of obesity?",
+              options: [
+                { text: "Yes, immediate family", score: 10 },
+                { text: "Extended family", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
@@ -126,9 +293,55 @@ const HEALTH_DATA = {
         },
       ],
     },
+
+    // --- CANCER AWARENESS ---
     {
       category: "Cancer Awareness",
       conditions: [
+        {
+          id: "breast_cancer",
+          name: "Breast Cancer",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Have you noticed any lumps or thickening in the breast/underarm?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Is there a family history of breast cancer?",
+              options: [
+                { text: "Yes, mother/sister", score: 10 },
+                { text: "Yes, extended family", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text:
+                "Have you noticed changes in skin texture or nipple discharge?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Slight changes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you perform regular self-exams?",
+              options: [
+                { text: "No / Never", score: 10 },
+                { text: "Rarely", score: 5 },
+                { text: "Yes, monthly", score: 0 },
+              ],
+            },
+          ],
+        },
         {
           id: "lung_cancer",
           name: "Lung Cancer",
@@ -136,19 +349,19 @@ const HEALTH_DATA = {
             {
               id: 1,
               question_text:
-                "Do you currently smoke or have you smoked in the past?",
+                "Do you currently smoke or have a history of smoking?",
               options: [
-                { text: "Yes, currently smoke", score: 10 },
-                { text: "Yes, but I quit", score: 5 },
-                { text: "No, never", score: 0 },
+                { text: "Yes, current smoker", score: 10 },
+                { text: "Ex-smoker", score: 5 },
+                { text: "No", score: 0 },
               ],
             },
             {
               id: 2,
               question_text:
-                "Are you frequently exposed to secondhand smoke or industrial pollutants?",
+                "Do you have a persistent cough that won't go away?",
               options: [
-                { text: "Yes, frequently", score: 10 },
+                { text: "Yes", score: 10 },
                 { text: "Occasionally", score: 5 },
                 { text: "No", score: 0 },
               ],
@@ -156,27 +369,205 @@ const HEALTH_DATA = {
             {
               id: 3,
               question_text:
-                "Do you have a persistent cough that hasn't gone away for weeks?",
+                "Are you exposed to secondhand smoke or pollutants?",
               options: [
-                { text: "Yes", score: 10 },
+                { text: "Yes, frequently", score: 10 },
+                { text: "Sometimes", score: 5 },
                 { text: "No", score: 0 },
-                { text: "Not sure", score: 3 },
               ],
             },
             {
               id: 4,
               question_text:
-                "Is there a history of lung cancer in your family?",
+                "Have you coughed up blood or rust-colored sputum?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "oral_cancer",
+          name: "Oral Cancer",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do you use tobacco (smoking or chewing)?",
+              options: [
+                { text: "Yes, regularly", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you have mouth sores that haven't healed for 2 weeks?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text:
+                "Do you have persistent pain or white/red patches in your mouth?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Mild discomfort", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you consume alcohol heavily?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Moderately", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "skin_cancer",
+          name: "Skin Cancer",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Do you have moles that have changed shape, color, or size?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you get frequent sunburns or use tanning beds?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you have fair skin that burns easily?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Medium skin", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Is there a family history of skin cancer?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 2 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "prostate_cancer",
+          name: "Prostate Cancer",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Do you have difficulty urinating or frequent urges at night?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Are you over the age of 50?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "40-50", score: 5 },
+                { text: "Under 40", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Is there a family history of prostate cancer?",
               options: [
                 { text: "Yes, immediate family", score: 10 },
-                { text: "Yes, extended family", score: 5 },
+                { text: "Extended family", score: 5 },
                 { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Have you experienced blood in urine or semen?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "colon_cancer",
+          name: "Colon Cancer",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Have you noticed changes in bowel habits lasting over a few days?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Have you experienced rectal bleeding or blood in stool?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text:
+                "Is there a family history of colorectal cancer or polyps?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Not sure", score: 2 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Is your diet high in red or processed meats?",
+              options: [
+                { text: "Yes, daily", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No, mostly plant-based", score: 0 },
               ],
             },
           ],
         },
       ],
     },
+
+    // --- WELLBEING ---
     {
       category: "Wellbeing",
       conditions: [
@@ -187,17 +578,60 @@ const HEALTH_DATA = {
             {
               id: 1,
               question_text:
-                "How often do you feel overwhelmed by your daily responsibilities?",
+                "How often do you feel overwhelmed by responsibilities?",
               options: [
                 { text: "Almost every day", score: 10 },
-                { text: "A few times a week", score: 5 },
+                { text: "Weekly", score: 5 },
                 { text: "Rarely", score: 0 },
               ],
             },
             {
               id: 2,
               question_text:
-                "Do you experience physical symptoms like tension headaches or chest tightness?",
+                "Do you have physical symptoms like headaches or muscle tension?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you find it hard to relax or switch off?",
+              options: [
+                { text: "Yes, very hard", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Does stress affect your sleep?",
+              options: [
+                { text: "Yes, insomnia/waking up", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "anxiety",
+          name: "Anxiety",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do you feel nervous, anxious, or on edge?",
+              options: [
+                { text: "Nearly every day", score: 10 },
+                { text: "Several days", score: 5 },
+                { text: "Not at all", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you have trouble stopping or controlling worrying?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -207,26 +641,199 @@ const HEALTH_DATA = {
             {
               id: 3,
               question_text:
-                "Are you able to relax and disconnect from work/study?",
+                "Do you experience restlessness or increased heart rate?",
               options: [
-                { text: "No, I find it very hard", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "Yes, easily", score: 0 },
+                { text: "Yes, frequently", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
               ],
             },
             {
               id: 4,
-              question_text: "How is your sleep quality when you are stressed?",
+              question_text: "Does anxiety interfere with daily work/school?",
               options: [
-                { text: "Very poor / Insomnia", score: 10 },
-                { text: "Disturbed", score: 5 },
+                { text: "Yes, significantly", score: 10 },
+                { text: "Somewhat", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "sleep",
+          name: "Sleep Health",
+          questions: [
+            {
+              id: 1,
+              question_text: "How many hours of sleep do you get on average?",
+              options: [
+                { text: "Less than 5 hours", score: 10 },
+                { text: "5-6 hours", score: 5 },
+                { text: "7-9 hours", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Do you have trouble falling or staying asleep?",
+              options: [
+                { text: "Yes, regularly", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you feel tired or groggy upon waking?",
+              options: [
+                { text: "Yes, almost always", score: 10 },
+                { text: "Often", score: 5 },
+                { text: "No, feel refreshed", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you snore loudly or gasp for air?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Told by others", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "burnout",
+          name: "Burnout",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do you feel emotionally exhausted or drained?",
+              options: [
+                { text: "Yes, constantly", score: 10 },
+                { text: "Often", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Have you become cynical or detached from work/activities?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Somewhat", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you feel your performance has declined?",
+              options: [
+                { text: "Yes, significantly", score: 10 },
+                { text: "A little", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you lack motivation to start your day?",
+              options: [
+                { text: "Every day", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "mood",
+          name: "Mood",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Have you felt down, depressed, or hopeless recently?",
+              options: [
+                { text: "Nearly every day", score: 10 },
+                { text: "Several days", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you have little interest or pleasure in doing things?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you experience severe mood swings?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "How is your appetite?",
+              options: [
+                { text: "Poor / Overeating", score: 10 },
+                { text: "Variable", score: 5 },
                 { text: "Normal", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "focus",
+          name: "Focus & Attention",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do you have trouble concentrating on tasks?",
+              options: [
+                { text: "Yes, very often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Are you easily distracted by external stimuli?",
+              options: [
+                { text: "Yes, easily", score: 10 },
+                { text: "Somewhat", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you have difficulty organizing tasks?",
+              options: [
+                { text: "Yes, frequently", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you experience 'brain fog'?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
               ],
             },
           ],
         },
       ],
     },
+
+    // --- SENSORY HEALTH ---
     {
       category: "Sensory Health",
       conditions: [
@@ -236,28 +843,16 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you experience blurred vision when reading or looking at screens?",
+              question_text: "Do you experience blurred vision or eye strain?",
               options: [
                 { text: "Yes, frequently", score: 10 },
-                { text: "After long hours only", score: 5 },
+                { text: "After screens", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
             {
               id: 2,
-              question_text:
-                "How many hours per day do you spend looking at digital screens?",
-              options: [
-                { text: "8+ hours", score: 10 },
-                { text: "4-8 hours", score: 5 },
-                { text: "Less than 4 hours", score: 0 },
-              ],
-            },
-            {
-              id: 3,
-              question_text:
-                "Do you get frequent headaches around your eyes or forehead?",
+              question_text: "Do you get frequent headaches around the eyes?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -265,12 +860,238 @@ const HEALTH_DATA = {
               ],
             },
             {
-              id: 4,
-              question_text: "When was your last eye checkup?",
+              id: 3,
+              question_text: "Do you have trouble seeing at night?",
               options: [
-                { text: "More than 2 years ago / Never", score: 10 },
-                { text: "Within last 2 years", score: 5 },
+                { text: "Yes", score: 10 },
+                { text: "Slightly", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "When was your last eye exam?",
+              options: [
+                { text: "Over 2 years ago", score: 10 },
+                { text: "1-2 years ago", score: 5 },
                 { text: "Within last year", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "hearing",
+          name: "Hearing",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do you often ask people to repeat themselves?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you keep the TV/Radio volume higher than others?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text:
+                "Do you have trouble hearing in noisy environments?",
+              options: [
+                { text: "Yes, very difficult", score: 10 },
+                { text: "Somewhat", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Are you exposed to loud noises regularly?",
+              options: [
+                { text: "Yes, daily", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "tinnitus",
+          name: "Tinnitus",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Do you hear ringing, buzzing, or hissing in your ears?",
+              options: [
+                { text: "Yes, constantly", score: 10 },
+                { text: "Intermittently", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Does the sound interfere with your sleep?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Is it in one ear or both?",
+              options: [
+                { text: "One ear (consult doctor)", score: 10 },
+                { text: "Both", score: 5 },
+                { text: "N/A", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you have a history of ear infections?",
+              options: [
+                { text: "Yes, frequent", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "smell",
+          name: "Smell",
+          questions: [
+            {
+              id: 1,
+              question_text: "Have you noticed a reduced ability to smell?",
+              options: [
+                { text: "Yes, significant loss", score: 10 },
+                { text: "Mild reduction", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you experience phantom smells (smelling things not there)?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Rarely", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you have chronic sinus issues or allergies?",
+              options: [
+                { text: "Yes, chronic", score: 10 },
+                { text: "Seasonal", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Has this affected your ability to taste food?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Slightly", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "taste",
+          name: "Taste",
+          questions: [
+            {
+              id: 1,
+              question_text: "Do foods taste blander than usual?",
+              options: [
+                { text: "Yes, significantly", score: 10 },
+                { text: "A little", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text:
+                "Do you have a persistent metallic or bitter taste?",
+              options: [
+                { text: "Yes, constantly", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text: "Do you have dry mouth frequently?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you smoke or maintain poor oral hygiene?",
+              options: [
+                { text: "Yes, both/either", score: 10 },
+                { text: "Trying to improve", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          id: "touch",
+          name: "Touch (Neuropathy)",
+          questions: [
+            {
+              id: 1,
+              question_text:
+                "Do you experience numbness or tingling in hands/feet?",
+              options: [
+                { text: "Yes, frequently", score: 10 },
+                { text: "Occasionally", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 2,
+              question_text: "Do you have burning sensations or sharp pains?",
+              options: [
+                { text: "Yes, painful", score: 10 },
+                { text: "Mild discomfort", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 3,
+              question_text:
+                "Do you have difficulty with coordination or balance?",
+              options: [
+                { text: "Yes, often", score: 10 },
+                { text: "Sometimes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 4,
+              question_text: "Do you have diabetes or vitamin deficiencies?",
+              options: [
+                { text: "Yes, diagnosed", score: 10 },
+                { text: "Suspected", score: 5 },
+                { text: "No", score: 0 },
               ],
             },
           ],
@@ -316,11 +1137,11 @@ const QuestionnairesScreen = () => {
   const { conditionId, conditionName } = route.params || {
     conditionId: "diabetes",
     conditionName: "Diabetes",
-  }; // fallback
+  };
 
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
-  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0); // Using Index instead of ID for safety
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [allQuestionsAnswered, setAllQuestionsAnswered] = useState(false);
   const [animationDirection, setAnimationDirection] = useState("right");
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -339,15 +1160,15 @@ const QuestionnairesScreen = () => {
     if (!found) {
       Alert.alert(
         "Error",
-        "Questions for this condition are not yet available."
+        `Questions for ${conditionName} are not yet available.`
       );
+      // If not found, go back immediately to prevent stuck screen
       navigation.goBack();
     }
   }, [conditionId]);
 
   useEffect(() => {
     const completed = Object.keys(answers).length;
-    // Check if questions are loaded before checking length
     if (questions.length > 0) {
       setAllQuestionsAnswered(completed === questions.length);
     }
@@ -366,10 +1187,8 @@ const QuestionnairesScreen = () => {
   const handleSelect = (questionId, optionObj) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionObj }));
 
-    // Auto advance if not last question
     if (activeQuestionIndex < questions.length - 1) {
       setAnimationDirection("right");
-      // Small delay for better UX
       setTimeout(() => setActiveQuestionIndex((prev) => prev + 1), 250);
     }
   };
@@ -393,7 +1212,7 @@ const QuestionnairesScreen = () => {
     return (Object.keys(answers).length / questions.length) * 100;
   }, [answers, questions]);
 
-  // 🔥 5. NEW SCORING LOGIC BASED ON JSON
+  // 🔥 5. SCORING LOGIC
   const calculateRiskAssessment = () => {
     let totalScore = 0;
     let riskFactors = [];
@@ -429,29 +1248,25 @@ const QuestionnairesScreen = () => {
     };
   };
 
-  // 🔥 UPDATED: Handle Submit Logic for Routing
+  // 🔥 6. SUBMIT LOGIC
   const handleSubmit = () => {
     if (!allQuestionsAnswered) return;
 
     const assessment = calculateRiskAssessment();
 
-    // Check the level string from JSON (matches "level" key in thresholds)
     if (assessment.riskLevel === "Low Risk") {
       navigation.navigate("LowRisk", { assessment });
     } else if (assessment.riskLevel === "Moderate Risk") {
       navigation.navigate("ModerateRisk", { assessment });
     } else {
-      // Assuming anything else is High Risk (score > 25)
       navigation.navigate("HighRisk", { assessment });
     }
   };
 
-  // 🔥 UPDATED RESET LOGIC: Navigates back to SelfSense
+  // 🔥 7. RESET LOGIC
   const resetQuestionnaire = () => {
-    // Clear answers
     setAnswers({});
     setActiveQuestionIndex(0);
-    // Navigate back to the main Disease Selection screen
     navigation.navigate("SelfSense");
   };
 
@@ -579,6 +1394,7 @@ const QuestionnairesScreen = () => {
           </Text>
         </TouchableOpacity>
 
+        {/* 🔥 RESET BUTTON */}
         <TouchableOpacity
           style={[styles.actionBtn, styles.secondaryBtn]}
           onPress={resetQuestionnaire}
@@ -624,7 +1440,6 @@ const QuestionCard = ({
         </View>
       </View>
 
-      {/* 🔥 REFACTORED OPTIONS UI to Vertical List for long text */}
       <View style={styles.optionsWrap}>
         {question.options.map((opt, i) => {
           const selected = selectedAnswerObj?.text === opt.text;

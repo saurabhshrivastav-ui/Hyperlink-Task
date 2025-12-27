@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-// 🔥 ADDED useRoute
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 
 import ReportBanner from "../../../components/ReportBanner";
-import ResultBottomMenu from "../../../components/ResultBottomMenu";
 import { Text } from "../../../components/TextWrapper";
 
 const { width } = Dimensions.get("window");
@@ -49,7 +47,6 @@ const ModerateRisk = () => {
             />
           </View>
 
-          {/* 🔥 DYNAMIC TITLE */}
           <Text style={styles.headerTitle} weight="800">
             {conditionName}: Moderate ⚠️
           </Text>
@@ -64,7 +61,6 @@ const ModerateRisk = () => {
           </View>
 
           <View style={styles.resultCard}>
-            {/* 🔥 DYNAMIC MESSAGE */}
             <Text style={styles.resultCardText}>
               {message}
             </Text>
@@ -108,9 +104,8 @@ const ModerateRisk = () => {
         </View>
 
         <ReportBanner />
+        <View style={{ height: 40 }} />
       </ScrollView>
-
-      <ResultBottomMenu active="moderate" />
     </View>
   );
 };

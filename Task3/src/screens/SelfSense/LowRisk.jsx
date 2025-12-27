@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-// 🔥 ADDED useRoute
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 
 import ReportBanner from "../../../components/ReportBanner";
-import ResultBottomMenu from "../../../components/ResultBottomMenu";
 import { Text } from "../../../components/TextWrapper";
 
 const { width } = Dimensions.get("window");
@@ -113,10 +111,8 @@ const ResultScreen = () => {
         </View>
 
         <ReportBanner />
+        <View style={{ height: 40 }} />
       </ScrollView>
-
-      {/* Corrected active tab name */}
-      <ResultBottomMenu active="low" />
     </View>
   );
 };
@@ -142,7 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     color: "#fff",
     marginTop: 10,
-    textAlign: "center", // Added for long names
+    textAlign: "center",
   },
   headerSubtitle: {
     color: "#ecfdf5",
