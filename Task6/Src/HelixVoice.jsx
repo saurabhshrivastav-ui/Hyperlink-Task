@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -10,36 +10,55 @@ import {
   SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
-// --- IMPORT CUSTOM TEXT WRAPPER ---
-import { Text } from "../Components/TextWrapper"; 
+import { Text } from "../Components/TextWrapper";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
-// --- ASSETS ---
 const HERO_IMAGE = require("../assets/HelixMobileillustrator.webp");
-const CHAT_ILLUSTRATION = require("../assets/helixchatillustrator.webp"); 
+const CHAT_ILLUSTRATION = require("../assets/helixchatillustrator.webp");
 
-// --- BACKGROUND ASSETS ---
 const HEADER_BG = require("../assets/Header.png");
-const DNA_PATTERN = require("../assets/bgdna.png"); 
+const DNA_PATTERN = require("../assets/bgdna.png");
 
 export default function HelixVoice() {
   const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState("Helix");
 
   const handleAddVoicePress = () => {
     navigation.navigate("AddPerson");
   };
 
+  const navItems = [
+    { key: "Home", icon: "keyboard-backspace", rotate: "180deg" },
+    { key: "Helix", icon: "dots-grid" },
+    { key: "Helix Chat", icon: "dna" },
+    { key: "Your Voices", icon: "book-open-page-variant-outline" },
+    { key: "Profile", icon: "account-circle-outline" },
+  ];
+
+  const handleTabPress = (itemKey) => {
+    setActiveTab(itemKey);
+
+    if (itemKey === "Helix Chat") {
+      navigation.navigate("HelixChat");
+    } else if (itemKey === "Your Voices") {
+      navigation.navigate("YourVoices");
+    } else if (itemKey === "Helix" || itemKey === "Home") {
+      navigation.navigate("HelixVoice");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
+      />
 
-      {/* ================= BACKGROUND LAYERS ================= */}
-      
-      {/* 1. Header Background */}
       <View style={styles.headerBgContainer} pointerEvents="none">
         <Image
           source={HEADER_BG}
@@ -53,55 +72,44 @@ export default function HelixVoice() {
         />
       </View>
 
-      {/* 2. Footer Background */}
       <View style={styles.footerBgContainer} pointerEvents="none">
         <Image
           source={HEADER_BG}
           style={styles.gradientBgFooter}
           resizeMode="cover"
         />
-        <Image
-          source={DNA_PATTERN}
-          style={styles.footerPatternBg}
-          resizeMode="contain"
-        />
       </View>
 
-      {/* ================= MAIN CONTENT ================= */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        style={{ backgroundColor: 'transparent' }}
       >
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={28} color="#000" />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={28} color="#4A148C" />
           </TouchableOpacity>
         </View>
 
-        {/* HERO SECTION */}
         <View style={styles.heroContainer}>
-          
-          {/* LEFT SIDE: Text & Button */}
-          <View style={[styles.heroTextSide, { zIndex: 10 }]}>
+          <View style={styles.heroTextSide}>
             <Text style={styles.title} weight="700">
               Hyperlink Voice AI
             </Text>
             <Text style={styles.subtitle} weight="500">
               Loved-Ones Voice Companion
             </Text>
-
             <Text style={styles.description} weight="400">
               Record your loved one’s voice once, and Hyperlink AI will speak to
               you in that tone reminding, asking, and motivating you daily.
             </Text>
 
-            {/* CTA Button */}
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={handleAddVoicePress}
-              style={{ zIndex: 20, elevation: 10 }} 
+              style={styles.ctaButtonWrapper}
             >
               <LinearGradient
                 colors={["#D946EF", "#8B5CF6"]}
@@ -116,7 +124,6 @@ export default function HelixVoice() {
             </TouchableOpacity>
           </View>
 
-          {/* RIGHT SIDE: Mobile Illustration */}
           <View style={styles.heroImageSide} pointerEvents="none">
             <Image
               source={HERO_IMAGE}
@@ -126,8 +133,6 @@ export default function HelixVoice() {
           </View>
         </View>
 
-        {/* CHAT ILLUSTRATION */}
-        {/* Moved up using negative margin */}
         <View style={styles.chatIllustrationContainer}>
           <Image
             source={CHAT_ILLUSTRATION}
@@ -137,31 +142,78 @@ export default function HelixVoice() {
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <View style={styles.navItem}>
-          <Icon name="home-outline" size={24} color="#666" />
-          <Text style={styles.navText} weight="500">Home</Text>
-        </View>
+      <View style={styles.navbarWrapper}>
+        <Image
+          source={DNA_PATTERN}
+          style={styles.staticFooterDna}
+          resizeMode="contain"
+          pointerEvents="none"
+        />
 
-        <View style={styles.navItemCenter}>
-          <View style={styles.centerButtonOuter}>
-            <LinearGradient
-              colors={["#E0C3FC", "#8EC5FC"]}
-              style={styles.centerButtonInner}
-            >
-              {/* Changed icon color to White to stand out on purple gradient */}
-              <Icon name="dots-grid" size={24} color="#FFFFFF" />
-            </LinearGradient>
-          </View>
-          <Text style={[styles.navText, styles.activeNavText]} weight="700">
-            Helix
-          </Text>
-        </View>
+        <View style={styles.navbarBackground} />
 
-        <View style={styles.navItem}>
-          <Icon name="account-outline" size={24} color="#666" />
-          <Text style={styles.navText} weight="500">Profile</Text>
+        <View style={styles.navbarContent}>
+          {navItems.map((item) => {
+            const isActive = activeTab === item.key;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  styles.navItemContainer,
+                  isActive && styles.navItemContainerActive,
+                ]}
+                onPress={() => handleTabPress(item.key)}
+                activeOpacity={0.9}
+              >
+                {isActive ? (
+                  <View style={styles.activeItemWrapper}>
+                    <View style={styles.activeCircleOuter}>
+                      <LinearGradient
+                        colors={["#E0C3FC", "#8EC5FC"]}
+                        style={styles.activeCircleGradient}
+                      >
+                        <View style={styles.activeCircleInner}>
+                          <MaterialCommunityIcons
+                            name={
+                              item.icon === "book-open-page-variant-outline"
+                                ? "book-open-page-variant"
+                                : item.icon
+                            }
+                            size={30}
+                            color="#4A148C"
+                            style={
+                              item.rotate
+                                ? { transform: [{ rotate: item.rotate }] }
+                                : {}
+                            }
+                          />
+                        </View>
+                      </LinearGradient>
+                    </View>
+                    <Text style={styles.activeNavText} weight="700">
+                      {item.key}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.inactiveItemWrapper}>
+                    <MaterialCommunityIcons
+                      name={item.icon}
+                      size={20}
+                      color="#888"
+                      style={
+                        item.rotate
+                          ? { transform: [{ rotate: item.rotate }] }
+                          : {}
+                      }
+                    />
+                    <Text style={styles.navText} weight="500">
+                      {item.key}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
     </SafeAreaView>
@@ -173,8 +225,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9EAF4",
   },
-
-  // --- Background Styles ---
   headerBgContainer: {
     position: "absolute",
     top: 0,
@@ -200,60 +250,52 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "180deg" }],
   },
   headerPatternBg: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+    position: "absolute",
+    width: "100%",
+    height: "100%",
     opacity: 0.6,
     top: -20,
   },
-  footerPatternBg: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+  staticFooterDna: {
+    position: "absolute",
+    width: "100%",
+    height: 120,
     opacity: 0.6,
-    top: 0,
+    top: -80,
+    zIndex: -1,
   },
-
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 130,
   },
-
   header: {
     paddingHorizontal: 20,
     marginTop: 50,
     marginBottom: 10,
+    alignItems: "flex-start",
   },
-
-  // --- Hero Section ---
   heroContainer: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
     marginBottom: 10,
-    overflow: 'visible', 
+    overflow: "visible",
   },
   heroTextSide: {
-    flex: 0.5,
+    flex: 0.55,
     paddingRight: 5,
-    zIndex: 10, 
+    zIndex: 10,
   },
   heroImageSide: {
-    flex: 0.5,
+    flex: 0.45,
     alignItems: "flex-end",
     justifyContent: "center",
-    zIndex: 0, 
+    zIndex: 0,
   },
   heroImage: {
     width: "100%",
-    height: 280, 
-    transform: [
-      { scale: 1.35 },      
-      { translateX: 10 },   
-      { translateY: 10 }    
-    ],
+    height: 280,
+    transform: [{ scale: 1.35 }, { translateX: 10 }, { translateY: 10 }],
   },
-
-  // Text Styles
   title: {
     fontSize: 22,
     color: "#4A148C",
@@ -270,11 +312,15 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 20,
   },
+  ctaButtonWrapper: {
+    zIndex: 20,
+    elevation: 10,
+    alignSelf: "flex-start",
+  },
   ctaButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    alignSelf: "flex-start",
     elevation: 5,
     shadowColor: "#D946EF",
     shadowOffset: { width: 0, height: 4 },
@@ -285,67 +331,104 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 14,
   },
-
-  // --- Chat Illustration ---
   chatIllustrationContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 10,
-    marginTop: -20, // <--- CHANGED: Negative margin moves it UP slightly
+    marginTop: -20,
     marginBottom: 30,
-    width: "100%",
+    width: width,
   },
   chatImage: {
     width: width - 20,
     height: 250,
   },
-
-  // --- Bottom Nav ---
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "flex-end",
-    backgroundColor: "#FFF",
-    height: 80,
-    paddingBottom: 20,
+  navbarWrapper: {
     position: "absolute",
     bottom: 0,
     width: "100%",
-    borderTopWidth: 1,
-    borderTopColor: "#EEE",
-    zIndex: 10,
+    height: 120,
+    justifyContent: "flex-end",
+    zIndex: 50,
   },
-  navItem: {
+  navbarBackground: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: 85,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  navbarContent: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "flex-end",
+    paddingBottom: 15,
+    width: "100%",
+  },
+  navItemContainer: {
     alignItems: "center",
-    marginBottom: 5,
-    flex: 1,
+    justifyContent: "flex-end",
+    height: 85,
+    width: width / 5,
   },
-  navItemCenter: {
+  navItemContainerActive: {
+    justifyContent: "flex-end",
+    marginBottom: 20,
+  },
+  inactiveItemWrapper: {
     alignItems: "center",
-    flex: 1,
-    position: "relative",
-    bottom: 15,
+    justifyContent: "flex-end",
+    height: 40,
   },
-  centerButtonOuter: {
-    backgroundColor: "#F9EAF4",
-    padding: 5,
-    borderRadius: 35,
-    marginBottom: 5,
+  activeItemWrapper: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+    height: 100,
   },
-  centerButtonInner: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
+  activeCircleOuter: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FFF",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 5,
+    marginBottom: 5,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  activeCircleGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activeCircleInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   navText: {
-    fontSize: 12,
+    fontSize: 9,
     color: "#888",
     marginTop: 2,
   },
   activeNavText: {
-    color: "#5E35B1",
+    fontSize: 10,
+    color: "#4A148C",
+    marginTop: 0,
   },
 });
