@@ -116,7 +116,9 @@ const ModerateRisk = () => {
         >
           <Feather name="arrow-left" size={24} color="#5e35b1" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{conditionName} Outcome</Text>
+        <Text style={styles.headerTitle} weight="700">
+          {conditionName} Outcome
+        </Text>
       </View>
 
       <ScrollView
@@ -140,15 +142,21 @@ const ModerateRisk = () => {
             {/* Big Icon Circle with Animation */}
             <Animated.View style={[styles.iconCircle, { transform: [{ scale: scaleAnim }] }]}
             >
-              <Text style={styles.exclamationMark}>!</Text>
+              <Text style={styles.exclamationMark} weight="700">
+                !
+              </Text>
             </Animated.View>
 
             <View style={styles.resultTextContainer}>
               <View style={styles.pillContainer}>
-                <Text style={styles.pillText}>Based on your answers</Text>
+                <Text style={styles.pillText} weight="700">
+                  Based on your answers
+                </Text>
               </View>
-              <Text style={styles.resultTitle}>Moderate Attention Need</Text>
-              <Text style={styles.resultDesc}>
+              <Text style={styles.resultTitle} weight="700">
+                Moderate Attention Need
+              </Text>
+              <Text style={styles.resultDesc} weight="500">
                 Your responses show a combination of lifestyle factors and
                 symptoms that may increase risk over time. Monitoring and
                 preventive action are advised.
@@ -167,7 +175,7 @@ const ModerateRisk = () => {
         >
           <View style={styles.disclaimerRow}>
             <View style={styles.orangeDot} />
-            <Text style={styles.disclaimerText}>
+            <Text style={styles.disclaimerText} weight="600">
               This is not a diagnostic tool. For urgent concerns, please
               consult
             </Text>
@@ -186,7 +194,9 @@ const ModerateRisk = () => {
                 colors={["#D500F9", "#AA00FF"]}
                 style={styles.consultBtnGradient}
               >
-                <Text style={styles.consultBtnText}>Consult Now!</Text>
+                <Text style={styles.consultBtnText} weight="700">
+                  Consult Now!
+                </Text>
               </LinearGradient>
             </Pressable>
 
@@ -196,19 +206,23 @@ const ModerateRisk = () => {
                 <View style={styles.miniIconBg}>
                   <FontAwesome5 name="user-md" size={14} color="#1976D2" />
                 </View>
-                <Text style={styles.miniIconText}>One to One Consultation</Text>
+                <Text style={styles.miniIconText} weight="500">
+                  One to One Consultation
+                </Text>
               </View>
               <View style={styles.consultIconItem}>
                 <View style={styles.miniIconBg}>
                   <MaterialCommunityIcons name="chat" size={14} color="#1976D2" />
                 </View>
-                <Text style={styles.miniIconText}>Chat with Healer</Text>
+                <Text style={styles.miniIconText} weight="500">
+                  Chat with Healer
+                </Text>
               </View>
               <View style={styles.consultIconItem}>
                 <View style={styles.miniIconBg}>
                   <MaterialIcons name="lightbulb-outline" size={14} color="#1976D2" />
                 </View>
-                <Text style={styles.miniIconText}>
+                <Text style={styles.miniIconText} weight="500">
                   Prescription and Health Tips
                 </Text>
               </View>
@@ -217,7 +231,7 @@ const ModerateRisk = () => {
         </Pressable>
 
         {/* Influencing Factors */}
-        <Text style={styles.sectionTitle}>
+        <Text style={styles.sectionTitle} weight="600">
           How your answers influenced this result
         </Text>
         <View style={styles.listContainer}>
@@ -229,8 +243,12 @@ const ModerateRisk = () => {
             "Preventive checks may be delayed",
           ].map((item, index) => (
             <View key={index} style={styles.bulletRow}>
-              <Text style={styles.bulletDot}>•</Text>
-              <Text style={styles.bulletText}>{item}</Text>
+              <Text style={styles.bulletDot} weight="500">
+                •
+              </Text>
+              <Text style={styles.bulletText} weight="500">
+                {item}
+              </Text>
             </View>
           ))}
         </View>
@@ -243,7 +261,9 @@ const ModerateRisk = () => {
               <View style={styles.checkIconBox}>
                 <Feather name="check" size={14} color="#fff" />
               </View>
-              <Text style={styles.colTitleDo}>Do</Text>
+              <Text style={styles.colTitleDo} weight="700">
+                Do
+              </Text>
             </View>
 
             <View style={styles.colContent}>
@@ -254,8 +274,12 @@ const ModerateRisk = () => {
                 "Track related health patterns weekly",
               ].map((item, i) => (
                 <View key={i} style={styles.gridItemRow}>
-                  <Text style={styles.gridBulletDo}>•</Text>
-                  <Text style={styles.gridText}>{item}</Text>
+                  <Text style={styles.gridBulletDo} weight="700">
+                    •
+                  </Text>
+                  <Text style={styles.gridText} weight="500">
+                    {item}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -267,7 +291,9 @@ const ModerateRisk = () => {
               <View style={styles.crossIconBox}>
                 <Feather name="x" size={14} color="#fff" />
               </View>
-              <Text style={styles.colTitleAvoid}>Avoid</Text>
+              <Text style={styles.colTitleAvoid} weight="700">
+                Avoid
+              </Text>
             </View>
 
             <View style={styles.colContent}>
@@ -278,8 +304,12 @@ const ModerateRisk = () => {
                 "High stress without recovery habits",
               ].map((item, i) => (
                 <View key={i} style={styles.gridItemRow}>
-                  <Text style={styles.gridBulletAvoid}>•</Text>
-                  <Text style={styles.gridText}>{item}</Text>
+                  <Text style={styles.gridBulletAvoid} weight="700">
+                    •
+                  </Text>
+                  <Text style={styles.gridText} weight="500">
+                    {item}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -293,15 +323,19 @@ const ModerateRisk = () => {
             hovered && styles.cardHover,
           ]}
         >
-          <Text style={styles.researchTitle}>What research says</Text>
-          <Text style={styles.researchText}>
+          <Text style={styles.researchTitle} weight="600">
+            What research says
+          </Text>
+          <Text style={styles.researchText} weight="400">
             Studies show that early awareness and lifestyle adjustments can
             significantly reduce long-term risk and improve overall wellbeing.
           </Text>
           <Pressable
             style={({ hovered }) => [hovered && styles.linkHover]}
           >
-            <Text style={styles.learnMore}>Learn More &gt;</Text>
+            <Text style={styles.learnMore} weight="700">
+              Learn More &gt;
+            </Text>
           </Pressable>
         </Pressable>
 
@@ -332,7 +366,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: isTablet ? 22 : 20,
-    fontWeight: "700",
     color: "#6A1B9A", // Deep Purple
   },
   scrollContent: {
@@ -373,7 +406,6 @@ const styles = StyleSheet.create({
   },
   exclamationMark: {
     fontSize: 36,
-    fontWeight: "bold",
     color: "#fff",
   },
   resultTextContainer: {
@@ -390,11 +422,9 @@ const styles = StyleSheet.create({
   pillText: {
     color: "#6A1B9A",
     fontSize: 10,
-    fontWeight: "700",
   },
   resultTitle: {
     fontSize: isTablet ? 20 : 18,
-    fontWeight: "bold",
     color: "#000",
     marginBottom: 6,
   },
@@ -402,7 +432,6 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? 13 : 12,
     color: "#333",
     lineHeight: isTablet ? 20 : 18,
-    fontWeight: "500",
   },
   // Consult Card
   consultCard: {
@@ -433,7 +462,6 @@ const styles = StyleSheet.create({
   disclaimerText: {
     fontSize: 11,
     color: "#000",
-    fontWeight: "600",
     flex: 1,
     lineHeight: 16,
   },
@@ -462,7 +490,6 @@ const styles = StyleSheet.create({
   },
   consultBtnText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 14,
   },
   consultIconsContainer: {
@@ -493,7 +520,6 @@ const styles = StyleSheet.create({
   // Influence Section
   sectionTitle: {
     fontSize: isTablet ? 17 : 16,
-    fontWeight: "600",
     color: "#6A1B9A",
     marginBottom: 12,
   },
@@ -515,7 +541,6 @@ const styles = StyleSheet.create({
   bulletText: {
     fontSize: isTablet ? 15 : 14,
     color: "#555",
-    fontWeight: "500",
   },
   // Do's and Don'ts
   gridContainer: {
@@ -557,11 +582,9 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   colTitleDo: {
-    fontWeight: "bold",
     color: "#000",
   },
   colTitleAvoid: {
-    fontWeight: "bold",
     color: "#000",
   },
   colContent: {
@@ -576,20 +599,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginRight: 5,
     color: "#2E7D32",
-    fontWeight: "bold",
   },
   gridBulletAvoid: {
     fontSize: 12,
     marginRight: 5,
     color: "#C62828",
-    fontWeight: "bold",
   },
   gridText: {
     fontSize: isTablet ? 12 : 10,
     color: "#000",
     flex: 1,
     lineHeight: isTablet ? 16 : 14,
-    fontWeight: "500",
   },
   // Research Card
   researchCard: {
@@ -604,7 +624,6 @@ const styles = StyleSheet.create({
   },
   researchTitle: {
     fontSize: 14,
-    fontWeight: "600",
     color: "#6A1B9A",
     marginBottom: 8,
   },
@@ -617,7 +636,6 @@ const styles = StyleSheet.create({
   learnMore: {
     fontSize: 12,
     color: "#6A1B9A",
-    fontWeight: "bold",
     textAlign: "right",
   },
   linkHover: {
