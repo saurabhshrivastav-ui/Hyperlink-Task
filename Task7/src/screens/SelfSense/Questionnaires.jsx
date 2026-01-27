@@ -1,22 +1,51 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   Pressable,
   Animated,
   Dimensions,
-  Alert,
-  ImageBackground,
   Image,
+  ImageBackground, // Required for the header image
+  Easing,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
+// Assuming TextWrapper exists
 import { Text } from "../../../components/TextWrapper";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+// --- 1. SUPPLEMENTARY DISPLAY DATA ---
+const CONDITION_DESCRIPTIONS = {
+  diabetes: "Monitoring blood sugar and lifestyle choices are key.",
+  hypertension: "Regular checks help prevent heart disease.",
+  pcos: "Early diagnosis helps management of hormone levels.",
+  thyroid: "Monitor metabolism and energy levels regularly.",
+  heart: "Diet, exercise, and stress management are vital.",
+  obesity: "Weight management reduces long-term health risks.",
+  breast_cancer: "Regular self-exams are crucial for early detection.",
+  lung_cancer: "Avoid tobacco and pollutants to protect lungs.",
+  oral_cancer: "Early detection of sores improves outcomes.",
+  skin_cancer: "Protect skin from UV rays and check moles.",
+  prostate_cancer: "Screening is important for men over 50.",
+  colon_cancer: "Monitor bowel habits and screen regularly.",
+  stress: "Finding balance is key to mental health.",
+  anxiety: "Anxiety is manageable with support and therapy.",
+  sleep: "Quality sleep is essential for immune function.",
+  burnout: "Rest and boundaries are necessary.",
+  mood: "Tracking mood helps identify patterns.",
+  focus: "Limit distractions to improve productivity.",
+  vision: "Regular eye exams prevent strain.",
+  hearing: "Protect ears from loud noise.",
+  tinnitus: "Manage stress to reduce ringing impact.",
+  smell: "Loss of smell can indicate sinus issues.",
+  taste: "Taste changes can be linked to nutrition.",
+  touch: "Numbness should be evaluated.",
+};
 
 const HEALTH_DATA = {
   health_assessments: [
@@ -30,8 +59,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you have a family history of Type 2 Diabetes? (Parent, sibling)",
+              question_text: "Do you have a family history of Type 2 Diabetes?",
               options: [
                 { text: "Yes, immediate family", score: 10 },
                 { text: "Yes, extended family", score: 5 },
@@ -42,7 +70,7 @@ const HEALTH_DATA = {
             {
               id: 2,
               question_text:
-                "Have you ever been diagnosed with high blood sugar or prediabetes?",
+                "Have you ever been diagnosed with high blood sugar?",
               options: [
                 { text: "Yes, diagnosed", score: 10 },
                 { text: "No, never", score: 0 },
@@ -214,7 +242,7 @@ const HEALTH_DATA = {
                 "Do you experience chest pain or shortness of breath?",
               options: [
                 { text: "Yes, often", score: 10 },
-                { text: "Only with heavy exertion", score: 5 },
+                { text: "Only with exertion", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
@@ -231,7 +259,7 @@ const HEALTH_DATA = {
             {
               id: 3,
               question_text:
-                "Do you smoke or have a family history of heart disease?",
+                "Do you smoke or have family history of heart disease?",
               options: [
                 { text: "Yes, both/either", score: 10 },
                 { text: "Used to smoke", score: 5 },
@@ -258,7 +286,7 @@ const HEALTH_DATA = {
               question_text: "Is your BMI over 30?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Between 25-30 (Overweight)", score: 5 },
+                { text: "Overweight (25-30)", score: 5 },
                 { text: "No / Normal", score: 0 },
                 { text: "Not sure", score: 2 },
               ],
@@ -306,7 +334,7 @@ const HEALTH_DATA = {
             {
               id: 1,
               question_text:
-                "Have you noticed any lumps or thickening in the breast/underarm?",
+                "Have you noticed any lumps in the breast/underarm?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Not sure", score: 5 },
@@ -324,8 +352,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text:
-                "Have you noticed changes in skin texture or nipple discharge?",
+              question_text: "Have you noticed skin changes or discharge?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Slight changes", score: 5 },
@@ -359,8 +386,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you have a persistent cough that won't go away?",
+              question_text: "Do you have a persistent cough?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -404,8 +430,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you have mouth sores that haven't healed for 2 weeks?",
+              question_text: "Do you have mouth sores that haven't healed?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Not sure", score: 5 },
@@ -414,8 +439,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text:
-                "Do you have persistent pain or white/red patches in your mouth?",
+              question_text: "Do you have persistent pain or patches in mouth?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Mild discomfort", score: 5 },
@@ -439,8 +463,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you have moles that have changed shape, color, or size?",
+              question_text: "Do you have moles that changed shape/color?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Not sure", score: 5 },
@@ -484,7 +507,7 @@ const HEALTH_DATA = {
             {
               id: 1,
               question_text:
-                "Do you have difficulty urinating or frequent urges at night?",
+                "Do you have difficulty urinating or frequent urges?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -526,8 +549,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Have you noticed changes in bowel habits lasting over a few days?",
+              question_text: "Have you noticed changes in bowel habits?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -536,8 +558,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Have you experienced rectal bleeding or blood in stool?",
+              question_text: "Have you experienced rectal bleeding?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Not sure", score: 5 },
@@ -546,8 +567,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text:
-                "Is there a family history of colorectal cancer or polyps?",
+              question_text: "Is there a family history of colorectal cancer?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Not sure", score: 2 },
@@ -578,8 +598,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "How often do you feel overwhelmed by responsibilities?",
+              question_text: "How often do you feel overwhelmed?",
               options: [
                 { text: "Almost every day", score: 10 },
                 { text: "Weekly", score: 5 },
@@ -588,8 +607,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you have physical symptoms like headaches or muscle tension?",
+              question_text: "Do you have physical symptoms like headaches?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -609,7 +627,7 @@ const HEALTH_DATA = {
               id: 4,
               question_text: "Does stress affect your sleep?",
               options: [
-                { text: "Yes, insomnia/waking up", score: 10 },
+                { text: "Yes, insomnia", score: 10 },
                 { text: "Occasionally", score: 5 },
                 { text: "No", score: 0 },
               ],
@@ -631,8 +649,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you have trouble stopping or controlling worrying?",
+              question_text: "Do you have trouble controlling worrying?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -642,7 +659,7 @@ const HEALTH_DATA = {
             {
               id: 3,
               question_text:
-                "Do you experience restlessness or increased heart rate?",
+                "Do you experience restlessness or rapid heart rate?",
               options: [
                 { text: "Yes, frequently", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -651,7 +668,7 @@ const HEALTH_DATA = {
             },
             {
               id: 4,
-              question_text: "Does anxiety interfere with daily work/school?",
+              question_text: "Does anxiety interfere with daily work?",
               options: [
                 { text: "Yes, significantly", score: 10 },
                 { text: "Somewhat", score: 5 },
@@ -668,7 +685,7 @@ const HEALTH_DATA = {
               id: 1,
               question_text: "How many hours of sleep do you get on average?",
               options: [
-                { text: "Less than 5 hours", score: 10 },
+                { text: "< 5 hours", score: 10 },
                 { text: "5-6 hours", score: 5 },
                 { text: "7-9 hours", score: 0 },
               ],
@@ -717,8 +734,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Have you become cynical or detached from work/activities?",
+              question_text: "Have you become cynical/detached from work?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Somewhat", score: 5 },
@@ -751,8 +767,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Have you felt down, depressed, or hopeless recently?",
+              question_text: "Have you felt down, depressed, or hopeless?",
               options: [
                 { text: "Nearly every day", score: 10 },
                 { text: "Several days", score: 5 },
@@ -761,8 +776,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you have little interest or pleasure in doing things?",
+              question_text: "Do you have little interest in doing things?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -895,8 +909,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you keep the TV/Radio volume higher than others?",
+              question_text: "Do you keep the TV/Radio volume high?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -905,8 +918,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text:
-                "Do you have trouble hearing in noisy environments?",
+              question_text: "Do you have trouble hearing in noise?",
               options: [
                 { text: "Yes, very difficult", score: 10 },
                 { text: "Somewhat", score: 5 },
@@ -930,8 +942,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you hear ringing, buzzing, or hissing in your ears?",
+              question_text: "Do you hear ringing or buzzing in your ears?",
               options: [
                 { text: "Yes, constantly", score: 10 },
                 { text: "Intermittently", score: 5 },
@@ -951,7 +962,7 @@ const HEALTH_DATA = {
               id: 3,
               question_text: "Is it in one ear or both?",
               options: [
-                { text: "One ear (consult doctor)", score: 10 },
+                { text: "One ear", score: 10 },
                 { text: "Both", score: 5 },
                 { text: "N/A", score: 0 },
               ],
@@ -975,15 +986,14 @@ const HEALTH_DATA = {
               id: 1,
               question_text: "Have you noticed a reduced ability to smell?",
               options: [
-                { text: "Yes, significant loss", score: 10 },
+                { text: "Yes, significant", score: 10 },
                 { text: "Mild reduction", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
             {
               id: 2,
-              question_text:
-                "Do you experience phantom smells (smelling things not there)?",
+              question_text: "Do you experience phantom smells?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Rarely", score: 5 },
@@ -992,7 +1002,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text: "Do you have chronic sinus issues or allergies?",
+              question_text: "Do you have chronic sinus issues?",
               options: [
                 { text: "Yes, chronic", score: 10 },
                 { text: "Seasonal", score: 5 },
@@ -1025,8 +1035,7 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text:
-                "Do you have a persistent metallic or bitter taste?",
+              question_text: "Do you have a persistent metallic taste?",
               options: [
                 { text: "Yes, constantly", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -1059,8 +1068,7 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you experience numbness or tingling in hands/feet?",
+              question_text: "Do you feel numbness in hands/feet?",
               options: [
                 { text: "Yes, frequently", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -1078,8 +1086,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text:
-                "Do you have difficulty with coordination or balance?",
+              question_text: "Do you have difficulty with coordination?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -1088,7 +1095,7 @@ const HEALTH_DATA = {
             },
             {
               id: 4,
-              question_text: "Do you have diabetes or vitamin deficiencies?",
+              question_text: "Do you have diabetes/vitamin deficiencies?",
               options: [
                 { text: "Yes, diagnosed", score: 10 },
                 { text: "Suspected", score: 5 },
@@ -1108,23 +1115,21 @@ const HEALTH_DATA = {
         range_min: 0,
         range_max: 10,
         color_code: "#28a745",
-        message: "Your risk appears low. Keep maintaining a healthy lifestyle.",
+        message: "Low risk.",
       },
       {
         level: "Moderate Risk",
         range_min: 11,
         range_max: 25,
         color_code: "#ffc107",
-        message:
-          "You have some risk factors. Consider monitoring your health and consulting a doctor.",
+        message: "Moderate risk.",
       },
       {
         level: "High Risk",
         range_min: 26,
         range_max: 40,
         color_code: "#dc3545",
-        message:
-          "High risk detected. It is highly recommended to consult a specialist immediately.",
+        message: "High risk.",
       },
     ],
   },
@@ -1134,7 +1139,6 @@ const QuestionnairesScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  // 🔥 2. RETRIEVE PASSED PARAMS
   const { conditionId, conditionName } = route.params || {
     conditionId: "diabetes",
     conditionName: "Diabetes",
@@ -1144,29 +1148,33 @@ const QuestionnairesScreen = () => {
   const [answers, setAnswers] = useState({});
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [allQuestionsAnswered, setAllQuestionsAnswered] = useState(false);
-  const [animationDirection, setAnimationDirection] = useState("right");
-  
-  // 🔥 3. ANIMATION REFS
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current; // Opacity controls fade in/out
+
+  // Animations
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  // Truncate disease text for fixed fit
+  const rawInfo =
+    CONDITION_DESCRIPTIONS[conditionId] || CONDITION_DESCRIPTIONS.default || "";
+  const diseaseInfo =
+    rawInfo.length > 85 ? rawInfo.substring(0, 85) + "..." : rawInfo;
 
   useEffect(() => {
-    let found = false;
-    for (const cat of HEALTH_DATA.health_assessments) {
-      const cond = cat.conditions.find((c) => c.id === conditionId);
-      if (cond) {
-        setQuestions(cond.questions);
-        found = true;
-        break;
+    // Logic to find questions based on ID
+    // Simplified flattening for robustness
+    const allConditions = HEALTH_DATA.health_assessments.flatMap(
+      (c) => c.conditions || [],
+    );
+    const cond = allConditions.find((c) => c.id === conditionId);
+
+    if (cond) {
+      setQuestions(cond.questions);
+    } else {
+      // Fallback for visual testing
+      if (allConditions.length > 0) {
+        setQuestions(allConditions[0].questions);
       }
-    }
-    if (!found) {
-      Alert.alert(
-        "Error",
-        `Questions for ${conditionName} are not yet available.`,
-      );
-      // If not found, go back immediately to prevent stuck screen
-      navigation.goBack();
     }
   }, [conditionId]);
 
@@ -1177,70 +1185,62 @@ const QuestionnairesScreen = () => {
     }
   }, [answers, questions]);
 
-  // 🔥 4. TRIGGER ANIMATION ON QUESTION CHANGE (THE "APPEAR" PHASE)
   useEffect(() => {
-    // Reset slide
-    slideAnim.setValue(animationDirection === "right" ? 50 : -50);
+    if (questions.length > 0) {
+      const targetWidth = ((activeQuestionIndex + 1) / questions.length) * 100;
+      Animated.timing(progressAnim, {
+        toValue: targetWidth,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [activeQuestionIndex, questions]);
 
-    // Animate In: Fade to 1 and Slide to 0 simultaneously
+  useEffect(() => {
+    slideAnim.setValue(50);
+    fadeAnim.setValue(0);
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 500,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 400,
+        friction: 7,
+        tension: 40,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [activeQuestionIndex]); 
+  }, [activeQuestionIndex]);
 
-  // 🔥 5. HELPER: FADE OUT -> CHANGE DATA -> FADE IN (THE "DISAPPEAR" PHASE)
   const changeQuestion = (newIndex) => {
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 200, // Fast fade out
+      duration: 150,
       useNativeDriver: true,
     }).start(() => {
-      // Once hidden, update index. This triggers the useEffect above to fade back in.
       setActiveQuestionIndex(newIndex);
     });
   };
 
   const handleSelect = (questionId, optionObj) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionObj }));
-
     if (activeQuestionIndex < questions.length - 1) {
-      setAnimationDirection("right");
-      // Wait a moment for selection feedback, then fade out
-      setTimeout(() => {
-          changeQuestion(activeQuestionIndex + 1);
-      }, 200);
-    }
-  };
-
-  const goToNextQuestion = () => {
-    if (activeQuestionIndex < questions.length - 1) {
-      setAnimationDirection("right");
-      changeQuestion(activeQuestionIndex + 1);
+      setTimeout(() => changeQuestion(activeQuestionIndex + 1), 250);
     }
   };
 
   const goToPrevQuestion = () => {
-    if (activeQuestionIndex > 0) {
-      setAnimationDirection("left");
-      changeQuestion(activeQuestionIndex - 1);
-    }
+    if (activeQuestionIndex > 0) changeQuestion(activeQuestionIndex - 1);
   };
 
-  const progressPct = useMemo(() => {
-    if (questions.length === 0) return 0;
-    return (Object.keys(answers).length / questions.length) * 100;
-  }, [answers, questions]);
+  const goToNextQuestion = () => {
+    if (activeQuestionIndex < questions.length - 1)
+      changeQuestion(activeQuestionIndex + 1);
+  };
 
-  // 🔥 6. SCORING LOGIC
   const calculateRiskAssessment = () => {
     let totalScore = 0;
     let riskFactors = [];
@@ -1276,12 +1276,9 @@ const QuestionnairesScreen = () => {
     };
   };
 
-  // 🔥 7. SUBMIT LOGIC
   const handleSubmit = () => {
     if (!allQuestionsAnswered) return;
-
     const assessment = calculateRiskAssessment();
-
     if (assessment.riskLevel === "Low Risk") {
       navigation.navigate("LowRisk", { assessment });
     } else if (assessment.riskLevel === "Moderate Risk") {
@@ -1291,406 +1288,434 @@ const QuestionnairesScreen = () => {
     }
   };
 
-  // 🔥 8. RESET LOGIC (UPDATED: Navigate to SelfSense)
-  const resetQuestionnaire = () => {
-    setAnswers({});
-    setActiveQuestionIndex(0);
-    navigation.navigate("SelfSense");
-  };
-
   const activeQ = questions[activeQuestionIndex];
-
-  if (!activeQ) return null; // Loading state
+  if (!activeQ) return null;
 
   return (
-    <View style={styles.page}>
-      {/* ===== UPDATED HEADER ===== */}
-      <ImageBackground
-        source={require("../../../assets/Head.png")} // Check path
-        style={styles.hero}
-        imageStyle={styles.heroBgImage}
-      >
-        {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.8}
-        >
-          <Feather name="arrow-left" size={24} color="#553fb5" />
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
 
-        {/* 🔥 ANIMATED Centered Mobile Hands Illustration */}
-        <View style={styles.illustrationContainer}>
-          <Animated.Image 
-            source={require("../../../assets/MobHands.webp")} // Check path
-            style={[
+      {/* --- HEADER (Fixed with ImageBackground) --- */}
+      <ImageBackground
+        source={require("../../../assets/Head.png")}
+        style={styles.header}
+        imageStyle={styles.headerImageBg}
+      >
+        <View style={styles.headerSafeArea}>
+          {/* Navigation Row */}
+          <View style={styles.navRow}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.iconBtn}
+            >
+              <Feather name="arrow-left" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} weight="800">
+              {conditionName}
+            </Text>
+          </View>
+
+          {/* Illustration & Info (Side by Side) */}
+          <View style={styles.headerContentRow}>
+            <Animated.Image
+              source={require("../../../assets/MobHands.png")}
+              style={[
                 styles.illustration,
-                { opacity: fadeAnim } // Bind opacity
-            ]}
-          />
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            />
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText} weight="600" numberOfLines={3}>
+                {diseaseInfo}
+              </Text>
+            </View>
+          </View>
         </View>
       </ImageBackground>
 
-      {/* ===== BODY ===== */}
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={{ paddingBottom: 160 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Progress */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressIndicator}>
-            <Animated.View
-              style={[styles.progressBar, { width: `${progressPct}%` }]}
-            />
+      {/* --- BODY (Fixed Content) --- */}
+      <View style={styles.bodyContainer}>
+        {/* Progress Bar */}
+        <View style={styles.progressSection}>
+          <View style={styles.progressLabelRow}>
+            <Text style={styles.progressText} weight="700">
+              Q{activeQuestionIndex + 1}
+            </Text>
+            <Text style={styles.progressTextTotal} weight="600">
+              /{questions.length}
+            </Text>
           </View>
-          <Text style={styles.progressText} weight="500">
-            {activeQuestionIndex + 1} of {questions.length}
-          </Text>
-
-          {/* Navigation Buttons */}
-          <View style={styles.questionNav}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.navButton,
-                styles.navPrev,
-                pressed && styles.navPrevPressed,
-                activeQuestionIndex === 0 && styles.navDisabled,
+          <View style={styles.track}>
+            <Animated.View
+              style={[
+                styles.fill,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: ["0%", "100%"],
+                  }),
+                },
               ]}
-              onPress={goToPrevQuestion}
-              disabled={activeQuestionIndex === 0}
-            >
-              <Text style={styles.navPrevText} weight="600">
-                Previous
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.navButton,
-                styles.navNext,
-                pressed && styles.navNextPressed,
-                activeQuestionIndex === questions.length - 1 &&
-                  styles.navDisabled,
-              ]}
-              onPress={goToNextQuestion}
-              disabled={activeQuestionIndex === questions.length - 1}
-            >
-              <Text style={styles.navNextText} weight="700">
-                Next
-              </Text>
-            </Pressable>
+            />
           </View>
         </View>
 
-        {/* 🔥 Single Active Question Card - ANIMATED */}
-        <Animated.View
-          style={[
-            styles.activeCardWrapper,
-            { 
-                transform: [{ translateX: slideAnim }],
-                opacity: fadeAnim // Bind opacity here too
-            },
-          ]}
-        >
-          <QuestionCard
-            question={activeQ}
-            selectedAnswerObj={answers[activeQ.id]}
-            onSelect={(optObj) => handleSelect(activeQ.id, optObj)}
-            isAnswered={!!answers[activeQ.id]}
-          />
-        </Animated.View>
-      </ScrollView>
-
-      {/* ===== BOTTOM TRAY ===== */}
-      <View style={styles.bottomTray}>
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            !allQuestionsAnswered && styles.actionBtnDisabled,
-          ]}
-          disabled={!allQuestionsAnswered}
-          onPress={handleSubmit}
-        >
-          <Text style={styles.actionBtnText} weight="700">
-            Submit Assessment
-          </Text>
-        </TouchableOpacity>
-
-        {/* 🔥 RESET BUTTON */}
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.secondaryBtn]}
-          onPress={resetQuestionnaire}
-        >
-          <Text
-            style={[styles.actionBtnText, styles.secondaryBtnText]}
-            weight="500"
+        {/* Content Area */}
+        <View style={styles.fixedCardContainer}>
+          <Animated.View
+            style={[
+              styles.cardWrapper,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }, { scale: fadeAnim }],
+              },
+            ]}
           >
-            Reset
-          </Text>
-        </TouchableOpacity>
+            <View style={styles.glassCard}>
+              <Text style={styles.questionText} weight="700" numberOfLines={3}>
+                {activeQ.question_text}
+              </Text>
+
+              <View style={styles.optionsContainer}>
+                {activeQ.options.map((opt, i) => (
+                  <OptionItem
+                    key={i}
+                    option={opt}
+                    isSelected={answers[activeQ.id]?.text === opt.text}
+                    onPress={() => handleSelect(activeQ.id, opt)}
+                  />
+                ))}
+              </View>
+            </View>
+          </Animated.View>
+        </View>
+      </View>
+
+      {/* --- FOOTER --- */}
+      <View style={styles.footer}>
+        <View style={styles.footerNavRow}>
+          <TouchableOpacity
+            onPress={goToPrevQuestion}
+            disabled={activeQuestionIndex === 0}
+            style={[
+              styles.navCircle,
+              activeQuestionIndex === 0 && styles.navCircleDisabled,
+            ]}
+          >
+            <Feather name="chevron-left" size={24} color="#fff" />
+          </TouchableOpacity>
+
+          {allQuestionsAnswered ? (
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+              <Text style={styles.submitText} weight="800">
+                FINISH
+              </Text>
+              <Feather name="check-circle" size={18} color="#fff" />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
+
+          <TouchableOpacity
+            onPress={goToNextQuestion}
+            disabled={activeQuestionIndex === questions.length - 1}
+            style={[
+              styles.navCircle,
+              activeQuestionIndex === questions.length - 1 &&
+                styles.navCircleDisabled,
+            ]}
+          >
+            <Feather name="chevron-right" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 };
 
-/* ===== Single Question Card ===== */
-const QuestionCard = ({
-  question,
-  selectedAnswerObj,
-  onSelect,
-  isAnswered,
-}) => {
-  return (
-    <View style={styles.accordionItem}>
-      <View style={styles.accordionHeader}>
-        <View style={styles.questionNumWrap}>
-          <View style={styles.questionNum}>
-            <Text style={{ color: "#553fb5", fontSize: 14 }} weight="600">
-              Q{question.id}
-            </Text>
-            {isAnswered && (
-              <View style={styles.answerIndicator}>
-                <Feather name="check" size={10} color="#fff" />
-              </View>
-            )}
-          </View>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.questionText} weight="600">
-            {question.question_text}
-          </Text>
-        </View>
-      </View>
+// --- COMPACT OPTION BUTTON ---
+const OptionItem = ({ option, isSelected, onPress }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-      <View style={styles.optionsWrap}>
-        {question.options.map((opt, i) => {
-          const selected = selectedAnswerObj?.text === opt.text;
-          return (
-            <TouchableOpacity
-              key={`${question.id}-${i}`}
-              style={[styles.optionCard, selected && styles.optionCardSelected]}
-              onPress={() => onSelect(opt)}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  selected && { color: "#553fb5", fontWeight: "700" },
-                ]}
-                weight={selected ? "700" : "500"}
-              >
-                {opt.text}
-              </Text>
-              {selected && <Feather name="check" size={14} color="#553fb5" />}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+    onPress();
+  };
+
+  return (
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      <Animated.View
+        style={[
+          styles.optionBtn,
+          isSelected && styles.optionBtnSelected,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <View
+          style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}
+        >
+          {isSelected && <View style={styles.radioDot} />}
+        </View>
+        <Text
+          style={[styles.optionText, isSelected && styles.optionTextSelected]}
+          weight={isSelected ? "700" : "500"}
+          numberOfLines={1}
+        >
+          {option.text}
+        </Text>
+      </Animated.View>
+    </Pressable>
   );
 };
 
 export default QuestionnairesScreen;
 
-/* ===== Styles ===== */
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#f9fafc" },
-  // Updated Hero Styles
-  hero: {
-    height: 250, // Fixed height to accommodate background and illustration
-    paddingTop: 40, // Padding for status bar
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    overflow: "hidden", // Ensures the image respects the border radius
+  container: {
+    flex: 1,
+    backgroundColor: "#FDF4FF",
   },
-  heroBgImage: {
+  // --- HEADER ---
+  header: {
+    width: "100%",
+    height: 220, // Increased height for better image display
+    justifyContent: "flex-start",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: "hidden",
+    // No background color, purely image-based
+  },
+  headerImageBg: {
     resizeMode: "cover",
+    opacity: 1,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: 'center',
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.7)", // Slightly visible background for the icon
+  headerSafeArea: {
+    paddingTop: Platform.OS === "android" ? 40 : 50,
+    paddingHorizontal: 20,
+    flex: 1,
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
-  illustrationContainer: {
-    flex: 1,
-    justifyContent: "center",
+  iconBtn: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    color: "#3e1c66", // Dark purple for contrast on light header
+    letterSpacing: 0.5,
+  },
+  headerContentRow: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between", // Push image left, text right
+    marginTop: 5,
   },
   illustration: {
-    width: 180,
-    height: 180,
+    width: 100,
+    height: 100,
     resizeMode: "contain",
-    marginTop: -20, // Adjust this to position the image perfectly relative to the curve
   },
-  // ... Rest of styles kept same
-  progressContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 20, // Added some top padding since header text is gone
-    marginBottom: 0,
+  infoBox: {
+    flex: 1,
+    marginLeft: 15,
+    backgroundColor: "rgba(255,255,255,0.7)", // Glassy look
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
   },
-  progressIndicator: {
-    height: 5,
-    backgroundColor: "#F3E8FF",
-    borderRadius: 3,
-    marginBottom: 0,
-    marginTop: 6,
+  infoText: {
+    color: "#4a148c",
+    fontSize: 13,
+    lineHeight: 18,
   },
-  progressBar: {
-    height: "100%",
-    backgroundColor: "#7C3AED",
-    borderRadius: 3,
+
+  // --- BODY (Fixed) ---
+  bodyContainer: {
+    flex: 1,
+    backgroundColor: "#FDF4FF",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  progressSection: {
+    marginBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  progressLabelRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    width: 55,
   },
   progressText: {
-    fontSize: 13,
-    color: "#7C3AED",
-    textAlign: "left",
-    fontWeight: "600",
-    marginBottom: 8,
-    marginTop: 18,
+    fontSize: 16,
+    color: "#4c1d95",
   },
-  activeCardWrapper: {
-    alignSelf: "center",
-    width: "92%",
-    marginTop: 12,
+  progressTextTotal: {
+    fontSize: 12,
+    color: "#94a3b8",
   },
-  accordionItem: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#F3E8FF",
-    shadowColor: "#7C3AED",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+  track: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "#E9D5FF",
+    borderRadius: 4,
     overflow: "hidden",
   },
-  accordionHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 22,
-    paddingBottom: 0,
+  fill: {
+    height: "100%",
+    backgroundColor: "#7c3aed",
+    borderRadius: 4,
+  },
+
+  fixedCardContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+  },
+  cardWrapper: {
+    width: "100%",
+  },
+  glassCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: "#4c1d95",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "#f8fafc",
   },
   questionText: {
-    fontSize: 16,
+    fontSize: 17,
     color: "#1e293b",
-    lineHeight: 22,
-    fontWeight: "600",
-    marginBottom: 0,
+    marginBottom: 20,
+    lineHeight: 24,
   },
-  optionsWrap: {
-    paddingHorizontal: 22,
-    paddingBottom: 22,
-    flexDirection: "column",
+  optionsContainer: {
     gap: 12,
-    marginTop: 20,
   },
-  optionCard: {
-    width: "100%",
-    paddingVertical: 13,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+  // --- OPTION BUTTONS ---
+  optionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // Fixed from previous snippet
-    shadowColor: "#7C3AED",
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-    marginBottom: 0,
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
   },
-  optionCardSelected: {
-    backgroundColor: "#F3E8FF",
-    borderColor: "#7C3AED",
+  optionBtnSelected: {
+    backgroundColor: "#faf5ff",
+    borderColor: "#8b5cf6",
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#cbd5e1",
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioCircleSelected: {
+    borderColor: "#7c3aed",
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#7c3aed",
   },
   optionText: {
-    color: "#1e293b",
     fontSize: 15,
-    fontWeight: "500",
-    maxWidth: "90%",
-    letterSpacing: 0.1,
-  },
-  navButton: {
+    color: "#475569",
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
   },
-  navPrev: { backgroundColor: "#f1f5f9" },
-  navPrevPressed: { backgroundColor: "#d1d5db" },
-  navNext: { backgroundColor: "#553fb5" },
-  navNextPressed: { backgroundColor: "#3b2c85" },
-  navDisabled: { opacity: 0.5 },
-  navPrevText: { color: "#64748b" },
-  navNextText: { color: "#fff" },
-  questionNumWrap: { marginRight: 16 },
-  questionNum: {
-    backgroundColor: "rgba(99,102,241,0.1)",
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  optionTextSelected: {
+    color: "#6d28d9",
+    fontWeight: "700",
   },
-  answerIndicator: {
-    position: "absolute",
-    bottom: -4,
-    right: -4,
-    backgroundColor: "#10b981",
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: "center",
+
+  // --- FOOTER ---
+  footer: {
+    height: 90,
+    backgroundColor: "#FDF4FF",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
+    paddingHorizontal: 24,
   },
-  bottomTray: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-    padding: 16,
-    flexDirection: "row-reverse",
-    gap: 16,
-    justifyContent: "center",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 10,
-  },
-  actionBtn: {
-    flex: 1,
-    backgroundColor: "#553fb5",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionBtnDisabled: { opacity: 0.5 },
-  actionBtnText: { color: "#fff", fontSize: 14 },
-  secondaryBtn: { backgroundColor: "#f1f5f9" },
-  secondaryBtnText: { color: "#64748b" },
-  questionNav: {
+  footerNavRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
-    marginVertical: 24,
+  },
+  navCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#8b5cf6",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  navCircleDisabled: {
+    backgroundColor: "#cbd5e1",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitBtn: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#8b5cf6",
+    height: 50,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 16,
+    shadowColor: "#8b5cf6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  submitText: {
+    color: "#fff",
+    fontSize: 16,
+    letterSpacing: 1,
+    marginRight: 8,
   },
 });

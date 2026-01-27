@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   TextInput,
@@ -10,12 +10,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import {
-  useNavigation,
-  useRoute,
-  useIsFocused,
-} from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Feather,
@@ -32,13 +27,11 @@ const { width } = Dimensions.get("window");
 const PersonalDetails = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const isFocused = useIsFocused(); // Check if screen is active
 
   const { conditionId, conditionName } = route.params || {
     conditionId: "diabetes",
     conditionName: "Diabetes",
   };
-
 
   const INITIAL_USERS = [
     {
@@ -77,40 +70,6 @@ const PersonalDetails = () => {
     phone: "",
   });
 
-  // 🔥 LOAD DATA FROM STORAGE
-  const loadUsersFromStorage = async () => {
-    try {
-      const storedUsers = await AsyncStorage.getItem("users");
-      const storedActiveId = await AsyncStorage.getItem("activeUserId");
-
-      if (storedUsers) {
-        setUsers(JSON.parse(storedUsers));
-      }
-      if (storedActiveId) {
-        setActiveUserId(JSON.parse(storedActiveId));
-      }
-    } catch (error) {
-      console.error("Failed to load users", error);
-    }
-  };
-
-  // 🔥 RELOAD WHEN SCREEN IS FOCUSED (Updates History)
-  useEffect(() => {
-    if (isFocused) {
-      loadUsersFromStorage();
-    }
-  }, [isFocused]);
-
-  // 🔥 SAVE DATA TO STORAGE HELPER
-  const saveUsersToStorage = async (updatedUsers) => {
-    try {
-      setUsers(updatedUsers); // Update UI immediately
-      await AsyncStorage.setItem("users", JSON.stringify(updatedUsers));
-    } catch (error) {
-      console.error("Failed to save users", error);
-    }
-  };
-
   const handleFormChange = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -131,8 +90,8 @@ const PersonalDetails = () => {
     setModalVisible(true);
   };
 
-  // 🔥 SAVE USER (ADD/EDIT) + PERSISTENCE
-  const handleSaveUser = async () => {
+  // 🔥 SAVE USER (ADD/EDIT) - Local State Only
+  const handleSaveUser = () => {
     if (!formData.name || !formData.age) {
       Alert.alert("Missing Info", "Please enter a Name and Age.");
       return;
@@ -141,7 +100,7 @@ const PersonalDetails = () => {
     let updatedUsers;
     if (isEditingMode) {
       updatedUsers = users.map((user) =>
-        user.id === activeUserId ? { ...user, ...formData } : user
+        user.id === activeUserId ? { ...user, ...formData } : user,
       );
     } else {
       const newId =
@@ -154,14 +113,13 @@ const PersonalDetails = () => {
       };
       updatedUsers = [...users, newUser];
       setActiveUserId(newId);
-      await AsyncStorage.setItem("activeUserId", JSON.stringify(newId));
     }
 
-    saveUsersToStorage(updatedUsers);
+    setUsers(updatedUsers);
     setModalVisible(false);
   };
 
-  // 🔥 DELETE USER + PERSISTENCE
+  // 🔥 DELETE USER - Local State Only
   const confirmRemoveUser = (id) => {
     if (users.length <= 1) {
       Alert.alert("Action Denied", "You must have at least one user profile.");
@@ -173,13 +131,12 @@ const PersonalDetails = () => {
       {
         text: "Delete",
         style: "destructive",
-        onPress: async () => {
+        onPress: () => {
           const updatedUsers = users.filter((u) => u.id !== id);
-          saveUsersToStorage(updatedUsers);
+          setUsers(updatedUsers);
           if (activeUserId === id) {
             const nextId = updatedUsers[0].id;
             setActiveUserId(nextId);
-            await AsyncStorage.setItem("activeUserId", JSON.stringify(nextId));
           }
         },
       },
@@ -206,7 +163,7 @@ const PersonalDetails = () => {
           style={styles.headerBgImage}
           resizeMode="cover"
         />
-        
+
         {/* Top Bar */}
         <View style={styles.heroTopBar}>
           <TouchableOpacity
@@ -254,16 +211,24 @@ const PersonalDetails = () => {
                 color="#7C3AED"
               />
             </View>
-            <Text style={styles.infoValue} weight="700">6</Text>
-            <Text style={styles.infoLabel} weight="400">Questions</Text>
+            <Text style={styles.infoValue} weight="700">
+              6
+            </Text>
+            <Text style={styles.infoLabel} weight="400">
+              Questions
+            </Text>
           </View>
 
           <View style={styles.infoCard}>
             <View style={styles.infoIconContainer}>
               <Feather name="clock" size={22} color="#7C3AED" />
             </View>
-            <Text style={styles.infoValue} weight="700">2 min</Text>
-            <Text style={styles.infoLabel} weight="400">Duration</Text>
+            <Text style={styles.infoValue} weight="700">
+              2 min
+            </Text>
+            <Text style={styles.infoLabel} weight="400">
+              Duration
+            </Text>
           </View>
 
           <View style={styles.infoCard}>
@@ -350,12 +315,8 @@ const PersonalDetails = () => {
                   styles.userItem,
                   u.id === activeUserId && styles.userActive,
                 ]}
-                onPress={async () => {
+                onPress={() => {
                   setActiveUserId(u.id);
-                  await AsyncStorage.setItem(
-                    "activeUserId",
-                    JSON.stringify(u.id)
-                  );
                   setIsProfileExpanded(false);
                 }}
               >
@@ -388,7 +349,7 @@ const PersonalDetails = () => {
           </View>
         )}
 
-        {/* 🔥 HISTORY SECTION - DISPLAYS STORED RESPONSES */}
+        {/* HISTORY SECTION */}
         <View style={styles.historySection}>
           <Text style={styles.historyTitle} weight="600">
             Past Assessment History
@@ -560,12 +521,14 @@ const PersonalDetails = () => {
               size={18}
               color="#E91E63"
             />
-            <Text style={[styles.bottomBadgeText, { color: "#E91E63" }]} weight="500">
+            <Text
+              style={[styles.bottomBadgeText, { color: "#E91E63" }]}
+              weight="500"
+            >
               Confidential
             </Text>
           </View>
         </View>
-
       </View>
     </ScrollView>
   );
@@ -583,8 +546,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    // 🔥 Added Background Color here to match "border radius behind it" (Profile Card Border)
-    backgroundColor: "#E9D5FF", 
+    backgroundColor: "#E9D5FF",
   },
   headerBgImage: {
     position: "absolute",
@@ -605,9 +567,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   heroTitle: { fontSize: 18, color: "#7C3AED", letterSpacing: 0.2 },
-  heroSubtitle: { 
-    fontSize: 13, 
-    color: "#4B5563", 
+  heroSubtitle: {
+    fontSize: 13,
+    color: "#4B5563",
     lineHeight: 19,
     marginBottom: 10,
   },
@@ -671,17 +633,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#6B7280",
   },
-  detailsContainer: { 
-    paddingHorizontal: 18, 
+  detailsContainer: {
+    paddingHorizontal: 18,
     paddingTop: 24,
     backgroundColor: "#FFFFFF",
     marginTop: -8,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
-  detailsHeading: { 
-    fontSize: 16, 
-    color: "#1F2937", 
+  detailsHeading: {
+    fontSize: 16,
+    color: "#1F2937",
     marginBottom: 14,
     letterSpacing: 0.1,
   },
@@ -697,7 +659,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  profileCardMain: { 
+  profileCardMain: {
     borderRadius: 14,
   },
   profileCardContent: {
@@ -718,11 +680,11 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     letterSpacing: 0.5,
   },
-  profileInfo: { 
+  profileInfo: {
     flex: 1,
   },
-  profileName: { 
-    fontSize: 17, 
+  profileName: {
+    fontSize: 17,
     color: "#7C3AED",
     marginBottom: 5,
     letterSpacing: 0.2,
@@ -765,8 +727,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
-  userActive: { 
-    backgroundColor: "#FAF5FF", 
+  userActive: {
+    backgroundColor: "#FAF5FF",
     borderColor: "#7C3AED",
   },
   deleteIconArea: { padding: 8 },
@@ -782,8 +744,6 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 8,
   },
-
-  // HISTORY STYLES
   historySection: { marginTop: 15, marginBottom: 15 },
   historyTitle: {
     fontSize: 15,
@@ -830,7 +790,6 @@ const styles = StyleSheet.create({
   },
   riskBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   historyScore: { fontSize: 13, color: "#718096", fontWeight: "600" },
-
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -843,7 +802,12 @@ const styles = StyleSheet.create({
     padding: 24,
     elevation: 10,
   },
-  modalTitle: { fontSize: 20, marginBottom: 20, color: "#1F2937", textAlign: "center" },
+  modalTitle: {
+    fontSize: 20,
+    marginBottom: 20,
+    color: "#1F2937",
+    textAlign: "center",
+  },
   input: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
