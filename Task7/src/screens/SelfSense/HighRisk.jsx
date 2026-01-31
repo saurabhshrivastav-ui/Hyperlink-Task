@@ -19,6 +19,8 @@ import {
 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "../../../components/TextWrapper";
+import GradientButton from "../../../components/GradientButton";
+import ConsultWarningCard from "../../../components/ConsultWarningCard";
 
 const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
@@ -165,86 +167,11 @@ const HighRisk = () => {
           </LinearGradient>
         </Pressable>
 
-        {/* Consultation Card (Light Pink) */}
-        <Pressable
-          style={({ hovered }) => [
-            styles.consultCard,
-            hovered && styles.cardHover,
-          ]}
-        >
-          <View style={styles.disclaimerRow}>
-            <View style={styles.orangeDot} />
-            <Text style={styles.disclaimerText} weight="600">
-              This is not a diagnostic tool. For urgent concerns, please consult
-            </Text>
-          </View>
-
-          <View style={styles.consultActionRow}>
-            {/* Consult Button */}
-            <Pressable
-              onPress={() => {
-                // TODO: Implement Consultation screen navigation
-                console.log('Navigate to Consultation')
-              }}
-              style={({ pressed, hovered }) => [
-                styles.consultBtn,
-                (pressed || hovered) && styles.buttonHover,
-              ]}
-            >
-              <LinearGradient
-                colors={["#D500F9", "#AA00FF"]}
-                style={styles.consultBtnGradient}
-              >
-                <Text style={styles.consultBtnText} weight="700">
-                  Consult Now!
-                </Text>
-              </LinearGradient>
-            </Pressable>
-
-            {/* Small Icons */}
-            <View style={styles.consultIconsContainer}>
-              <Pressable
-                style={({ hovered }) => [
-                  styles.consultIconItem,
-                  hovered && styles.iconHover,
-                ]}
-              >
-                <View style={styles.miniIconBg}>
-                  <FontAwesome5 name="user-md" size={14} color="#1976D2" />
-                </View>
-                <Text style={styles.miniIconText} weight="500">
-                  One to One Consultation
-                </Text>
-              </Pressable>
-              <Pressable
-                style={({ hovered }) => [
-                  styles.consultIconItem,
-                  hovered && styles.iconHover,
-                ]}
-              >
-                <View style={styles.miniIconBg}>
-                  <MaterialCommunityIcons name="chat" size={14} color="#1976D2" />
-                </View>
-                <Text style={styles.miniIconText} weight="500">
-                  Chat with specialist
-                </Text>
-              </Pressable>
-              <Pressable
-                style={({ hovered }) => [
-                  styles.consultIconItem,
-                  hovered && styles.iconHover,
-                ]}
-              >
-                <View style={styles.miniIconBg}>
-                  <MaterialIcons name="lightbulb-outline" size={14} color="#1976D2" />
-                </View>
-                <Text style={styles.miniIconText} weight="500">
-                  Prescription and lab referrals
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </Pressable>
+        {/* Consultation Card */}
+        <ConsultWarningCard
+          onConsultPress={() => console.log('Navigate to Consultation')}
+          style={styles.consultCard}
+        />
 
         {/* Influencing Factors */}
         <Text style={styles.sectionTitle} weight="600">

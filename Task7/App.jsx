@@ -7,6 +7,7 @@ import SelfSense from "./src/screens/SelfSense/SelfSense";
 import SelfSenseHealthArea from "./src/screens/SelfSense/SelfSenseHealthArea";
 import SelfSensePersonalDetails from "./src/screens/SelfSense/PersonalDetails"; 
 import SelfSenseQuestionnaires from "./src/screens/SelfSense/Questionnaires";
+import AssessmentHistory from "./src/screens/SelfSense/AssessmentHistory";
 
 // Result Screen Imports (Make sure these files exist in your folder)
 // If you haven't created them yet, the app will crash when submitting the quiz.
@@ -37,6 +38,9 @@ export default function App() {
         <Stack.Screen name="LowRisk" component={LowRisk} />
         <Stack.Screen name="ModerateRisk" component={ModerateRisk} />
         <Stack.Screen name="HighRisk" component={HighRisk} />
+
+        {/* 6. Assessment History Screen */}
+        <Stack.Screen name="AssessmentHistory" component={AssessmentHistory} />
 
       </Stack.Navigator>
     </NavigationContainer>

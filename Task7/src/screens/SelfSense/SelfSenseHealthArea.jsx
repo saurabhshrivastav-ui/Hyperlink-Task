@@ -77,7 +77,7 @@ const GridItem = ({ icon, label, material, id, onPress }) => {
           resizeMode="contain"
         />
       </View>
-      <Text weight="500" style={styles.gridLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+      <Text weight="500" style={styles.gridLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -99,12 +99,23 @@ const HealthCard = ({
   const animValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(animValue, {
-      toValue: open ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
-      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
-    }).start();
+    if (open) {
+      // Opening animation with spring for smooth feel
+      Animated.spring(animValue, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      // Closing animation with timing for controlled feel
+      Animated.timing(animValue, {
+        toValue: 0,
+        duration: 280,
+        useNativeDriver: false,
+        easing: Easing.bezier(0.4, 0.0, 0.6, 1),
+      }).start();
+    }
   }, [open]);
 
   const arrowRotation = animValue.interpolate({
@@ -113,8 +124,18 @@ const HealthCard = ({
   });
 
   const contentOpacity = animValue.interpolate({
-    inputRange: [0, 0.3, 1],
-    outputRange: [0, 0, 1],
+    inputRange: [0, 0.4, 1],
+    outputRange: [0, 0.2, 1],
+  });
+
+  const gridScale = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.95, 1],
+  });
+
+  const gridTranslateY = animValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-15, 0],
   });
 
   return (
@@ -137,7 +158,16 @@ const HealthCard = ({
 
         {open && (
           <Animated.View
-            style={[styles.gridContainer, { opacity: contentOpacity }]}
+            style={[
+              styles.gridContainer,
+              {
+                opacity: contentOpacity,
+                transform: [
+                  { translateY: gridTranslateY },
+                  { scale: gridScale },
+                ],
+              },
+            ]}
           >
             {items.map((item, idx) => (
               <GridItem
@@ -209,8 +239,8 @@ export default function SelfSenseHealthArea({ navigation }) {
           <HealthCard
             id="chronic"
             title="Chronic Conditions"
-            subtitle="Long-term lifestyle-linked conditions"
-            desc="Understand risks linked to diabetes, PCOS, blood pressure, and more."
+            subtitle="Lifestyle & Long-term Care"
+            desc="Assess risks for Diabetes, BP, Thyroid, and heart health."
             image={require("../../../assets/MobHands.png")}
             expandedCard={expandedCard}
             onToggle={toggleCard}
@@ -218,9 +248,9 @@ export default function SelfSenseHealthArea({ navigation }) {
             items={[
               { id: "diabetes", label: "Diabetes", icon: "water", material: true },
               { id: "hypertension", label: "Hypertension", icon: "heart-pulse", material: true },
-              { id: "pcos", label: "PCOS", icon: "record-circle-outline", material: true },
-              { id: "thyroid", label: "Thyroid", icon: "butterfly", material: true },
-              { id: "heart", label: "Heart", icon: "heart", material: true },
+              { id: "pcos", label: "PCOS", icon: "gender-female", material: true },
+              { id: "thyroid", label: "Thyroid", icon: "butterfly-outline", material: true },
+              { id: "heart", label: "Heart Health", icon: "heart", material: true },
               { id: "obesity", label: "Obesity", icon: "scale-bathroom", material: true },
             ]}
           />
@@ -229,19 +259,19 @@ export default function SelfSenseHealthArea({ navigation }) {
           <HealthCard
             id="cancer"
             title="Cancer Awareness"
-            subtitle="Early warning signs & risk factors"
-            desc="Self-checks for common cancer related symptoms and lifestyle risks."
+            subtitle="Early Signs & Symptoms"
+            desc="Guidance on self-checks for breast, oral, and lung health."
             image={require("../../../assets/cancer.webp")}
             expandedCard={expandedCard}
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
-              { id: "breast_cancer", label: "Breast", icon: "ribbon", material: true },
-              { id: "lung_cancer", label: "Lung", icon: "lungs", material: true },
-              { id: "oral_cancer", label: "Oral", icon: "mouth", material: true },
-              { id: "skin_cancer", label: "Skin", icon: "theme-light-dark", material: true },
-              { id: "prostate_cancer", label: "Prostate", icon: "gender-male", material: true },
-              { id: "colon_cancer", label: "Colon", icon: "record-circle", material: true },
+              { id: "breast_cancer", label: "Breast Cancer", icon: "ribbon", material: true },
+              { id: "lung_cancer", label: "Lung Cancer", icon: "lungs", material: true },
+              { id: "oral_cancer", label: "Oral Cancer", icon: "tooth-outline", material: true },
+              { id: "skin_cancer", label: "Skin Cancer", icon: "circle-outline", material: true },
+              { id: "prostate_cancer", label: "Prostate Cancer", icon: "human-male", material: true },
+              { id: "colon_cancer", label: "Colon Cancer", icon: "stomach", material: true },
             ]}
           />
 
@@ -249,39 +279,39 @@ export default function SelfSenseHealthArea({ navigation }) {
           <HealthCard
             id="mental"
             title="Mental Wellbeing"
-            subtitle="Emotional & mental health awareness."
-            desc="Check stress levels, emotional patterns, and burnout indicators."
+            subtitle="Emotional Balance"
+            desc="Track stress, anxiety levels, and burnout symptoms."
             image={require("../../../assets/MentalWell.webp")}
             expandedCard={expandedCard}
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
               { id: "stress", label: "Stress", icon: "brain", material: true },
-              { id: "anxiety", label: "Anxiety", icon: "weather-windy", material: true },
-              { id: "sleep", label: "Sleep", icon: "bed", material: true },
-              { id: "burnout", label: "Burnout", icon: "battery-alert", material: true },
-              { id: "mood", label: "Mood", icon: "emoticon-happy", material: true },
-              { id: "focus", label: "Focus", icon: "target", material: true },
+              { id: "anxiety", label: "Anxiety", icon: "emoticon-sad-outline", material: true },
+              { id: "sleep", label: "Sleep Health", icon: "sleep", material: true },
+              { id: "burnout", label: "Burnout", icon: "fire", material: true },
+              { id: "mood", label: "Mood", icon: "emoticon-happy-outline", material: true },
+              { id: "focus", label: "Focus & Attention", icon: "bullseye-arrow", material: true },
             ]}
           />
 
           {/* Sensory Health */}
           <HealthCard
             id="sensory"
-            title="Hearing & Sensory Health"
-            subtitle="Hearing health & exposure awareness"
-            desc="Understanding hearing loss risks and ear health concerns."
+            title="Sensory Health"
+            subtitle="Hearing & Vision"
+            desc="Check for hearing loss, tinnitus, and eye strain."
             image={require("../../../assets/ears.webp")}
             expandedCard={expandedCard}
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
+              { id: "vision", label: "Vision", icon: "eye-outline", material: true },
               { id: "hearing", label: "Hearing", icon: "ear-hearing", material: true },
-              { id: "tinnitus", label: "Tinnitus", icon: "bell-off", material: true },
-              { id: "vision", label: "Vision", icon: "eye", material: true },
+              { id: "tinnitus", label: "Tinnitus", icon: "volume-high", material: true },
               { id: "smell", label: "Smell", icon: "scent", material: true },
-              { id: "taste", label: "Taste", icon: "silverware-fork-knife", material: true },
-              { id: "touch", label: "Touch", icon: "fingerprint", material: true },
+              { id: "taste", label: "Taste", icon: "food-apple-outline", material: true },
+              { id: "touch", label: "Touch", icon: "hand-back-left-outline", material: true },
             ]}
           />
         </View>
@@ -481,6 +511,7 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(18),
     paddingHorizontal: moderateScale(8),
     gap: isTablet ? 12 : moderateScale(10),
+    overflow: "hidden",
   },
   gridItem: {
     width: isTablet ? "30%" : "30%",
@@ -499,22 +530,25 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   gridIconContainer: {
-    width: isTablet ? 50 : moderateScale(44),
-    height: isTablet ? 50 : moderateScale(44),
+    width: isTablet ? 52 : moderateScale(46),
+    height: isTablet ? 52 : moderateScale(46),
+    borderRadius: isTablet ? 26 : moderateScale(23),
     justifyContent: "center",
     alignItems: "center",
     marginBottom: moderateScale(8),
+    backgroundColor: "#F0E6FF",
   },
   gridIconImage: {
-    width: isTablet ? 40 : moderateScale(36),
-    height: isTablet ? 40 : moderateScale(36),
+    width: isTablet ? 36 : moderateScale(32),
+    height: isTablet ? 36 : moderateScale(32),
   },
   gridLabel: {
-    fontSize: isTablet ? 13 : moderateScale(11),
+    fontSize: isTablet ? 12 : moderateScale(10),
     textAlign: "center",
     color: "#333",
     fontWeight: "500",
-    numberOfLines: 1,
+    lineHeight: isTablet ? 16 : moderateScale(14),
+    minHeight: isTablet ? 32 : moderateScale(28),
   },
   cardFooter: {
     backgroundColor: "#E8DCFF",

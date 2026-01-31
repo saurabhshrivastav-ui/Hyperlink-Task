@@ -1198,27 +1198,20 @@ const QuestionnairesScreen = () => {
   }, [activeQuestionIndex, questions]);
 
   useEffect(() => {
-    slideAnim.setValue(50);
     fadeAnim.setValue(0);
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 7,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
   }, [activeQuestionIndex]);
 
   const changeQuestion = (newIndex) => {
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 150,
+      duration: 200,
+      easing: Easing.bezier(0.4, 0.0, 0.6, 1),
       useNativeDriver: true,
     }).start(() => {
       setActiveQuestionIndex(newIndex);
@@ -1321,10 +1314,7 @@ const QuestionnairesScreen = () => {
               source={require("../../../assets/MobHands.png")}
               style={[
                 styles.illustration,
-                {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }],
-                },
+                { opacity: fadeAnim },
               ]}
             />
             <View style={styles.infoBox}>
@@ -1370,7 +1360,6 @@ const QuestionnairesScreen = () => {
               styles.cardWrapper,
               {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }, { scale: fadeAnim }],
               },
             ]}
           >
@@ -1532,28 +1521,34 @@ const styles = StyleSheet.create({
   headerContentRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // Push image left, text right
-    marginTop: 5,
+    justifyContent: "flex-start",
+    marginTop: 10,
+    paddingRight: 10,
   },
   illustration: {
-    width: 100,
-    height: 100,
+    width: 110,
+    height: 110,
     resizeMode: "contain",
+    marginRight: 10,
   },
   infoBox: {
     flex: 1,
-    marginLeft: 15,
-    backgroundColor: "rgba(255,255,255,0.7)", // Glassy look
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    backgroundColor: "rgba(255,255,255,0.75)",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
+    borderColor: "rgba(255,255,255,0.6)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   infoText: {
     color: "#4a148c",
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
   },
 
   // --- BODY (Fixed) ---

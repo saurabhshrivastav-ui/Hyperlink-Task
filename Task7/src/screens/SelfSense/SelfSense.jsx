@@ -12,16 +12,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "../../../components/TextWrapper";
+import GradientButton from "../../../components/GradientButton";
+import ConsultWarningCard from "../../../components/ConsultWarningCard";
 
 const { width, height } = Dimensions.get("window");
 
-// Responsive breakpoints
 const isSmallDevice = width < 375;
 const isMediumDevice = width >= 375 && width < 768;
 const isTablet = width >= 768 && width < 1024;
 const isDesktop = width >= 1024;
 
-// Responsive scaling
 const scale = (size) => (width / 375) * size;
 const verticalScale = (size) => (height / 812) * size;
 const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
@@ -97,94 +97,43 @@ export default function SelfSense({ navigation }) {
               </Text>
 
               {/* Start Self Check Button */}
-              <TouchableOpacity
+              <GradientButton
+                title="Start Self Check"
+                variant="pink"
                 onPress={() => navigation.navigate("SelfSenseHealthArea")}
-                activeOpacity={0.8}
                 style={styles.startCheckButtonContainer}
-              >
-                <LinearGradient
-                  colors={["#F54BC9", "#E83BC3", "#C93AD6"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.startCheckButton}
-                >
-                  <Text numberOfLines={1} weight="700" style={styles.startCheckButtonText}>
-                    Start Self Check
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              />
             </View>
 
             {/* Hero Image */}
             <Image
-              source={require("../../../assets/SelfSense.png")}
+              source={require("../../../assets/SelfSense.webp")}
               style={styles.heroImage}
             />
           </View>
 
-          {/* Warning Banner - Moved after Start Self Check */}
-          <View style={styles.warningBannerContainer}>
-            <View style={styles.warningBanner}>
-              <View style={styles.warningIconContainer}>
-                <MaterialIcons name="warning" size={20} color="#FF9F43" />
-              </View>
-              <Text weight="500" style={styles.warningText}>
-                This is not a diagnostic tool. For urgent concerns, please consult
-              </Text>
-            </View>
-
-            {/* Consultation Options - Inside warning container */}
-            <View style={styles.consultationRow}>
-              <TouchableOpacity 
-                style={styles.consultButton} 
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={["#F54BC9", "#E83BC3", "#C93AD6"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.consultButtonGradient}
-                >
-                  <Text weight="700" style={styles.consultButtonText} numberOfLines={1}>
-                    Consult Now!
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.consultOptionItem}>
-                <MaterialCommunityIcons name="account-supervisor" size={24} color="#4A8FE7" />
-                <Text weight="500" style={styles.consultOptionText}>
-                  One to One{"\n"}Consultation
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.consultOptionItem}>
-                <MaterialIcons name="home" size={24} color="#4A8FE7" />
-                <Text weight="500" style={styles.consultOptionText}>
-                  Chat with{"\n"}specialist
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.consultOptionItem}>
-                <MaterialCommunityIcons name="run" size={24} color="#4A8FE7" />
-                <Text weight="500" style={styles.consultOptionText}>
-                  Prescription and{"\n"}lab referrals
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          {/* Warning Banner with Consultation Options */}
+          <ConsultWarningCard
+            onConsultPress={() => console.log('Navigate to Consultation')}
+            style={styles.warningBannerContainer}
+          />
         </View>
 
         {/* Main Content */}
         <View style={styles.content}>
 
           {/* Build Health Persona Section */}
-          <View style={styles.personaSection}>
+          <LinearGradient
+            colors={["#CDE8FF", "#E0EEFF", "#F3EBFF"]}
+            start={{ x: 0, y: 0.14 }}
+            end={{ x: 0.6, y: 0.87 }}
+            style={styles.personaSection}
+          >
             <Text weight="700" style={styles.personaTitle}>
               Build your Health Persona
             </Text>
             <Text weight="400" style={styles.personaDescription}>
-              Help us to understand you better, so your self-checks are more relevant and accurate.
+              Help us to understand you better, so your self checks are more relevant and accurate.
             </Text>
 
             {/* Persona Info Cards and Button Row */}
@@ -192,7 +141,7 @@ export default function SelfSense({ navigation }) {
               <View style={styles.personaCards}>
                 <View style={styles.personaCard}>
                   <View style={styles.personaCardIconCircle}>
-                    <MaterialIcons name="access-time" size={13} color="#5B3DF5" />
+                    <Feather name="clock" size={12} color="#5B3DF5" />
                   </View>
                   <Text weight="700" style={styles.personaCardValue}>
                     2 min
@@ -202,9 +151,9 @@ export default function SelfSense({ navigation }) {
                   </Text>
                 </View>
 
-                <View style={styles.personaCard}>
-                  <View style={styles.personaCardIconCircle}>
-                    <MaterialIcons name="shield" size={13} color="#E74C3C" />
+                <View style={[styles.personaCard, styles.personaCardHighlight]}>
+                  <View style={[styles.personaCardIconCircle, styles.personaCardIconHighlight]}>
+                    <MaterialCommunityIcons name="shield-check" size={12} color="#E74C3C" />
                   </View>
                   <Text weight="700" style={styles.personaCardValue}>
                     Private
@@ -216,7 +165,7 @@ export default function SelfSense({ navigation }) {
 
                 <View style={styles.personaCard}>
                   <View style={styles.personaCardIconCircle}>
-                    <MaterialCommunityIcons name="stethoscope" size={13} color="#4A8FE7" />
+                    <MaterialCommunityIcons name="file-document-outline" size={12} color="#4A8FE7" />
                   </View>
                   <Text weight="700" style={styles.personaCardValue}>
                     20
@@ -228,20 +177,15 @@ export default function SelfSense({ navigation }) {
               </View>
 
               {/* Create My Persona Button */}
-              <TouchableOpacity style={styles.createPersonaButton} activeOpacity={0.8}>
-                <LinearGradient
-                  colors={["#1E9BFA", "#3A7BFD", "#92C7FD"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.createPersonaButtonGradient}
-                >
-                  <Text numberOfLines={1} weight="700" style={styles.createPersonaButtonText}>
-                    Create My Persona
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              <GradientButton
+                title="Create My Persona"
+                variant="blue"
+                onPress={() => console.log('Create Persona')}
+                size="small"
+                style={styles.createPersonaButton}
+              />
             </View>
-          </View>
+          </LinearGradient>
 
           {/* How Self Sense Helps You */}
           <View style={styles.helpSection}>
@@ -277,8 +221,82 @@ export default function SelfSense({ navigation }) {
           </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
+
+      {/* Bottom Navigation Bar */}
+      <View style={styles.bottomNav}>
+        <View style={styles.navbarBackground} />
+        
+        <View style={styles.navbarContent}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
+            <View style={styles.navIconWrapper}>
+              <MaterialCommunityIcons name="undo-variant" size={24} color="#8E8E93" />
+            </View>
+            <Text weight="500" style={styles.navLabel}>Home</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.navItem}>
+            <View style={styles.navIconWrapper}>
+              <View style={styles.dotsGrid}>
+                <View style={styles.dotRow}>
+                  <View style={[styles.dot, styles.dotActive]} />
+                  <View style={[styles.dot, styles.dotActive]} />
+                </View>
+                <View style={styles.dotRow}>
+                  <View style={[styles.dot, styles.dotActive]} />
+                  <View style={[styles.dot, styles.dotActive]} />
+                </View>
+              </View>
+            </View>
+            <Text weight="600" style={styles.navLabelActive}>Self Checks</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.navItemCenter}>
+            <View style={styles.navCenterIconOuter}>
+              <LinearGradient
+                colors={["#E0C3FC", "#8EC5FC"]}
+                style={styles.navCenterIcon}
+              >
+                <View style={styles.navCenterIconInner}>
+                  <View style={styles.specialityIcon}>
+                    <View style={styles.specialityRow}>
+                      <View style={[styles.specialityDot, styles.dotPink]} />
+                      <View style={[styles.specialityDot, styles.dotPurple]} />
+                      <View style={[styles.specialityDot, styles.dotPink]} />
+                    </View>
+                    <View style={styles.specialityRow}>
+                      <View style={[styles.specialityDot, styles.dotPurple]} />
+                      <View style={[styles.specialityDot, styles.dotPink]} />
+                      <View style={[styles.specialityDot, styles.dotPurple]} />
+                    </View>
+                    <View style={styles.specialityRow}>
+                      <View style={[styles.specialityDot, styles.dotPink]} />
+                      <View style={[styles.specialityDot, styles.dotPurple]} />
+                      <View style={[styles.specialityDot, styles.dotPink]} />
+                    </View>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+            <Text weight="500" style={styles.navLabel}>Speciality</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('AssessmentHistory')}>
+            <View style={styles.navIconWrapper}>
+              <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#8E8E93" />
+            </View>
+            <Text weight="500" style={styles.navLabel}>History</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.navItem}>
+            <View style={styles.navIconWrapper}>
+              <MaterialCommunityIcons name="comment-account-outline" size={22} color="#8E8E93" />
+            </View>
+            <Text weight="500" style={styles.navLabel}>Profile</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
@@ -401,10 +419,10 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     position: isTablet ? "relative" : "absolute",
-    right: isTablet ? 0 : -5,
-    top: isTablet ? 0 : verticalScale(-10),
-    width: isTablet ? "45%" : width * 0.58,
-    height: isTablet ? 320 : width * 0.58,
+    right: isTablet ? 0 : -10,
+    top: isTablet ? 0 : verticalScale(-25),
+    width: isTablet ? "50%" : width * 0.58,
+    height: isTablet ? 360 : width * 0.62,
     resizeMode: "contain",
     zIndex: 5,
   },
@@ -492,93 +510,92 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   personaSection: {
-    backgroundColor: "#CDE9FF",
-    borderRadius: moderateScale(16),
-    padding: isTablet ? 18 : moderateScale(14),
+    borderRadius: moderateScale(12),
+    padding: isTablet ? 16 : moderateScale(12),
     marginTop: verticalScale(1),
     borderWidth: 1,
-    borderColor: "#BFD4FF",
+    borderColor: "#D4E4FF",
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
+    overflow: "visible",
   },
   personaTitle: {
-    fontSize: isTablet ? 18 : isDesktop ? 20 : moderateScale(15.5),
+    fontSize: isTablet ? 16 : isDesktop ? 18 : moderateScale(14),
     color: COLORS.textPrimary,
-    marginBottom: moderateScale(6),
+    marginBottom: moderateScale(4),
     fontWeight: "700",
   },
   personaDescription: {
-    fontSize: isTablet ? 12 : moderateScale(10.5),
+    fontSize: isTablet ? 11 : moderateScale(10),
     color: COLORS.textSecondary,
-    lineHeight: isTablet ? 18 : moderateScale(16),
-    marginBottom: verticalScale(10),
+    lineHeight: isTablet ? 16 : moderateScale(14),
+    marginBottom: verticalScale(8),
   },
   personaBottomRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: moderateScale(8),
+    gap: moderateScale(6),
     flexWrap: "nowrap",
   },
   personaCards: {
     flexDirection: "row",
     gap: moderateScale(6),
     alignItems: "center",
-    flex: 1,
-    flexShrink: 1,
+    flex: 0,
+    flexShrink: 0,
   },
   personaCard: {
     backgroundColor: COLORS.white,
-    borderRadius: moderateScale(10),
-    paddingVertical: moderateScale(7),
+    borderRadius: moderateScale(8),
+    paddingVertical: moderateScale(6),
     paddingHorizontal: moderateScale(6),
     alignItems: "center",
-    width: moderateScale(52),
-    minHeight: moderateScale(50),
+    width: moderateScale(50),
+    minHeight: moderateScale(52),
     borderWidth: 1,
-    borderColor: "#E1E7FF",
+    borderColor: "#E8EEF5",
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
+  personaCardHighlight: {
+    borderColor: "#E8D4F0",
+    backgroundColor: "#FDF8FF",
+  },
   personaCardIconCircle: {
-    width: moderateScale(24),
-    height: moderateScale(24),
-    borderRadius: moderateScale(12),
-    backgroundColor: "#F3F6FF",
+    width: moderateScale(22),
+    height: moderateScale(22),
+    borderRadius: moderateScale(11),
+    backgroundColor: "#F5F8FF",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: moderateScale(3),
   },
+  personaCardIconHighlight: {
+    backgroundColor: "#FFF5F5",
+  },
   personaCardValue: {
-    fontSize: moderateScale(10.5),
+    fontSize: moderateScale(9),
     color: COLORS.textPrimary,
     marginBottom: 1,
     fontWeight: "700",
   },
   personaCardLabel: {
-    fontSize: moderateScale(6.8),
+    fontSize: moderateScale(6),
     color: "#6C7A99",
     textAlign: "center",
-    lineHeight: moderateScale(8.5),
+    lineHeight: moderateScale(7.5),
   },
   createPersonaButton: {
-    borderRadius: 8,
-    overflow: "hidden",
     alignSelf: "center",
-    marginLeft: moderateScale(6),
+    marginLeft: "auto",
     flexShrink: 0,
-    maxWidth: moderateScale(130),
-    shadowColor: "#DEF0FE",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 4,
   },
   createPersonaButtonGradient: {
     paddingVertical: 8,
@@ -623,5 +640,134 @@ const styles = StyleSheet.create({
     color: "#444444",
     lineHeight: isTablet ? 22 : moderateScale(20),
     flex: 1,
+  },
+  // Bottom Navigation Styles
+  bottomNav: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    justifyContent: "flex-end",
+    zIndex: 50,
+  },
+  navbarBackground: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: 85,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  navbarContent: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "flex-end",
+    paddingBottom: 15,
+    width: "100%",
+  },
+  navItem: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+    height: 85,
+    width: width / 5,
+  },
+  navItemCenter: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+    height: 85,
+    width: width / 5,
+    marginBottom: 20,
+  },
+  navCenterIconOuter: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.white,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  navCenterIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#F0E6FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navCenterIconInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.white,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navIconWrapper: {
+    width: moderateScale(28),
+    height: moderateScale(28),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dotsGrid: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: moderateScale(4),
+  },
+  dotRow: {
+    flexDirection: "row",
+    gap: moderateScale(4),
+  },
+  dot: {
+    width: moderateScale(5),
+    height: moderateScale(5),
+    borderRadius: moderateScale(2.5),
+    backgroundColor: "#8E8E93",
+  },
+  dotActive: {
+    backgroundColor: "#5B3DF5",
+  },
+  specialityIcon: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: moderateScale(4),
+  },
+  specialityRow: {
+    flexDirection: "row",
+    gap: moderateScale(4),
+  },
+  specialityDot: {
+    width: moderateScale(6),
+    height: moderateScale(6),
+    borderRadius: moderateScale(3),
+  },
+  dotPink: {
+    backgroundColor: "#E91E63",
+  },
+  dotPurple: {
+    backgroundColor: "#7C4DFF",
+  },
+  navLabel: {
+    fontSize: moderateScale(9),
+    color: "#8E8E93",
+    marginTop: moderateScale(4),
+  },
+  navLabelActive: {
+    fontSize: moderateScale(9),
+    color: "#5B3DF5",
+    marginTop: moderateScale(4),
+    fontWeight: "600",
   },
 });
