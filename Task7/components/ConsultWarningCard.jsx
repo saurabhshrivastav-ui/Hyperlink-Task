@@ -16,19 +16,19 @@ const ConsultWarningCard = ({
 }) => {
   return (
     <View style={[styles.container, style]}>
-      {/* Warning Banner */}
-      <View style={styles.warningBanner}>
+      {/* Top Row - Warning and Text */}
+      <View style={styles.topRow}>
         <View style={styles.warningIconContainer}>
-          <MaterialIcons name="warning" size={18} color="#FF9F43" />
+          <MaterialIcons name="warning" size={16} color="#FF9F43" />
         </View>
         <Text weight="500" style={styles.warningText}>
           This is not a diagnostic tool. For urgent concerns,{"\n"}please consult
         </Text>
       </View>
 
-      {/* Consultation Options Row */}
+      {/* Bottom Row - Button and Options */}
       {showConsultOptions && (
-        <View style={styles.consultationRow}>
+        <View style={styles.bottomRow}>
           <View style={styles.consultButtonWrapper}>
             <GradientButton
               title="Consult Now!"
@@ -42,7 +42,7 @@ const ConsultWarningCard = ({
           <View style={styles.optionsWrapper}>
             <TouchableOpacity style={styles.consultOptionItem}>
               <View style={styles.iconCircle}>
-                <FontAwesome5 name="user-friends" size={14} color="#4A8FE7" />
+                <FontAwesome5 name="user-friends" size={12} color="#4A8FE7" />
               </View>
               <Text weight="500" style={styles.consultOptionText}>
                 One to One{"\n"}Consultation
@@ -51,7 +51,7 @@ const ConsultWarningCard = ({
 
             <TouchableOpacity style={styles.consultOptionItem}>
               <View style={styles.iconCircle}>
-                <MaterialCommunityIcons name="message-text-outline" size={16} color="#4A8FE7" />
+                <MaterialCommunityIcons name="message-text-outline" size={14} color="#4A8FE7" />
               </View>
               <Text weight="500" style={styles.consultOptionText}>
                 Chat with{"\n"}specialist
@@ -60,10 +60,10 @@ const ConsultWarningCard = ({
 
             <TouchableOpacity style={styles.consultOptionItem}>
               <View style={styles.iconCircle}>
-                <MaterialCommunityIcons name="clipboard-text-outline" size={16} color="#4A8FE7" />
+                <MaterialCommunityIcons name="clipboard-text-outline" size={14} color="#4A8FE7" />
               </View>
               <Text weight="500" style={styles.consultOptionText}>
-                Prescription and{"\n"}lab referrals
+                Prescription{"\n"}and lab{"\n"}referrals
               </Text>
             </TouchableOpacity>
           </View>
@@ -75,88 +75,79 @@ const ConsultWarningCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#FBF1FE",
-    borderRadius: moderateScale(16),
-    paddingVertical: isTablet ? 16 : moderateScale(14),
-    paddingHorizontal: isTablet ? 16 : moderateScale(14),
-    borderWidth: 1.5,
-    borderColor: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
+    borderRadius: moderateScale(12),
+    paddingVertical: isTablet ? 12 : moderateScale(10),
+    paddingHorizontal: isTablet ? 14 : moderateScale(12),
+    borderWidth: 1,
+    borderColor: "rgba(74,143,231,0.08)",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
-  warningBanner: {
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFAF5",
-    borderRadius: moderateScale(10),
-    paddingVertical: moderateScale(10),
-    paddingHorizontal: moderateScale(12),
-    borderWidth: 1,
-    borderColor: "#FFE0C7",
+    marginBottom: moderateScale(10),
   },
   warningIconContainer: {
     marginRight: moderateScale(8),
     backgroundColor: "#FFF3E0",
-    borderRadius: moderateScale(14),
-    width: moderateScale(28),
-    height: moderateScale(28),
+    borderRadius: moderateScale(6),
+    width: moderateScale(24),
+    height: moderateScale(24),
     alignItems: "center",
     justifyContent: "center",
   },
   warningText: {
-    fontSize: isTablet ? 12 : moderateScale(11),
-    color: "#2D2D2D",
+    fontSize: isTablet ? 11 : moderateScale(10),
+    color: "#1f2937",
     flex: 1,
-    lineHeight: isTablet ? 18 : moderateScale(16),
-    fontWeight: "500",
+    lineHeight: isTablet ? 16 : moderateScale(14),
   },
-  consultationRow: {
+  bottomRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: moderateScale(14),
-    paddingHorizontal: moderateScale(4),
   },
   consultButtonWrapper: {
     justifyContent: "center",
     alignItems: "center",
-    marginRight: moderateScale(12),
+    marginRight: moderateScale(10),
   },
   consultButton: {
-    // Uses default GradientButton styling
+    borderRadius: 8,
+    overflow: "hidden",
   },
   optionsWrapper: {
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   consultOptionItem: {
     alignItems: "center",
     flex: 1,
+    paddingVertical: moderateScale(4),
+    paddingHorizontal: moderateScale(2),
   },
   iconCircle: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(16),
-    backgroundColor: "#FFFFFF",
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(8),
+    backgroundColor: "#F0F4FF",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: moderateScale(4),
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(74,143,231,0.1)",
   },
   consultOptionText: {
-    fontSize: isTablet ? 8 : moderateScale(7),
-    color: "#2D2D2D",
+    fontSize: isTablet ? 8 : moderateScale(7.5),
+    color: "#0f172a",
     textAlign: "center",
     lineHeight: isTablet ? 11 : moderateScale(10),
-    fontWeight: "500",
   },
 });
 

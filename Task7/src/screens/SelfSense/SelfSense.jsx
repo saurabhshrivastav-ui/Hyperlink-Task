@@ -333,16 +333,9 @@ const styles = StyleSheet.create({
   backButton: {
     width: moderateScale(40),
     height: moderateScale(40),
-    borderRadius: moderateScale(12),
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: moderateScale(12),
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
   },
   headerTitle: {
     fontSize: isTablet ? 24 : isDesktop ? 26 : moderateScale(20),

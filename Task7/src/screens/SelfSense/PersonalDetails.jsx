@@ -797,9 +797,12 @@ const styles = StyleSheet.create({
   },
   profileTagText: { fontSize: 11, color: "#7C3AED" },
   dropdownIcon: {
-    padding: 6,
+    padding: 8,
     backgroundColor: "#F1E7FE",
     borderRadius: 20,
+    marginLeft: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   userList: { marginTop: 5, marginBottom: 15 },
   switchUserLabel: {

@@ -14,10 +14,12 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 // Assuming TextWrapper exists
 import { Text } from "../../../components/TextWrapper";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 // --- 1. SUPPLEMENTARY DISPLAY DATA ---
 const CONDITION_DESCRIPTIONS = {
@@ -1201,8 +1203,8 @@ const QuestionnairesScreen = () => {
     fadeAnim.setValue(0);
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 400,
-      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      duration: 300,
+      easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
   }, [activeQuestionIndex]);
@@ -1211,7 +1213,7 @@ const QuestionnairesScreen = () => {
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 200,
-      easing: Easing.bezier(0.4, 0.0, 0.6, 1),
+      easing: Easing.in(Easing.ease),
       useNativeDriver: true,
     }).start(() => {
       setActiveQuestionIndex(newIndex);
@@ -1339,7 +1341,10 @@ const QuestionnairesScreen = () => {
             </Text>
           </View>
           <View style={styles.track}>
-            <Animated.View
+            <AnimatedLinearGradient
+              colors={["#c4b5fd", "#7c3aed"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={[
                 styles.fill,
                 {
@@ -1350,12 +1355,26 @@ const QuestionnairesScreen = () => {
                 },
               ]}
             />
+            {/* subtle glow */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.fillGlow,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: ["0%", "100%"],
+                  }),
+                  opacity: progressAnim.interpolate({ inputRange: [0, 100], outputRange: [0, 0.9] }),
+                },
+              ]}
+            />
           </View>
         </View>
 
         {/* Content Area */}
         <View style={styles.fixedCardContainer}>
-          <Animated.View
+          <Animated.View 
             style={[
               styles.cardWrapper,
               {
@@ -1398,15 +1417,22 @@ const QuestionnairesScreen = () => {
           </TouchableOpacity>
 
           {allQuestionsAnswered ? (
-            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-              <Text style={styles.submitText} weight="800">
-                FINISH
-              </Text>
-              <Feather name="check-circle" size={18} color="#fff" />
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.9}>
+              <LinearGradient
+                colors={["#c084fc", "#7c3aed"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitGradient}
+              >
+                <Text style={styles.submitText} weight="800">
+                  FINISH
+                </Text>
+                <Feather name="check-circle" size={18} color="#fff" />
+              </LinearGradient>
             </TouchableOpacity>
           ) : (
             <View style={{ flex: 1 }} />
-          )}
+          )} 
 
           <TouchableOpacity
             onPress={goToNextQuestion}
@@ -1459,14 +1485,9 @@ const OptionItem = ({ option, isSelected, onPress }) => {
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
-        <View
-          style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}
-        >
-          {isSelected && <View style={styles.radioDot} />}
-        </View>
         <Text
           style={[styles.optionText, isSelected && styles.optionTextSelected]}
-          weight={isSelected ? "700" : "500"}
+          weight={isSelected ? "600" : "500"}
           numberOfLines={1}
         >
           {option.text}
@@ -1481,69 +1502,66 @@ export default QuestionnairesScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FDF4FF",
+    backgroundColor: "#FBF7FF",
   },
   // --- HEADER ---
   header: {
     width: "100%",
-    height: 220, // Increased height for better image display
+    height: 230,
     justifyContent: "flex-start",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 34,
+    borderBottomRightRadius: 34,
     overflow: "hidden",
-    // No background color, purely image-based
   },
   headerImageBg: {
     resizeMode: "cover",
     opacity: 1,
   },
   headerSafeArea: {
-    paddingTop: Platform.OS === "android" ? 40 : 50,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "android" ? 40 : 54,
+    paddingHorizontal: 22,
     flex: 1,
   },
   navRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   iconBtn: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    marginRight: 12,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    marginRight: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: 24,
-    color: "#3e1c66", // Dark purple for contrast on light header
-    letterSpacing: 0.5,
+    fontSize: 26,
+    color: "#3b2160",
+    letterSpacing: 0.6,
   },
   headerContentRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    marginTop: 10,
+    marginTop: 8,
     paddingRight: 10,
   },
   illustration: {
-    width: 110,
-    height: 110,
+    width: 120,
+    height: 120,
     resizeMode: "contain",
-    marginRight: 10,
+    marginRight: 12,
   },
   infoBox: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.75)",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.6)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 18,
   },
   infoText: {
     color: "#4a148c",
@@ -1554,20 +1572,20 @@ const styles = StyleSheet.create({
   // --- BODY (Fixed) ---
   bodyContainer: {
     flex: 1,
-    backgroundColor: "#FDF4FF",
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    backgroundColor: "#FBF7FF",
+    paddingHorizontal: 22,
+    paddingTop: 22,
   },
   progressSection: {
-    marginBottom: 15,
+    marginBottom: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
   progressLabelRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    width: 55,
+    width: 60,
   },
   progressText: {
     fontSize: 16,
@@ -1575,19 +1593,27 @@ const styles = StyleSheet.create({
   },
   progressTextTotal: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: "#9aa3bf",
   },
   track: {
     flex: 1,
-    height: 8,
-    backgroundColor: "#E9D5FF",
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: "rgba(124,58,237,0.08)",
+    borderRadius: 6,
     overflow: "hidden",
   },
   fill: {
     height: "100%",
-    backgroundColor: "#7c3aed",
-    borderRadius: 4,
+    borderRadius: 6,
+  },
+  fillGlow: {
+    position: "absolute",
+    height: 10,
+    left: 0,
+    top: -6,
+    borderRadius: 20,
+    backgroundColor: "rgba(124,58,237,0.16)",
+    filter: undefined,
   },
 
   fixedCardContainer: {
@@ -1596,78 +1622,55 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: "100%",
+    overflow: "hidden",
   },
   glassCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: "#4c1d95",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: "#f8fafc",
+    borderRadius: 26,
+    padding: 24,
   },
   questionText: {
-    fontSize: 17,
-    color: "#1e293b",
-    marginBottom: 20,
-    lineHeight: 24,
+    fontSize: 18,
+    color: "#111827",
+    marginBottom: 22,
+    lineHeight: 26,
   },
   optionsContainer: {
-    gap: 12,
+    gap: 14,
   },
   // --- OPTION BUTTONS ---
   optionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#fff",
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    paddingHorizontal: 18,
+    borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: "#e2e8f0",
+    borderColor: "#E8E0F0",
+    shadowColor: "#E8E0F0",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 1,
   },
   optionBtnSelected: {
-    backgroundColor: "#faf5ff",
-    borderColor: "#8b5cf6",
-  },
-  radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#cbd5e1",
-    marginRight: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  radioCircleSelected: {
+    backgroundColor: "#F8F5FF",
     borderColor: "#7c3aed",
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#7c3aed",
+    borderWidth: 2,
   },
   optionText: {
     fontSize: 15,
-    color: "#475569",
-    flex: 1,
+    color: "#1f2937",
   },
   optionTextSelected: {
-    color: "#6d28d9",
-    fontWeight: "700",
+    color: "#4c1d95",
   },
 
   // --- FOOTER ---
   footer: {
-    height: 90,
-    backgroundColor: "#FDF4FF",
+    height: 100,
+    backgroundColor: "#FBF7FF",
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
   },
   footerNavRow: {
     flexDirection: "row",
@@ -1675,42 +1678,53 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   navCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#8b5cf6",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#7c3aed",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#8b5cf6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowColor: "#7c3aed",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 8,
   },
   navCircleDisabled: {
-    backgroundColor: "#cbd5e1",
+    backgroundColor: "#e6e6ea",
     shadowOpacity: 0,
     elevation: 0,
   },
   submitBtn: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "#8b5cf6",
-    height: 50,
-    borderRadius: 25,
+    backgroundColor: "transparent",
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 16,
-    shadowColor: "#8b5cf6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowColor: "#7c3aed",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    elevation: 10,
+  },
+  submitGradient: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 22,
+    height: 56,
+    borderRadius: 28,
+    gap: 8,
   },
   submitText: {
     color: "#fff",
     fontSize: 16,
     letterSpacing: 1,
     marginRight: 8,
+    textTransform: "uppercase",
   },
 });
