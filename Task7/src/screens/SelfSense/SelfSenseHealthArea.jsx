@@ -71,10 +71,10 @@ const GridItem = ({ icon, label, material, id, onPress }) => {
       activeOpacity={0.65}
     >
       <View style={styles.gridIconContainer}>
-        <Image 
-          source={require("../../../assets/HealthIcons.png")} 
-          style={styles.gridIconImage}
-          resizeMode="contain"
+        <MaterialCommunityIcons 
+          name={icon} 
+          size={isTablet ? 28 : moderateScale(24)} 
+          color="#5B3DF5" 
         />
       </View>
       <Text weight="500" style={styles.gridLabel} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>
@@ -246,12 +246,30 @@ export default function SelfSenseHealthArea({ navigation }) {
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
-              { id: "diabetes", label: "Diabetes", icon: "water", material: true },
-              { id: "hypertension", label: "Hypertension", icon: "heart-pulse", material: true },
-              { id: "pcos", label: "PCOS", icon: "gender-female", material: true },
-              { id: "thyroid", label: "Thyroid", icon: "butterfly-outline", material: true },
-              { id: "heart", label: "Heart Health", icon: "heart", material: true },
-              { id: "obesity", label: "Obesity", icon: "scale-bathroom", material: true },
+              {
+                id: "diabetes_pre-diabetes",
+                label: "Diabetes & Pre Diabetes",
+                icon: "water",
+                material: true,
+              },
+              {
+                id: "hypertension",
+                label: "Hypertension",
+                icon: "heart-pulse",
+                material: true,
+              },
+              {
+                id: "obesity",
+                label: "Obesity",
+                icon: "scale-bathroom",
+                material: true,
+              },
+              {
+                id: "pcod_pcos",
+                label: "PCOD / PCOS",
+                icon: "record-circle-outline",
+                material: true,
+              },
             ]}
           />
 
@@ -266,12 +284,36 @@ export default function SelfSenseHealthArea({ navigation }) {
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
-              { id: "breast_cancer", label: "Breast Cancer", icon: "ribbon", material: true },
-              { id: "lung_cancer", label: "Lung Cancer", icon: "lungs", material: true },
-              { id: "oral_cancer", label: "Oral Cancer", icon: "tooth-outline", material: true },
-              { id: "skin_cancer", label: "Skin Cancer", icon: "circle-outline", material: true },
-              { id: "prostate_cancer", label: "Prostate Cancer", icon: "human-male", material: true },
-              { id: "colon_cancer", label: "Colon Cancer", icon: "stomach", material: true },
+              {
+                id: "breast_cancer",
+                label: "Breast",
+                icon: "ribbon",
+                material: true,
+              },
+              {
+                id: "cervical_cancer",
+                label: "Cervical",
+                icon: "human-female",
+                material: true,
+              },
+              {
+                id: "oral_cancer",
+                label: "Oral",
+                icon: "tooth-outline",
+                material: true,
+              },
+              {
+                id: "prostate_cancer",
+                label: "Prostate",
+                icon: "human-male",
+                material: true,
+              },
+              {
+                id: "colonrectal_cancer",
+                label: "Colorectal",
+                icon: "record-circle",
+                material: true,
+              },
             ]}
           />
 
@@ -286,12 +328,12 @@ export default function SelfSenseHealthArea({ navigation }) {
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
-              { id: "stress", label: "Stress", icon: "brain", material: true },
-              { id: "anxiety", label: "Anxiety", icon: "emoticon-sad-outline", material: true },
-              { id: "sleep", label: "Sleep Health", icon: "sleep", material: true },
-              { id: "burnout", label: "Burnout", icon: "fire", material: true },
-              { id: "mood", label: "Mood", icon: "emoticon-happy-outline", material: true },
-              { id: "focus", label: "Focus & Attention", icon: "bullseye-arrow", material: true },
+              {
+                id: "stress",
+                label: "Mental Wellbeing",
+                icon: "brain",
+                material: true,
+              },
             ]}
           />
 
@@ -306,12 +348,12 @@ export default function SelfSenseHealthArea({ navigation }) {
             onToggle={toggleCard}
             onItemPress={handleConditionSelect}
             items={[
-              { id: "vision", label: "Vision", icon: "eye-outline", material: true },
-              { id: "hearing", label: "Hearing", icon: "ear-hearing", material: true },
-              { id: "tinnitus", label: "Tinnitus", icon: "volume-high", material: true },
-              { id: "smell", label: "Smell", icon: "scent", material: true },
-              { id: "taste", label: "Taste", icon: "food-apple-outline", material: true },
-              { id: "touch", label: "Touch", icon: "hand-back-left-outline", material: true },
+              {
+                id: "hearing",
+                label: "Audiogram",
+                icon: "ear-hearing",
+                material: true,
+              },
             ]}
           />
         </View>
@@ -324,7 +366,7 @@ export default function SelfSenseHealthArea({ navigation }) {
         <View style={styles.navbarBackground} />
         
         <View style={styles.navbarContent}>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('SelfSense')}>
             <View style={styles.navIconWrapper}>
               <MaterialCommunityIcons name="undo-variant" size={24} color="#8E8E93" />
             </View>
@@ -335,19 +377,19 @@ export default function SelfSenseHealthArea({ navigation }) {
             <View style={styles.navIconWrapper}>
               <View style={styles.dotsGrid}>
                 <View style={styles.dotRow}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
+                  <View style={[styles.dot, styles.dotActive]} />
+                  <View style={[styles.dot, styles.dotActive]} />
                 </View>
                 <View style={styles.dotRow}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
+                  <View style={[styles.dot, styles.dotActive]} />
+                  <View style={[styles.dot, styles.dotActive]} />
                 </View>
               </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Self Checks</Text>
+            <Text weight="600" style={styles.navLabelActive}>Self Checks</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItemCenter}>
+          <TouchableOpacity style={styles.navItemCenter} onPress={() => navigation.navigate('SelfSenseHealthArea')}>
             <View style={styles.navCenterIconOuter}>
               <LinearGradient
                 colors={["#E0C3FC", "#8EC5FC"]}
@@ -374,10 +416,10 @@ export default function SelfSenseHealthArea({ navigation }) {
                 </View>
               </LinearGradient>
             </View>
-            <Text weight="600" style={styles.navLabelActive}>Speciality</Text>
+            <Text weight="500" style={styles.navLabelActive}>Speciality</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('AssessmentHistory')}>
             <View style={styles.navIconWrapper}>
               <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#8E8E93" />
             </View>
@@ -507,27 +549,20 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     marginTop: verticalScale(18),
     paddingHorizontal: moderateScale(8),
-    gap: isTablet ? 12 : moderateScale(10),
+    gap: isTablet ? 16 : moderateScale(12),
     overflow: "hidden",
   },
   gridItem: {
     width: isTablet ? "30%" : "30%",
-    backgroundColor: "#F8F5FC",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: verticalScale(12),
+    marginBottom: verticalScale(8),
     minWidth: isTablet ? 100 : "auto",
-    paddingVertical: moderateScale(16),
-    paddingHorizontal: moderateScale(8),
-    borderRadius: moderateScale(16),
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(4),
   },
   gridIconContainer: {
     width: isTablet ? 52 : moderateScale(46),
@@ -535,7 +570,7 @@ const styles = StyleSheet.create({
     borderRadius: isTablet ? 26 : moderateScale(23),
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(6),
     backgroundColor: "#F0E6FF",
   },
   gridIconImage: {
@@ -568,6 +603,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.2,
   },
+  // Bottom Navigation Styles
   bottomNav: {
     position: "absolute",
     bottom: 0,
@@ -662,6 +698,9 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(2.5),
     backgroundColor: "#8E8E93",
   },
+  dotActive: {
+    backgroundColor: "#5B3DF5",
+  },
   specialityIcon: {
     alignItems: "center",
     justifyContent: "center",
@@ -690,7 +729,7 @@ const styles = StyleSheet.create({
   navLabelActive: {
     fontSize: moderateScale(9),
     color: "#5B3DF5",
-    marginTop: moderateScale(3),
+    marginTop: moderateScale(4),
     fontWeight: "600",
   },
 });

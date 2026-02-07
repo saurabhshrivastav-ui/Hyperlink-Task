@@ -19,7 +19,7 @@ const ConsultWarningCard = ({
       {/* Top Row - Warning and Text */}
       <View style={styles.topRow}>
         <View style={styles.warningIconContainer}>
-          <MaterialIcons name="warning" size={16} color="#FF9F43" />
+          <MaterialIcons name="warning-amber" size={18} color="#F59E0B" />
         </View>
         <Text weight="500" style={styles.warningText}>
           This is not a diagnostic tool. For urgent concerns,{"\n"}please consult
@@ -76,30 +76,32 @@ const ConsultWarningCard = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFFFFF",
-    borderRadius: moderateScale(12),
-    paddingVertical: isTablet ? 12 : moderateScale(10),
-    paddingHorizontal: isTablet ? 14 : moderateScale(12),
+    borderRadius: moderateScale(14),
+    paddingVertical: isTablet ? 14 : moderateScale(12),
+    paddingHorizontal: isTablet ? 16 : moderateScale(14),
     borderWidth: 1,
-    borderColor: "rgba(74,143,231,0.08)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
+    borderColor: "rgba(245,158,11,0.12)",
+    shadowColor: "rgba(37,0,84,0.10)",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: moderateScale(10),
+    marginBottom: moderateScale(12),
   },
   warningIconContainer: {
-    marginRight: moderateScale(8),
-    backgroundColor: "#FFF3E0",
-    borderRadius: moderateScale(6),
-    width: moderateScale(24),
-    height: moderateScale(24),
+    marginRight: moderateScale(10),
+    backgroundColor: "#FEF3C7",
+    borderRadius: moderateScale(10),
+    width: moderateScale(32),
+    height: moderateScale(32),
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(245,158,11,0.15)",
   },
   warningText: {
     fontSize: isTablet ? 11 : moderateScale(10),

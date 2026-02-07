@@ -45,16 +45,26 @@ const COLORS = {
 export default function SelfSense({ navigation }) {
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with Background Image - Extended */}
+        {/* Header Section */}
         <View style={styles.headerImageContainer}>
-          <Image
-            source={require("../../../assets/Header.png")}
-            style={styles.headerBackgroundImage}
-            resizeMode="cover"
+          {/* header-only background — using your gradient (+ slightly darker for contrast) */}
+          <LinearGradient
+            // original: linear-gradient(112.54deg, rgba(228, 204, 247, 0.6) 2.07%, rgba(255, 233, 207, 0.6) 97.93%)
+            // converted & darkened: increased saturation and opacity for better contrast on mobile
+            colors={[
+              "rgba(196,170,230,0.78)", // darker version of rgba(228,204,247,0.6)
+              "rgba(245,205,175,0.78)", // darker version of rgba(255,233,207,0.6)
+            ]}
+            locations={[0.0207, 0.9793]}
+            /* approximate 112.54deg direction */
+            start={{ x: 0.12, y: 0.02 }}
+            end={{ x: 0.88, y: 0.98 }}
+            style={styles.headerGradient}
           />
+
           <SafeAreaView style={styles.header}>
             <TouchableOpacity
               onPress={() => {
@@ -304,7 +314,7 @@ export default function SelfSense({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: "#FDF4FF", /* page background — gradient only in header now */
   },
   headerImageContainer: {
     position: "relative",
@@ -313,12 +323,24 @@ const styles = StyleSheet.create({
     overflow: "visible",
     paddingBottom: verticalScale(30),
   },
-  headerBackgroundImage: {
+  /* gradient restricted to header only */
+  headerGradient: {
     position: "absolute",
-    width: "100%",
-    height: "100%",
     top: 0,
     left: 0,
+    right: 0,
+    height: isTablet ? verticalScale(460) : verticalScale(380),
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    zIndex: 0,
+    borderWidth: 1.5,
+    borderColor: "rgba(120,78,200,0.32)", /* slightly darker border */
+    shadowColor: "rgba(96,52,170,0.18)",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    elevation: 8,
+    overflow: "hidden",
   },
   header: {
     flexDirection: "row",
@@ -329,6 +351,7 @@ const styles = StyleSheet.create({
     maxWidth: isDesktop ? 1200 : "100%",
     width: "100%",
     alignSelf: "center",
+    zIndex: 2,
   },
   backButton: {
     width: moderateScale(40),
@@ -339,7 +362,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: isTablet ? 24 : isDesktop ? 26 : moderateScale(20),
-    color: "#30179F",
+    color: "#24106B", /* darker purple for better contrast */
     letterSpacing: 0.3,
   },
   content: {
@@ -351,11 +374,13 @@ const styles = StyleSheet.create({
   heroSectionInHeader: {
     marginTop: verticalScale(8),
     position: "relative",
-    minHeight: isTablet ? 320 : verticalScale(220),
+    minHeight: isTablet ? 320 : verticalScale(200),
     flexDirection: isTablet ? "row" : "column",
     alignItems: isTablet ? "center" : "flex-start",
     paddingHorizontal: isTablet ? 32 : isDesktop ? 48 : 20,
-    paddingBottom: verticalScale(60),
+    paddingBottom: verticalScale(40),
+    zIndex: 2,
+    overflow: "visible",
   },
   heroSection: {
     marginTop: verticalScale(-30),
@@ -371,11 +396,11 @@ const styles = StyleSheet.create({
     paddingTop: verticalScale(5),
   },
   heroTitle: {
-    fontSize: 14,
-    color: "#30179F",
-    lineHeight: 18,
+    fontSize: isTablet ? 18 : 16,
+    color: "#24106B", /* darker and slightly larger */
+    lineHeight: 22,
     fontWeight: "700",
-    marginBottom: 1,
+    marginBottom: 4,
   },
   heroDescription: {
     fontSize: isTablet ? 15 : isDesktop ? 16 : moderateScale(12),
@@ -387,8 +412,13 @@ const styles = StyleSheet.create({
   startCheckButtonContainer: {
     marginTop: verticalScale(12),
     alignSelf: "flex-start",
-    borderRadius: 8,
+    borderRadius: 10,
     overflow: "hidden",
+    shadowColor: "rgba(124,58,237,0.24)",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.28,
+    shadowRadius: 22,
+    elevation: 10,
   },
   startCheckButton: {
     flexDirection: "row",
@@ -411,25 +441,29 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   heroImage: {
-    position: isTablet ? "relative" : "absolute",
-    right: isTablet ? 0 : -10,
-    top: isTablet ? 0 : verticalScale(-25),
-    width: isTablet ? "50%" : width * 0.58,
-    height: isTablet ? 360 : width * 0.62,
+    position: "absolute",
+    /* place the illustration on right side, bottom overlaps card */
+    right: isTablet ? 20 : 0,
+    top: isTablet ? 20 : verticalScale(10),
+    width: isTablet ? "50%" : width * 0.55,
+    height: isTablet ? 320 : verticalScale(210),
     resizeMode: "contain",
-    zIndex: 5,
+    zIndex: 40, /* ensure it's above the consult card */
+    elevation: 22,
   },
   warningBannerContainer: {
-    backgroundColor: "#FBF1FE",
-    borderRadius: moderateScale(14),
-    padding: isTablet ? 16 : moderateScale(13),
-    marginTop: verticalScale(-25),
-    marginHorizontal: isTablet ? 32 : isDesktop ? 48 : 18,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: "#FBF1FE", /* light purple background */
+    borderRadius: moderateScale(16),
+    padding: isTablet ? 16 : moderateScale(14),
+    marginTop: isTablet ? verticalScale(12) : -verticalScale(6), /* pull card up slightly */
+    marginHorizontal: isTablet ? 32 : isDesktop ? 48 : 16,
+    shadowColor: "rgba(245,158,11,0.15)",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(245,158,11,0.08)",
     zIndex: 10,
   },
   warningBanner: {

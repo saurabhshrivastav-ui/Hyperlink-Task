@@ -224,11 +224,13 @@ const PersonalDetails = () => {
       contentContainerStyle={{ paddingBottom: 60 }}
     >
       {/* Header Section */}
-      <ImageBackground
-        source={require("../../../assets/Head.png")}
-        style={styles.heroContainer}
-        imageStyle={styles.headerBgImage}
-      >
+      <View style={styles.heroContainer}>
+        <LinearGradient
+          colors={["rgba(228, 204, 247, 0.6)", "rgba(255, 233, 207, 0.6)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.4 }}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.heroTopBar}>
           <TouchableOpacity
             style={styles.backButton}
@@ -299,7 +301,7 @@ const PersonalDetails = () => {
             </Text>
           </View>
         </View>
-      </ImageBackground>
+      </View>
 
       {/* Personal Details Section */}
       <View style={styles.detailsContainer}>

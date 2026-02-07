@@ -23,26 +23,23 @@ const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 // --- 1. SUPPLEMENTARY DISPLAY DATA ---
 const CONDITION_DESCRIPTIONS = {
-  diabetes: "Monitoring blood sugar and lifestyle choices are key.",
+  "diabetes_pre-diabetes": "Assess risks for Diabetes, BP, Thyroid, and heart health.",
   hypertension: "Regular checks help prevent heart disease.",
-  pcos: "Early diagnosis helps management of hormone levels.",
-  thyroid: "Monitor metabolism and energy levels regularly.",
-  heart: "Diet, exercise, and stress management are vital.",
   obesity: "Weight management reduces long-term health risks.",
-  breast_cancer: "Regular self-exams are crucial for early detection.",
-  lung_cancer: "Avoid tobacco and pollutants to protect lungs.",
+  "pcod_pcos": "Early diagnosis helps management of hormone levels.",
+  breast_cancer: "Guidance on self-checks for breast, oral, and lung health.",
+  cervical_cancer: "Regular screening is crucial for early detection.",
   oral_cancer: "Early detection of sores improves outcomes.",
-  skin_cancer: "Protect skin from UV rays and check moles.",
   prostate_cancer: "Screening is important for men over 50.",
-  colon_cancer: "Monitor bowel habits and screen regularly.",
-  stress: "Finding balance is key to mental health.",
+  colonrectal_cancer: "Monitor bowel habits and screen regularly.",
+  stress: "Track stress, anxiety levels, and burnout symptoms.",
   anxiety: "Anxiety is manageable with support and therapy.",
   sleep: "Quality sleep is essential for immune function.",
   burnout: "Rest and boundaries are necessary.",
   mood: "Tracking mood helps identify patterns.",
   focus: "Limit distractions to improve productivity.",
   vision: "Regular eye exams prevent strain.",
-  hearing: "Protect ears from loud noise.",
+  hearing: "Check for hearing loss, tinnitus, and eye strain.",
   tinnitus: "Manage stress to reduce ringing impact.",
   smell: "Loss of smell can indicate sinus issues.",
   taste: "Taste changes can be linked to nutrition.",
@@ -56,47 +53,143 @@ const HEALTH_DATA = {
       category: "Chronic Condition",
       conditions: [
         {
-          id: "diabetes",
-          name: "Diabetes",
+          id: "diabetes_pre-diabetes",
+          name: "Diabetes & Pre Diabetes",
+
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "Low cumulative risk score",
+              result_content: "Annual screening recommended",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "Moderate cumulative risk score",
+              result_content:
+                "Blood sugar testing every 6 months + lifestyle modification",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "High cumulative risk score",
+              result_content:
+                "Immediate fasting glucose / HbA1c testing + intensive lifestyle intervention",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text: "Do you have a family history of Type 2 Diabetes?",
+              question_text: "Body Mass Index (BMI)",
               options: [
-                { text: "Yes, immediate family", score: 10 },
-                { text: "Yes, extended family", score: 5 },
-                { text: "No known history", score: 0 },
-                { text: "Not sure", score: 2 },
+                { text: "Normal", score: 0 },
+                { text: "Overweight", score: 5 },
+                { text: "Obese", score: 10 },
               ],
             },
             {
               id: 2,
-              question_text:
-                "Have you ever been diagnosed with high blood sugar?",
+              question_text: "Waist Circumference",
               options: [
-                { text: "Yes, diagnosed", score: 10 },
-                { text: "No, never", score: 0 },
-                { text: "Not sure", score: 5 },
+                { text: "Normal", score: 0 },
+                { text: "Increased", score: 7 },
               ],
             },
             {
               id: 3,
-              question_text: "How often do you exercise?",
+              question_text: "Physical Activity Level",
               options: [
-                { text: "Daily", score: 0 },
-                { text: "3–5 times a week", score: 3 },
-                { text: "Rarely", score: 7 },
-                { text: "Never", score: 10 },
+                { text: "> 30 minutes daily", score: 0 },
+                { text: "< 30 minutes daily", score: 5 },
+                { text: "Sedentary (little to no activity)", score: 10 },
               ],
             },
             {
               id: 4,
-              question_text: "Do you experience frequent thirst or urination?",
+              question_text: "Family History of Diabetes",
               options: [
-                { text: "Yes, often", score: 10 },
-                { text: "Sometimes", score: 5 },
+                { text: "None", score: 0 },
+                { text: "One parent", score: 5 },
+                { text: "Both parents", score: 10 },
+              ],
+            },
+            {
+              id: 5,
+              question_text:
+                "Have you ever been told you have high blood sugar or prediabetes?",
+              options: [
+                { text: "Yes", score: 10 },
                 { text: "No", score: 0 },
-                { text: "Not sure", score: 2 },
+              ],
+            },
+            {
+              id: 6,
+              question_text: "Do you have high blood pressure?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+                { text: "Don't know", score: 3 },
+              ],
+            },
+            {
+              id: 7,
+              question_text: "Diet Pattern",
+              options: [
+                { text: "Balanced diet", score: 0 },
+                { text: "High refined carbs / sugary foods", score: 7 },
+              ],
+            },
+            {
+              id: 8,
+              question_text: "History of Gestational Diabetes (for women only)",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+                { text: "Not applicable", score: 0 },
+              ],
+            },
+            {
+              id: 9,
+              question_text:
+                "Do you experience frequent thirst or excessive urination?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 10,
+              question_text: "Do you feel persistent or unexplained fatigue?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 11,
+              question_text:
+                "Have you noticed unexplained weight loss or weight gain?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 12,
+              question_text: "Alcohol Consumption",
+              options: [
+                { text: "None", score: 0 },
+                { text: "Occasional", score: 3 },
+                { text: "Regular", score: 7 },
+              ],
+            },
+            {
+              id: 13,
+              question_text: "Do you smoke or use tobacco products?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
               ],
             },
           ],
@@ -104,177 +197,134 @@ const HEALTH_DATA = {
         {
           id: "hypertension",
           name: "Hypertension",
+
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "Low cumulative risk score",
+              result_content:
+                "Estimated less than 10% risk over the next 10 years. Continue healthy lifestyle practices and routine blood pressure monitoring.",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "Moderate cumulative risk score",
+              result_content:
+                "Approximately 4× higher odds of developing hypertension. Lifestyle modification and periodic blood pressure checks are strongly recommended.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "High cumulative risk score",
+              result_content:
+                "Approximately 11× higher risk of hypertension. A physician evaluation is advised within the next 7–10 days for further assessment and management.",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text:
-                "Is your blood pressure consistently above 120/80?",
+              question_text: "Body Mass Index (BMI)",
               options: [
-                { text: "Yes", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "No", score: 0 },
-                { text: "I don't check", score: 3 },
+                { text: "Normal", score: 0 },
+                { text: "Overweight", score: 5 },
+                { text: "Obese", score: 10 },
               ],
             },
+
             {
               id: 2,
-              question_text:
-                "Do you consume high-salt or processed foods often?",
+              question_text: "Waist circumference",
               options: [
-                { text: "Daily", score: 10 },
-                { text: "Occasionally", score: 5 },
-                { text: "Rarely", score: 0 },
+                { text: "Normal", score: 0 },
+                { text: "Increased", score: 7 },
               ],
             },
+
             {
               id: 3,
-              question_text: "Do you have a family history of High BP?",
+              question_text: "Family history of hypertension",
               options: [
-                { text: "Yes, immediate family", score: 10 },
-                { text: "Yes, extended family", score: 5 },
+                { text: "Yes", score: 7 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 4,
-              question_text:
-                "Do you experience frequent headaches or dizzy spells?",
-              options: [
-                { text: "Yes, frequently", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-          ],
-        },
-        {
-          id: "pcos",
-          name: "PCOS",
-          questions: [
-            {
-              id: 1,
-              question_text: "Do you experience irregular periods?",
-              options: [
-                { text: "Yes, frequently", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 2,
-              question_text:
-                "Have you noticed excess facial/body hair or acne?",
-              options: [
-                { text: "Yes, significant", score: 10 },
-                { text: "Mild", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 3,
-              question_text: "Do you struggle with unexplained weight gain?",
+              question_text: "Do you have diabetes or pre-diabetes?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Somewhat", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
-              id: 4,
-              question_text: "Is there a family history of PCOS?",
+              id: 5,
+              question_text: "Known cholesterol abnormality",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+                { text: "Don't know", score: 3 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text: "Salt consumption",
+              options: [
+                { text: "Low", score: 0 },
+                { text: "Moderate", score: 3 },
+                { text: "High", score: 7 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text: "Physical activity",
+              options: [
+                { text: "Regular", score: 0 },
+                { text: "Occasional", score: 5 },
+                { text: "None", score: 10 },
+              ],
+            },
+
+            {
+              id: 8,
+              question_text: "Alcohol intake",
+              options: [
+                { text: "None", score: 0 },
+                { text: "Occasional", score: 3 },
+                { text: "Regular", score: 7 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text: "Smoking history",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text: "History of cardiovascular disease",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Not sure", score: 2 },
                 { text: "No", score: 0 },
               ],
             },
-          ],
-        },
-        {
-          id: "thyroid",
-          name: "Thyroid",
-          questions: [
+
             {
-              id: 1,
-              question_text:
-                "Do you experience unexplained fatigue or weakness?",
+              id: 11,
+              question_text: "Known systolic blood pressure",
               options: [
-                { text: "Yes, constantly", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 2,
-              question_text:
-                "Have you noticed sudden weight changes (gain or loss)?",
-              options: [
-                { text: "Yes, significant", score: 10 },
-                { text: "Mild", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 3,
-              question_text: "Do you have sensitivity to cold or heat?",
-              options: [
-                { text: "Yes, very sensitive", score: 10 },
-                { text: "Somewhat", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 4,
-              question_text: "Is there a family history of Thyroid disorders?",
-              options: [
-                { text: "Yes", score: 10 },
-                { text: "Not sure", score: 2 },
-                { text: "No", score: 0 },
-              ],
-            },
-          ],
-        },
-        {
-          id: "heart",
-          name: "Heart Health",
-          questions: [
-            {
-              id: 1,
-              question_text:
-                "Do you experience chest pain or shortness of breath?",
-              options: [
-                { text: "Yes, often", score: 10 },
-                { text: "Only with exertion", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 2,
-              question_text: "Do you have high cholesterol levels?",
-              options: [
-                { text: "Yes, diagnosed", score: 10 },
+                { text: "Normal", score: 0 },
                 { text: "Borderline", score: 5 },
-                { text: "No", score: 0 },
-                { text: "Not sure", score: 2 },
-              ],
-            },
-            {
-              id: 3,
-              question_text:
-                "Do you smoke or have family history of heart disease?",
-              options: [
-                { text: "Yes, both/either", score: 10 },
-                { text: "Used to smoke", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 4,
-              question_text: "How would you rate your diet?",
-              options: [
-                { text: "High fat/sugar", score: 10 },
-                { text: "Average", score: 5 },
-                { text: "Healthy", score: 0 },
+                { text: "High", score: 10 },
+                { text: "Not checked", score: 3 },
               ],
             },
           ],
@@ -282,41 +332,313 @@ const HEALTH_DATA = {
         {
           id: "obesity",
           name: "Obesity",
+
+          risk_copy: {
+            category_1: {
+              label: "CATEGORY 1 – PREVENTION FOCUS",
+              range: "BMI < 25",
+              result_content:
+                "Your BMI is within the healthy range. Focus on prevention by maintaining balanced nutrition, regular physical activity, adequate sleep, and periodic health monitoring to sustain long-term metabolic well-being.",
+            },
+
+            category_2: {
+              label: "CATEGORY 2 – INTENSIVE LIFESTYLE INTERVENTION",
+              range: "BMI 25 – 29.9",
+              result_content:
+                "Your BMI falls in the overweight range. Intensive lifestyle intervention is recommended, including structured dietary planning, increased physical activity, portion control, and behavior modification to prevent progression to obesity and related health conditions.",
+            },
+
+            category_3: {
+              label: "CATEGORY 3 – STRUCTURED WEIGHT MANAGEMENT PROGRAM",
+              range: "BMI ≥ 30",
+              result_content:
+                "Your BMI indicates obesity. Enrollment in a structured weight management program is strongly advised, involving personalized nutrition guidance, physical activity planning, behavioral therapy, and regular progress tracking.",
+            },
+
+            category_4: {
+              label: "CATEGORY 4 – MEDICAL INTERVENTION ADVISED",
+              range: "BMI ≥ 30 with comorbidities",
+              result_content:
+                "Your BMI combined with obesity-related comorbidities (such as diabetes, hypertension, or dyslipidemia) suggests the need for medical intervention. Physician-guided management, including pharmacotherapy and closer clinical monitoring, may be required.",
+            },
+
+            category_5: {
+              label: "CATEGORY 5 – MULTIDISCIPLINARY TREATMENT",
+              range: "BMI ≥ 40",
+              result_content:
+                "Your BMI indicates severe obesity. A comprehensive, multidisciplinary treatment approach is recommended, involving medical specialists, dietitians, behavioral health professionals, and consideration of advanced interventions to achieve sustainable and safe weight reduction.",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text: "Is your BMI over 30?",
+              question_text: "Current Body Mass Index (BMI)",
               options: [
-                { text: "Yes", score: 10 },
-                { text: "Overweight (25-30)", score: 5 },
-                { text: "No / Normal", score: 0 },
-                { text: "Not sure", score: 2 },
+                { text: "< 25", score: 0 },
+                { text: "25 – 29.9", score: 5 },
+                { text: "≥ 30", score: 10 },
               ],
             },
             {
               id: 2,
-              question_text: "Do you have difficulty with physical movement?",
+              question_text: "Progressive weight gain in the last 1 year",
               options: [
-                { text: "Yes, significant", score: 10 },
-                { text: "Mild difficulty", score: 5 },
+                { text: "Yes", score: 7 },
                 { text: "No", score: 0 },
               ],
             },
             {
               id: 3,
-              question_text: "Do you eat large portions or snack frequently?",
+              question_text: "Eating pattern",
               options: [
-                { text: "Yes, frequently", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "No", score: 0 },
+                { text: "Regular", score: 0 },
+                { text: "Irregular", score: 5 },
               ],
             },
             {
               id: 4,
-              question_text: "Is there a family history of obesity?",
+              question_text: "Processed food / sugar intake",
               options: [
-                { text: "Yes, immediate family", score: 10 },
-                { text: "Extended family", score: 5 },
+                { text: "Low", score: 0 },
+                { text: "Moderate", score: 3 },
+                { text: "High", score: 7 },
+              ],
+            },
+            {
+              id: 5,
+              question_text: "Portion control",
+              options: [
+                { text: "Good", score: 0 },
+                { text: "Poor", score: 7 },
+              ],
+            },
+            {
+              id: 6,
+              question_text: "Physical activity level",
+              options: [
+                { text: "Regular", score: 0 },
+                { text: "Occasional", score: 5 },
+                { text: "None", score: 10 },
+              ],
+            },
+            {
+              id: 7,
+              question_text:
+                "Do you have weight-related conditions such as high blood pressure or diabetes?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 8,
+              question_text: "Previous weight-loss attempts",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 9,
+              question_text:
+                "Do you experience emotional or stress-related eating?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+              ],
+            },
+            {
+              id: 10,
+              question_text: "Your confidence in losing weight",
+              options: [
+                { text: "High", score: 0 },
+                { text: "Moderate", score: 3 },
+                { text: "Low", score: 7 },
+              ],
+            },
+            {
+              id: 11,
+              question_text:
+                "Impact of weight on your quality of life (mobility, energy, self-confidence)",
+              options: [
+                { text: "Minimal", score: 0 },
+                { text: "Moderate", score: 5 },
+                { text: "Severe", score: 10 },
+              ],
+            },
+            {
+              id: 12,
+              question_text:
+                "Do you believe your health and quality of life will improve with weight loss?",
+              options: [
+                { text: "Yes", score: 0 },
+                { text: "No", score: 5 },
+              ],
+            },
+            {
+              id: 13,
+              question_text: "Readiness for lifestyle change",
+              options: [
+                { text: "Ready", score: 0 },
+                { text: "Unsure", score: 3 },
+                { text: "Not ready", score: 7 },
+              ],
+            },
+          ],
+        },
+
+        {
+          id: "pcod_pcos",
+          name: "PCOD / PCOS",
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "Low cumulative risk score",
+              result_content:
+                "Your responses suggest a low risk for PCOD/PCOS at present. Continue routine annual monitoring and maintain a balanced lifestyle to support hormonal health.",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "Moderate cumulative risk score",
+              result_content:
+                "Your responses indicate moderate risk features suggestive of PCOD/PCOS. A gynecological or endocrine evaluation is recommended within the next 3 months for further assessment and guidance.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "High cumulative risk score",
+              result_content:
+                "Your responses indicate a high likelihood of PCOD/PCOS. An urgent pelvic ultrasound and hormonal evaluation are advised within the next 1 week to confirm diagnosis and initiate appropriate management.",
+            },
+          },
+          questions: [
+            {
+              id: 1,
+              question_text: "Menstrual cycle regularity",
+              options: [
+                { text: "Regular", score: 0 },
+                { text: "Irregular", score: 10 },
+              ],
+            },
+
+            {
+              id: 2,
+              question_text: "Typical cycle length",
+              options: [
+                { text: "< 35 days", score: 0 },
+                { text: "≥ 35 days", score: 7 },
+              ],
+            },
+
+            {
+              id: 3,
+              question_text: "Heavy menstrual bleeding",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 4,
+              question_text: "Excess facial or body hair (hirsutism)",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 5,
+              question_text: "Hair thinning or scalp hair loss",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text: "Moderate to severe acne",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text: "Darkened skin patches (acanthosis nigricans)",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 8,
+              question_text: "Body Mass Index (BMI)",
+              options: [
+                { text: "Normal", score: 0 },
+                { text: "Overweight", score: 5 },
+                { text: "Obese", score: 10 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text: "Weight gain mainly around the abdomen",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text: "Difficulty conceiving",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+                { text: "Not applicable", score: 0 },
+              ],
+            },
+
+            {
+              id: 11,
+              question_text: "Family history of PCOS",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 12,
+              question_text: "Known insulin resistance",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "No", score: 0 },
+                { text: "Don't know", score: 5 },
+              ],
+            },
+
+            {
+              id: 13,
+              question_text: "Mood swings or anxiety",
+              options: [
+                { text: "Yes", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 14,
+              question_text: "Previous diagnosis of PCOS",
+              options: [
+                { text: "Yes", score: 15 },
                 { text: "No", score: 0 },
               ],
             },
@@ -332,87 +654,351 @@ const HEALTH_DATA = {
         {
           id: "breast_cancer",
           name: "Breast Cancer",
+
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "0–3 positive responses",
+              result_content:
+                "Based on your responses, you currently show minimal concerning signs. Continue monthly breast self-awareness and annual clinical breast examination from age 40 (or earlier if there is a family history).",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "4–7 positive responses",
+              result_content:
+                "Your responses indicate some concerning changes. Please schedule a clinical breast examination within the next 2 weeks. Diagnostic imaging may be advised based on clinical findings.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "8 or more positive responses",
+              result_content:
+                "Your responses indicate multiple concerning signs requiring immediate medical attention. Please consult a breast specialist within the next 7 days. Early detection is associated with greater than 95% survival.",
+            },
+          },
+
           questions: [
             {
               id: 1,
               question_text:
-                "Have you noticed any lumps in the breast/underarm?",
+                "Have you noticed a new lump or thickening in your breast or armpit in the past month?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Not sure", score: 5 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 2,
-              question_text: "Is there a family history of breast cancer?",
+              question_text:
+                "Have you observed any change in the size or shape of your breast?",
               options: [
-                { text: "Yes, mother/sister", score: 10 },
-                { text: "Yes, extended family", score: 5 },
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 3,
-              question_text: "Have you noticed skin changes or discharge?",
+              question_text:
+                "Have you noticed skin dimpling, puckering, or an orange-peel appearance?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Slight changes", score: 5 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 4,
-              question_text: "Do you perform regular self-exams?",
+              question_text:
+                "Have you noticed any change in nipple position, inversion, or direction?",
               options: [
-                { text: "No / Never", score: 10 },
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 5,
+              question_text:
+                "Do you have any nipple discharge when not breastfeeding?",
+              options: [
+                { text: "No", score: 0 },
+                { text: "Yes – clear", score: 3 },
+                { text: "Yes – other", score: 5 },
+                { text: "Yes – bloody", score: 10 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text:
+                "Have you experienced redness, scaling, or rash on the breast or nipple?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text:
+                "Do you experience persistent pain in the breast or armpit?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "Unsure", score: 2 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 8,
+              question_text:
+                "Have you noticed swelling of part or all of the breast without a distinct lump?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text:
+                "Do both breasts look symmetrical when you raise your arms?",
+              options: [
+                { text: "Yes", score: 0 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 7 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text:
+                "Do you have a first-degree relative (mother, sister, daughter) with breast cancer?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Don't know", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 11,
+              question_text: "Age at first menstruation",
+              options: [
+                { text: "Before 12", score: 5 },
+                { text: "12 – 14", score: 2 },
+                { text: "After 14", score: 0 },
+                { text: "Don't remember", score: 2 },
+              ],
+            },
+
+            {
+              id: 12,
+              question_text:
+                "Have you ever had a breast biopsy or breast abnormality diagnosed before?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Don't know", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 13,
+              question_text:
+                "Do you consume alcohol regularly (more than 1 drink per day)?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 14,
+              question_text:
+                "How often do you perform breast self-awareness checks?",
+              options: [
+                { text: "Monthly", score: 0 },
+                { text: "Occasionally", score: 3 },
                 { text: "Rarely", score: 5 },
-                { text: "Yes, monthly", score: 0 },
+                { text: "Never", score: 7 },
               ],
             },
           ],
         },
         {
-          id: "lung_cancer",
-          name: "Lung Cancer",
+          id: "cervical_cancer",
+          name: "Cervical Cancer",
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "0–3 positive responses",
+              result_content:
+                "Low immediate concern. Maintain routine cervical screening as per age recommendations. HPV testing every 5 years or Pap test every 3 years is advised.",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "4–6 positive responses",
+              result_content:
+                "Risk factors are present. Please schedule a cervical screening examination within the next 4–6 weeks for further evaluation.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "7 or more positive responses",
+              result_content:
+                "Concerning symptoms have been detected. Consult a gynecologist within the next 1–2 weeks for prompt assessment. Early detection is associated with approximately 92% survival.",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you currently smoke or have a history of smoking?",
+              question_text: "When was your last Pap smear or HPV test?",
               options: [
-                { text: "Yes, current smoker", score: 10 },
-                { text: "Ex-smoker", score: 5 },
-                { text: "No", score: 0 },
+                { text: "Less than 3 years", score: 0 },
+                { text: "3–5 years", score: 3 },
+                { text: "More than 5 years", score: 7 },
+                { text: "Never", score: 10 },
+                { text: "Don't remember", score: 5 },
               ],
             },
+
             {
               id: 2,
-              question_text: "Do you have a persistent cough?",
+              question_text: "Have you experienced abnormal vaginal bleeding?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Occasionally", score: 5 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 3,
               question_text:
-                "Are you exposed to secondhand smoke or pollutants?",
+                "Do you have unusual vaginal discharge (foul-smelling, watery, or blood-tinged)?",
               options: [
-                { text: "Yes, frequently", score: 10 },
-                { text: "Sometimes", score: 5 },
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 4,
               question_text:
-                "Have you coughed up blood or rust-colored sputum?",
+                "Have you experienced pelvic pain not related to menstruation?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 5,
+              question_text:
+                "Do you experience pain or bleeding during or after sexual intercourse?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Not sure", score: 5 },
                 { text: "No", score: 0 },
+                { text: "Not applicable", score: 0 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text: "Age at first sexual intercourse",
+              options: [
+                { text: "Before 18", score: 7 },
+                { text: "18–21", score: 3 },
+                { text: "After 21", score: 0 },
+                { text: "Not applicable", score: 0 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text:
+                "Have you had more than 3 lifetime sexual partners?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "No", score: 0 },
+                { text: "Prefer not to answer", score: 3 },
+              ],
+            },
+
+            {
+              id: 8,
+              question_text: "Do you or your partner smoke?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Don't know", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text: "Do you know your HPV status?",
+              options: [
+                { text: "Positive", score: 10 },
+                { text: "Negative", score: 0 },
+                { text: "Never tested", score: 5 },
+                { text: "Don't know", score: 3 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text: "Have you received the HPV vaccine?",
+              options: [
+                { text: "Yes, complete", score: 0 },
+                { text: "Partial", score: 3 },
+                { text: "No", score: 7 },
+                { text: "Don't know", score: 3 },
+              ],
+            },
+
+            {
+              id: 11,
+              question_text: "Do you have a weakened immune system?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 12,
+              question_text: "Have you had 3 or more full-term pregnancies?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+                { text: "Not applicable", score: 0 },
+              ],
+            },
+
+            {
+              id: 13,
+              question_text:
+                "Have you used oral contraceptive pills for more than 5 years?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+                { text: "Not applicable", score: 0 },
               ],
             },
           ],
@@ -420,84 +1006,159 @@ const HEALTH_DATA = {
         {
           id: "oral_cancer",
           name: "Oral Cancer",
+
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "0–3 positive responses",
+              result_content:
+                "No immediate concern. Continue maintaining good oral hygiene and perform monthly oral self-examinations to monitor for any new changes.",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "4–6 positive responses",
+              result_content:
+                "Oral lesions or symptoms require evaluation. Please visit a dentist or ENT specialist within the next 2–3 weeks for further assessment.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "7 or more positive responses",
+              result_content:
+                "Urgent evaluation is required. Please consult an oral cancer specialist or ENT surgeon within the next 7 days. Early detection is associated with approximately 84% survival.",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text: "Do you use tobacco (smoking or chewing)?",
+              question_text: "Do you use tobacco in any form?",
               options: [
-                { text: "Yes, regularly", score: 10 },
-                { text: "Occasionally", score: 5 },
+                { text: "Yes, daily", score: 10 },
+                { text: "Yes, occasionally", score: 5 },
+                { text: "Former user", score: 3 },
                 { text: "No", score: 0 },
               ],
             },
-            {
-              id: 2,
-              question_text: "Do you have mouth sores that haven't healed?",
-              options: [
-                { text: "Yes", score: 10 },
-                { text: "Not sure", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 3,
-              question_text: "Do you have persistent pain or patches in mouth?",
-              options: [
-                { text: "Yes", score: 10 },
-                { text: "Mild discomfort", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-            {
-              id: 4,
-              question_text: "Do you consume alcohol heavily?",
-              options: [
-                { text: "Yes", score: 10 },
-                { text: "Moderately", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
-          ],
-        },
-        {
-          id: "skin_cancer",
-          name: "Skin Cancer",
-          questions: [
-            {
-              id: 1,
-              question_text: "Do you have moles that changed shape/color?",
-              options: [
-                { text: "Yes", score: 10 },
-                { text: "Not sure", score: 5 },
-                { text: "No", score: 0 },
-              ],
-            },
+
             {
               id: 2,
               question_text:
-                "Do you get frequent sunburns or use tanning beds?",
+                "Do you consume alcohol regularly (more than 2 drinks per day)?",
               options: [
-                { text: "Yes", score: 10 },
-                { text: "Occasionally", score: 5 },
+                { text: "Yes", score: 7 },
+                { text: "Occasionally", score: 3 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 3,
-              question_text: "Do you have fair skin that burns easily?",
+              question_text:
+                "Have you noticed white or red patches in your mouth that do not heal?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Medium skin", score: 5 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 4,
-              question_text: "Is there a family history of skin cancer?",
+              question_text:
+                "Do you have mouth ulcers lasting more than 3 weeks?",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Not sure", score: 2 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 5,
+              question_text:
+                "Have you noticed any lumps or thickening in your mouth or lips?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Unsure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text:
+                "Do you experience numbness in your mouth or face?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text:
+                "Do you have difficulty chewing, swallowing, or speaking?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 8,
+              question_text:
+                "Do you experience persistent hoarseness or throat discomfort?",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text:
+                "Have you noticed any change in teeth alignment or denture fit?",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "No", score: 0 },
+                { text: "Not applicable", score: 0 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text:
+                "Have you noticed swelling or a lump in your neck or jaw?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Unsure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 11,
+              question_text:
+                "Have you experienced unexplained bleeding in your mouth?",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Unsure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 12,
+              question_text: "Do you go for regular dental check-ups?",
+              options: [
+                { text: "Yes", score: 0 },
+                { text: "Occasionally", score: 3 },
+                { text: "No", score: 5 },
               ],
             },
           ],
@@ -505,84 +1166,313 @@ const HEALTH_DATA = {
         {
           id: "prostate_cancer",
           name: "Prostate Cancer",
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "IPSS 0–7",
+              result_content:
+                "Your symptoms are mild and do not indicate immediate concern. Routine monitoring is recommended along with healthy bladder habits. Periodic reassessment can help track any changes over time.",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "IPSS 8–19",
+              result_content:
+                "Your symptoms suggest a moderate level of concern. A doctor consultation is advised within the next 3–4 weeks for clinical evaluation and guidance on symptom management.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "IPSS 20–35",
+              result_content:
+                "Your symptoms indicate a high level of concern. Please consult a urologist within the next 1–2 weeks for prompt evaluation and further investigation.",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text:
-                "Do you have difficulty urinating or frequent urges?",
+              question_text: "Incomplete bladder emptying",
               options: [
-                { text: "Yes, often", score: 10 },
-                { text: "Sometimes", score: 5 },
-                { text: "No", score: 0 },
+                { text: "Never", score: 0 },
+                { text: "Rarely", score: 2 },
+                { text: "Sometimes", score: 4 },
+                { text: "Often", score: 6 },
+                { text: "Almost always", score: 10 },
               ],
             },
+
             {
               id: 2,
-              question_text: "Are you over the age of 50?",
+              question_text: "Frequent urination",
               options: [
-                { text: "Yes", score: 10 },
-                { text: "40-50", score: 5 },
-                { text: "Under 40", score: 0 },
+                { text: "Never", score: 0 },
+                { text: "Rarely", score: 2 },
+                { text: "Sometimes", score: 4 },
+                { text: "Often", score: 6 },
+                { text: "Almost always", score: 10 },
               ],
             },
+
             {
               id: 3,
-              question_text: "Is there a family history of prostate cancer?",
+              question_text: "Weak urine stream",
               options: [
-                { text: "Yes, immediate family", score: 10 },
-                { text: "Extended family", score: 5 },
+                { text: "Never", score: 0 },
+                { text: "Rarely", score: 2 },
+                { text: "Sometimes", score: 4 },
+                { text: "Often", score: 6 },
+                { text: "Almost always", score: 10 },
+              ],
+            },
+
+            {
+              id: 4,
+              question_text: "Straining to urinate",
+              options: [
+                { text: "Never", score: 0 },
+                { text: "Rarely", score: 2 },
+                { text: "Sometimes", score: 4 },
+                { text: "Often", score: 6 },
+                { text: "Almost always", score: 10 },
+              ],
+            },
+
+            {
+              id: 5,
+              question_text: "Night-time urination",
+              options: [
+                { text: "None", score: 0 },
+                { text: "1 time", score: 2 },
+                { text: "2 times", score: 4 },
+                { text: "3 times", score: 7 },
+                { text: "4 or more times", score: 10 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text: "Sudden urgency to urinate",
+              options: [
+                { text: "Never", score: 0 },
+                { text: "Rarely", score: 2 },
+                { text: "Sometimes", score: 4 },
+                { text: "Often", score: 6 },
+                { text: "Almost always", score: 10 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text: "Blood in urine or semen",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
-              id: 4,
-              question_text: "Have you experienced blood in urine or semen?",
+              id: 8,
+              question_text: "Pain during urination or ejaculation",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text: "Persistent lower back or hip pain",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text: "Family history of prostate cancer",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Not sure", score: 5 },
+                { text: "Don't know", score: 5 },
                 { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 11,
+              question_text: "When was your last PSA test or prostate exam?",
+              options: [
+                { text: "Less than 1 year ago", score: 0 },
+                { text: "1–2 years ago", score: 3 },
+                { text: "More than 2 years ago", score: 7 },
+                { text: "Never", score: 10 },
+                { text: "Don't know", score: 5 },
               ],
             },
           ],
         },
+
         {
-          id: "colon_cancer",
-          name: "Colon Cancer",
+          id: "colonrectal_cancer",
+          name: "Colorectal Cancer",
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "0–4 positive responses",
+              result_content:
+                "Low immediate concern. Routine colorectal screening is recommended starting from age 45, or earlier if advised by your physician based on personal or family history.",
+            },
+
+            moderate: {
+              label: "MODERATE RISK",
+              range: "5–8 positive responses",
+              result_content:
+                "Some risk factors are present. Please consult a physician within the next 2–3 weeks to determine the need for diagnostic evaluation such as FIT or colonoscopy.",
+            },
+
+            high: {
+              label: "HIGH RISK",
+              range: "9 or more positive responses",
+              result_content:
+                "High-risk symptoms detected. An urgent gastroenterology consultation is recommended within the next 1 week. Early detection is associated with approximately 90% survival.",
+            },
+          },
+
           questions: [
             {
               id: 1,
-              question_text: "Have you noticed changes in bowel habits?",
+              question_text: "Change in bowel habits lasting more than 2 weeks",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Sometimes", score: 5 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 2,
-              question_text: "Have you experienced rectal bleeding?",
+              question_text: "Persistent diarrhea or constipation",
               options: [
-                { text: "Yes", score: 10 },
-                { text: "Not sure", score: 5 },
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 3,
-              question_text: "Is there a family history of colorectal cancer?",
+              question_text: "Blood in stool",
               options: [
                 { text: "Yes", score: 10 },
-                { text: "Not sure", score: 2 },
+                { text: "Unsure", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
+
             {
               id: 4,
-              question_text: "Is your diet high in red or processed meats?",
+              question_text: "Feeling of incomplete bowel emptying",
               options: [
-                { text: "Yes, daily", score: 10 },
-                { text: "Occasionally", score: 5 },
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
                 { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 5,
+              question_text: "Narrow or pencil-thin stools",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 6,
+              question_text: "Persistent abdominal pain or discomfort",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Unsure", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 7,
+              question_text: "Unexplained weight loss",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Unsure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 8,
+              question_text: "Unusual or persistent fatigue",
+              options: [
+                { text: "Yes", score: 5 },
+                { text: "Unsure", score: 2 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 9,
+              question_text: "Family history of colorectal cancer",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Don't know", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 10,
+              question_text:
+                "History of inflammatory bowel disease (ulcerative colitis or Crohn's disease)",
+              options: [
+                { text: "Yes", score: 10 },
+                { text: "Unsure", score: 5 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 11,
+              question_text: "When was your last colonoscopy or FIT test?",
+              options: [
+                { text: "Less than 1 year ago", score: 0 },
+                { text: "1–5 years ago", score: 2 },
+                { text: "5–10 years ago", score: 5 },
+                { text: "More than 10 years ago", score: 7 },
+                { text: "Never", score: 10 },
+              ],
+            },
+
+            {
+              id: 12,
+              question_text: "High intake of red or processed meat",
+              options: [
+                { text: "Yes", score: 7 },
+                { text: "Occasionally", score: 3 },
+                { text: "No", score: 0 },
+              ],
+            },
+
+            {
+              id: 13,
+              question_text: "Do you engage in regular physical exercise?",
+              options: [
+                { text: "Yes", score: 0 },
+                { text: "Occasionally", score: 3 },
+                { text: "No", score: 5 },
               ],
             },
           ],
@@ -600,7 +1490,8 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text: "How often do you feel overwhelmed?",
+              question_text:
+                "How often do you feel overwhelmed by responsibilities?",
               options: [
                 { text: "Almost every day", score: 10 },
                 { text: "Weekly", score: 5 },
@@ -609,7 +1500,8 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text: "Do you have physical symptoms like headaches?",
+              question_text:
+                "Do you have physical symptoms like headaches or muscle tension?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -629,7 +1521,7 @@ const HEALTH_DATA = {
               id: 4,
               question_text: "Does stress affect your sleep?",
               options: [
-                { text: "Yes, insomnia", score: 10 },
+                { text: "Yes, insomnia/waking up", score: 10 },
                 { text: "Occasionally", score: 5 },
                 { text: "No", score: 0 },
               ],
@@ -651,7 +1543,8 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text: "Do you have trouble controlling worrying?",
+              question_text:
+                "Do you have trouble stopping or controlling worrying?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -661,7 +1554,7 @@ const HEALTH_DATA = {
             {
               id: 3,
               question_text:
-                "Do you experience restlessness or rapid heart rate?",
+                "Do you experience restlessness or increased heart rate?",
               options: [
                 { text: "Yes, frequently", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -670,7 +1563,7 @@ const HEALTH_DATA = {
             },
             {
               id: 4,
-              question_text: "Does anxiety interfere with daily work?",
+              question_text: "Does anxiety interfere with daily work/school?",
               options: [
                 { text: "Yes, significantly", score: 10 },
                 { text: "Somewhat", score: 5 },
@@ -687,7 +1580,7 @@ const HEALTH_DATA = {
               id: 1,
               question_text: "How many hours of sleep do you get on average?",
               options: [
-                { text: "< 5 hours", score: 10 },
+                { text: "Less than 5 hours", score: 10 },
                 { text: "5-6 hours", score: 5 },
                 { text: "7-9 hours", score: 0 },
               ],
@@ -707,7 +1600,7 @@ const HEALTH_DATA = {
               options: [
                 { text: "Yes, almost always", score: 10 },
                 { text: "Often", score: 5 },
-                { text: "No", score: 0 },
+                { text: "No, feel refreshed", score: 0 },
               ],
             },
             {
@@ -736,7 +1629,8 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text: "Have you become cynical/detached from work?",
+              question_text:
+                "Have you become cynical or detached from work/activities?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Somewhat", score: 5 },
@@ -769,7 +1663,8 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text: "Have you felt down, depressed, or hopeless?",
+              question_text:
+                "Have you felt down, depressed, or hopeless recently?",
               options: [
                 { text: "Nearly every day", score: 10 },
                 { text: "Several days", score: 5 },
@@ -778,7 +1673,8 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text: "Do you have little interest in doing things?",
+              question_text:
+                "Do you have little interest or pleasure in doing things?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -911,7 +1807,8 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text: "Do you keep the TV/Radio volume high?",
+              question_text:
+                "Do you keep the TV/Radio volume higher than others?",
               options: [
                 { text: "Yes", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -920,7 +1817,8 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text: "Do you have trouble hearing in noise?",
+              question_text:
+                "Do you have trouble hearing in noisy environments?",
               options: [
                 { text: "Yes, very difficult", score: 10 },
                 { text: "Somewhat", score: 5 },
@@ -944,7 +1842,8 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text: "Do you hear ringing or buzzing in your ears?",
+              question_text:
+                "Do you hear ringing, buzzing, or hissing in your ears?",
               options: [
                 { text: "Yes, constantly", score: 10 },
                 { text: "Intermittently", score: 5 },
@@ -964,7 +1863,7 @@ const HEALTH_DATA = {
               id: 3,
               question_text: "Is it in one ear or both?",
               options: [
-                { text: "One ear", score: 10 },
+                { text: "One ear (consult doctor)", score: 10 },
                 { text: "Both", score: 5 },
                 { text: "N/A", score: 0 },
               ],
@@ -988,14 +1887,15 @@ const HEALTH_DATA = {
               id: 1,
               question_text: "Have you noticed a reduced ability to smell?",
               options: [
-                { text: "Yes, significant", score: 10 },
+                { text: "Yes, significant loss", score: 10 },
                 { text: "Mild reduction", score: 5 },
                 { text: "No", score: 0 },
               ],
             },
             {
               id: 2,
-              question_text: "Do you experience phantom smells?",
+              question_text:
+                "Do you experience phantom smells (smelling things not there)?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Rarely", score: 5 },
@@ -1004,7 +1904,7 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text: "Do you have chronic sinus issues?",
+              question_text: "Do you have chronic sinus issues or allergies?",
               options: [
                 { text: "Yes, chronic", score: 10 },
                 { text: "Seasonal", score: 5 },
@@ -1037,7 +1937,8 @@ const HEALTH_DATA = {
             },
             {
               id: 2,
-              question_text: "Do you have a persistent metallic taste?",
+              question_text:
+                "Do you have a persistent metallic or bitter taste?",
               options: [
                 { text: "Yes, constantly", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -1070,7 +1971,8 @@ const HEALTH_DATA = {
           questions: [
             {
               id: 1,
-              question_text: "Do you feel numbness in hands/feet?",
+              question_text:
+                "Do you experience numbness or tingling in hands/feet?",
               options: [
                 { text: "Yes, frequently", score: 10 },
                 { text: "Occasionally", score: 5 },
@@ -1088,7 +1990,8 @@ const HEALTH_DATA = {
             },
             {
               id: 3,
-              question_text: "Do you have difficulty with coordination?",
+              question_text:
+                "Do you have difficulty with coordination or balance?",
               options: [
                 { text: "Yes, often", score: 10 },
                 { text: "Sometimes", score: 5 },
@@ -1097,7 +2000,7 @@ const HEALTH_DATA = {
             },
             {
               id: 4,
-              question_text: "Do you have diabetes/vitamin deficiencies?",
+              question_text: "Do you have diabetes or vitamin deficiencies?",
               options: [
                 { text: "Yes, diagnosed", score: 10 },
                 { text: "Suspected", score: 5 },
@@ -1110,28 +2013,29 @@ const HEALTH_DATA = {
     },
   ],
   risk_logic: {
-    total_possible_score: 40,
     thresholds: [
       {
         level: "Low Risk",
         range_min: 0,
-        range_max: 10,
+        range_max: 20,
         color_code: "#28a745",
-        message: "Low risk.",
+        message: "Your risk appears low. Keep maintaining a healthy lifestyle.",
       },
       {
         level: "Moderate Risk",
-        range_min: 11,
-        range_max: 25,
+        range_min: 21,
+        range_max: 45,
         color_code: "#ffc107",
-        message: "Moderate risk.",
+        message:
+          "You have some risk factors. Consider monitoring your health and consulting a doctor.",
       },
       {
         level: "High Risk",
-        range_min: 26,
-        range_max: 40,
+        range_min: 46,
+        range_max: Infinity,
         color_code: "#dc3545",
-        message: "High risk.",
+        message:
+          "High risk detected. It is highly recommended to consult a specialist immediately.",
       },
     ],
   },
@@ -1290,43 +2194,42 @@ const QuestionnairesScreen = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* --- HEADER (Fixed with ImageBackground) --- */}
-      <ImageBackground
-        source={require("../../../assets/Head.png")}
-        style={styles.header}
-        imageStyle={styles.headerImageBg}
-      >
+      {/* --- HEADER (Fixed with Gradient Background) --- */}
+      <View style={styles.header}>
+        <LinearGradient
+          colors={["rgba(228, 204, 247, 0.6)", "rgba(255, 233, 207, 0.6)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.4 }}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.headerSafeArea}>
-          {/* Navigation Row */}
-          <View style={styles.navRow}>
+          {/* Navigation Row with Back Button and Disease Name */}
+          <View style={styles.heroTopBar}>
             <TouchableOpacity
+              style={styles.backButton}
               onPress={() => navigation.goBack()}
-              style={styles.iconBtn}
             >
-              <Feather name="arrow-left" size={24} color="#333" />
+              <Feather name="arrow-left" size={22} color="#7C3AED" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle} weight="800">
+            <Text style={styles.heroTitle} weight="700">
               {conditionName}
             </Text>
           </View>
 
-          {/* Illustration & Info (Side by Side) */}
           <View style={styles.headerContentRow}>
-            <Animated.Image
+            <Image
               source={require("../../../assets/MobHands.png")}
-              style={[
-                styles.illustration,
-                { opacity: fadeAnim },
-              ]}
+              style={styles.illustration}
+              resizeMode="contain"
             />
             <View style={styles.infoBox}>
-              <Text style={styles.infoText} weight="600" numberOfLines={3}>
+              <Text style={styles.infoText} weight="500" numberOfLines={3}>
                 {diseaseInfo}
               </Text>
             </View>
           </View>
         </View>
-      </ImageBackground>
+      </View>
 
       {/* --- BODY (Fixed Content) --- */}
       <View style={styles.bodyContainer}>
@@ -1519,54 +2422,50 @@ const styles = StyleSheet.create({
   },
   headerSafeArea: {
     paddingTop: Platform.OS === "android" ? 40 : 54,
-    paddingHorizontal: 22,
+    paddingHorizontal: 16,
     flex: 1,
   },
-  navRow: {
+  heroTopBar: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  iconBtn: {
-    padding: 10,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    marginRight: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+  backButton: {
+    marginRight: 8,
   },
-  headerTitle: {
-    fontSize: 26,
-    color: "#3b2160",
-    letterSpacing: 0.6,
+  heroTitle: {
+    fontSize: 18,
+    color: "#7C3AED",
+    letterSpacing: 0.2,
+    flex: 1,
   },
   headerContentRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    marginTop: 8,
-    paddingRight: 10,
+    flex: 1,
   },
   illustration: {
-    width: 120,
-    height: 120,
-    resizeMode: "contain",
-    marginRight: 12,
+    width: 100,
+    height: 100,
   },
   infoBox: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginLeft: 10,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   infoText: {
-    color: "#4a148c",
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 12,
+    color: "#4B5563",
+    lineHeight: 18,
   },
 
   // --- BODY (Fixed) ---
