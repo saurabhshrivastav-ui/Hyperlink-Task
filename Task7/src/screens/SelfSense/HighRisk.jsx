@@ -23,10 +23,7 @@ import GradientButton from "../../../components/GradientButton";
 import ConsultWarningCard from "../../../components/ConsultWarningCard";
 
 const { width } = Dimensions.get("window");
-const isTablet = width >= 768;
-const isDesktop = width >= 1024;
-const horizontalPadding = isDesktop ? 40 : isTablet ? 28 : 20;
-const contentMaxWidth = isDesktop ? 980 : isTablet ? 760 : "100%";
+const s = (size) => (width / 375) * size;
 
 const HighRisk = () => {
   const navigation = useNavigation();
@@ -313,7 +310,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 50,
-    paddingHorizontal: horizontalPadding,
+    paddingHorizontal: s(20),
     paddingBottom: 18,
     backgroundColor: "transparent",
     borderBottomWidth: 0,
@@ -325,17 +322,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   headerTitle: {
-    fontSize: isTablet ? 22 : 20,
+    fontSize: s(20),
     color: "#7c2d12",
     letterSpacing: 0.2,
   },
 
   scrollContent: {
-    paddingHorizontal: horizontalPadding,
+    paddingHorizontal: s(20),
     paddingBottom: 36,
     width: "100%",
     alignSelf: "center",
-    maxWidth: contentMaxWidth,
+    maxWidth: "100%",
   },
 
   /* Card wrapper subtle lift */
@@ -402,22 +399,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   resultTitle: {
-    fontSize: isTablet ? 22 : 18,
+    fontSize: s(18),
     color: "#0b0b0b",
     marginBottom: 6,
     letterSpacing: 0.2,
   },
   resultDesc: {
-    fontSize: isTablet ? 14 : 13,
+    fontSize: s(13),
     color: "#333",
-    lineHeight: isTablet ? 22 : 20,
+    lineHeight: s(20),
     marginBottom: 8,
     opacity: 0.95,
   },
   resultDesc2: {
-    fontSize: isTablet ? 13 : 12,
+    fontSize: s(12),
     color: "#666",
-    lineHeight: isTablet ? 20 : 18,
+    lineHeight: s(18),
   },
 
   /* Consult Card — brighter, clearer call-to-action */
@@ -515,7 +512,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   miniIconText: {
-    fontSize: isTablet ? 10 : 9,
+    fontSize: s(9),
     color: "#666",
     textAlign: "center",
     lineHeight: 12,
@@ -523,7 +520,7 @@ const styles = StyleSheet.create({
 
   /* Influence Section — clearer headings */
   sectionTitle: {
-    fontSize: isTablet ? 18 : 16,
+    fontSize: s(16),
     color: "#7c2d12",
     marginBottom: 14,
   },
@@ -543,7 +540,7 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   bulletText: {
-    fontSize: isTablet ? 15 : 14,
+    fontSize: s(14),
     color: "#444",
   },
 
@@ -613,10 +610,10 @@ const styles = StyleSheet.create({
     color: "#C62828",
   },
   gridText: {
-    fontSize: isTablet ? 13 : 12,
+    fontSize: s(12),
     color: "#222",
     flex: 1,
-    lineHeight: isTablet ? 20 : 18,
+    lineHeight: s(18),
   },
   cardHoverSmall: {
     transform: [{ scale: 1.01 }],

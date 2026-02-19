@@ -27,18 +27,8 @@ import { Text } from "../../../components/TextWrapper";
 
 const { width, height } = Dimensions.get("window");
 
-// Responsive breakpoints
-const isSmallDevice = width < 375;
-const isMediumDevice = width >= 375 && width < 768;
-const isTablet = width >= 768 && width < 1024;
-const isDesktop = width >= 1024;
-
-// Responsive scaling functions
-const scale = (size) => (width / 375) * size;
-const verticalScale = (size) => (height / 812) * size;
-const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
-
-const SCREEN_PADDING = isTablet ? 32 : isDesktop ? 48 : 20;
+// Device-ratio based scaling
+const s = (size) => (width / 375) * size;
 
 const COLORS = {
   brandBlue: "#5B3DF5",
@@ -73,7 +63,7 @@ const GridItem = ({ icon, label, material, id, onPress }) => {
       <View style={styles.gridIconContainer}>
         <MaterialCommunityIcons 
           name={icon} 
-          size={isTablet ? 28 : moderateScale(24)} 
+          size={s(24)} 
           color="#5B3DF5" 
         />
       </View>
@@ -239,8 +229,8 @@ export default function SelfSenseHealthArea({ navigation }) {
           <HealthCard
             id="chronic"
             title="Chronic Conditions"
-            subtitle="Lifestyle & Long-term Care"
-            desc="Assess risks for Diabetes, BP, Thyroid, and heart health."
+            subtitle="Long-term lifestyle-linked conditions"
+            desc="Understand risks linked to diabetes, PCOS, blood pressure, and more."
             image={require("../../../assets/MobHands.png")}
             expandedCard={expandedCard}
             onToggle={toggleCard}
@@ -277,7 +267,7 @@ export default function SelfSenseHealthArea({ navigation }) {
           <HealthCard
             id="cancer"
             title="Cancer Awareness"
-            subtitle="Early Signs & Symptoms"
+            subtitle="Early warning signs & risk factors"
             desc="Guidance on self-checks for breast, oral, and lung health."
             image={require("../../../assets/cancer.webp")}
             expandedCard={expandedCard}
@@ -444,52 +434,52 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgLight,
   },
   header: {
-    paddingHorizontal: SCREEN_PADDING,
-    paddingVertical: moderateScale(16),
+    paddingHorizontal: 20,
+    paddingVertical: s(16),
     backgroundColor: COLORS.bgLight,
     borderBottomWidth: 0,
     borderBottomColor: "transparent",
-    maxWidth: isDesktop ? 1200 : "100%",
+    maxWidth: "100%",
     width: "100%",
     alignSelf: "center",
   },
   headerTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: moderateScale(4),
+    marginBottom: s(4),
   },
   backButton: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(8),
+    width: s(32),
+    height: s(32),
+    borderRadius: s(8),
     backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: moderateScale(8),
+    marginRight: s(8),
   },
   headerTitle: {
-    fontSize: isTablet ? 22 : isDesktop ? 24 : moderateScale(20),
+    fontSize: s(20),
     color: COLORS.brandBlue,
     fontWeight: "600",
     letterSpacing: 0.2,
   },
   headerSubtitle: {
-    fontSize: isTablet ? 14 : moderateScale(13),
+    fontSize: s(13),
     color: COLORS.textSecondary,
-    lineHeight: isTablet ? 20 : moderateScale(18),
-    marginLeft: moderateScale(40),
+    lineHeight: s(18),
+    marginLeft: s(40),
   },
   content: {
-    padding: SCREEN_PADDING,
-    marginTop: verticalScale(5),
-    maxWidth: isDesktop ? 1200 : "100%",
+    padding: 20,
+    marginTop: s(5),
+    maxWidth: "100%",
     width: "100%",
     alignSelf: "center",
   },
   card: {
     backgroundColor: COLORS.white,
-    borderRadius: moderateScale(16),
-    marginBottom: verticalScale(14),
+    borderRadius: s(16),
+    marginBottom: s(14),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
@@ -507,98 +497,98 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   cardBody: {
-    padding: isTablet ? 18 : moderateScale(14),
-    paddingBottom: isTablet ? 12 : moderateScale(8),
+    padding: s(14),
+    paddingBottom: s(8),
   },
   cardTop: {
     flexDirection: "row",
-    minHeight: isTablet ? 90 : moderateScale(80),
+    minHeight: s(80),
     alignItems: "flex-start",
   },
   cardTextContainer: {
     maxWidth: "70%",
     flex: 1,
-    paddingRight: moderateScale(10),
+    paddingRight: s(10),
   },
   cardImage: {
-    width: isTablet ? 100 : moderateScale(85),
-    height: isTablet ? 100 : moderateScale(85),
+    width: s(85),
+    height: s(85),
     resizeMode: "contain",
     position: "absolute",
     right: 0,
     top: 0,
   },
   cardTitle: {
-    fontSize: isTablet ? 18 : moderateScale(15),
+    fontSize: s(15),
     color: COLORS.cardTitle,
     fontWeight: "700",
-    marginBottom: moderateScale(2),
+    marginBottom: s(2),
   },
   cardSubtitle: {
-    fontSize: isTablet ? 13 : moderateScale(11.5),
-    marginTop: moderateScale(2),
+    fontSize: s(11.5),
+    marginTop: s(2),
     color: "#555",
     fontWeight: "500",
   },
   cardDesc: {
-    fontSize: isTablet ? 12 : moderateScale(10.5),
+    fontSize: s(10.5),
     color: "#888",
-    marginTop: moderateScale(8),
-    lineHeight: isTablet ? 18 : moderateScale(15),
+    marginTop: s(8),
+    lineHeight: s(15),
   },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-start",
-    marginTop: verticalScale(18),
-    paddingHorizontal: moderateScale(8),
-    gap: isTablet ? 16 : moderateScale(12),
+    marginTop: s(18),
+    paddingHorizontal: s(8),
+    gap: s(12),
     overflow: "hidden",
   },
   gridItem: {
-    width: isTablet ? "30%" : "30%",
+    width: "30%",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: verticalScale(8),
-    minWidth: isTablet ? 100 : "auto",
-    paddingVertical: moderateScale(8),
-    paddingHorizontal: moderateScale(4),
+    marginBottom: s(8),
+    minWidth: "auto",
+    paddingVertical: s(8),
+    paddingHorizontal: s(4),
   },
   gridIconContainer: {
-    width: isTablet ? 52 : moderateScale(46),
-    height: isTablet ? 52 : moderateScale(46),
-    borderRadius: isTablet ? 26 : moderateScale(23),
+    width: s(46),
+    height: s(46),
+    borderRadius: s(23),
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: moderateScale(6),
+    marginBottom: s(6),
     backgroundColor: "#F0E6FF",
   },
   gridIconImage: {
-    width: isTablet ? 36 : moderateScale(32),
-    height: isTablet ? 36 : moderateScale(32),
+    width: s(32),
+    height: s(32),
   },
   gridLabel: {
-    fontSize: isTablet ? 12 : moderateScale(10),
+    fontSize: s(10),
     textAlign: "center",
     color: "#333",
     fontWeight: "500",
-    lineHeight: isTablet ? 16 : moderateScale(14),
-    minHeight: isTablet ? 32 : moderateScale(28),
+    lineHeight: s(14),
+    minHeight: s(28),
   },
   cardFooter: {
     backgroundColor: "#E8DCFF",
-    paddingVertical: moderateScale(12),
+    paddingVertical: s(12),
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: moderateScale(6),
+    gap: s(6),
     borderTopWidth: 0,
   },
   cardFooterActive: {
     backgroundColor: "#DDD0FF",
   },
   footerText: {
-    fontSize: isTablet ? 13 : moderateScale(12),
+    fontSize: s(12),
     color: COLORS.footerText,
     fontWeight: "600",
     letterSpacing: 0.2,
@@ -678,24 +668,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   navIconWrapper: {
-    width: moderateScale(28),
-    height: moderateScale(28),
+    width: s(28),
+    height: s(28),
     alignItems: "center",
     justifyContent: "center",
   },
   dotsGrid: {
     alignItems: "center",
     justifyContent: "center",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   dotRow: {
     flexDirection: "row",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   dot: {
-    width: moderateScale(5),
-    height: moderateScale(5),
-    borderRadius: moderateScale(2.5),
+    width: s(5),
+    height: s(5),
+    borderRadius: s(2.5),
     backgroundColor: "#8E8E93",
   },
   dotActive: {
@@ -704,16 +694,16 @@ const styles = StyleSheet.create({
   specialityIcon: {
     alignItems: "center",
     justifyContent: "center",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   specialityRow: {
     flexDirection: "row",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   specialityDot: {
-    width: moderateScale(6),
-    height: moderateScale(6),
-    borderRadius: moderateScale(3),
+    width: s(6),
+    height: s(6),
+    borderRadius: s(3),
   },
   dotPink: {
     backgroundColor: "#E91E63",
@@ -722,14 +712,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#7C4DFF",
   },
   navLabel: {
-    fontSize: moderateScale(9),
+    fontSize: s(9),
     color: "#8E8E93",
-    marginTop: moderateScale(4),
+    marginTop: s(4),
   },
   navLabelActive: {
-    fontSize: moderateScale(9),
+    fontSize: s(9),
     color: "#5B3DF5",
-    marginTop: moderateScale(4),
+    marginTop: s(4),
     fontWeight: "600",
   },
 });

@@ -6,8 +6,7 @@ import { Text } from "./TextWrapper";
 import GradientButton from "./GradientButton";
 
 const { width } = Dimensions.get("window");
-const isTablet = width >= 768;
-const moderateScale = (size, factor = 0.5) => size + ((width / 375) * size - size) * factor;
+const s = (size) => (width / 375) * size;
 
 const ConsultWarningCard = ({ 
   onConsultPress,
@@ -76,9 +75,9 @@ const ConsultWarningCard = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFFFFF",
-    borderRadius: moderateScale(14),
-    paddingVertical: isTablet ? 14 : moderateScale(12),
-    paddingHorizontal: isTablet ? 16 : moderateScale(14),
+    borderRadius: s(14),
+    paddingVertical: s(12),
+    paddingHorizontal: s(14),
     borderWidth: 1,
     borderColor: "rgba(245,158,11,0.12)",
     shadowColor: "rgba(37,0,84,0.10)",
@@ -90,24 +89,24 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: moderateScale(12),
+    marginBottom: s(12),
   },
   warningIconContainer: {
-    marginRight: moderateScale(10),
+    marginRight: s(10),
     backgroundColor: "#FEF3C7",
-    borderRadius: moderateScale(10),
-    width: moderateScale(32),
-    height: moderateScale(32),
+    borderRadius: s(10),
+    width: s(32),
+    height: s(32),
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(245,158,11,0.15)",
   },
   warningText: {
-    fontSize: isTablet ? 11 : moderateScale(10),
+    fontSize: s(10),
     color: "#1f2937",
     flex: 1,
-    lineHeight: isTablet ? 16 : moderateScale(14),
+    lineHeight: s(14),
   },
   bottomRow: {
     flexDirection: "row",
@@ -116,7 +115,7 @@ const styles = StyleSheet.create({
   consultButtonWrapper: {
     justifyContent: "center",
     alignItems: "center",
-    marginRight: moderateScale(10),
+    marginRight: s(10),
   },
   consultButton: {
     borderRadius: 8,
@@ -131,25 +130,25 @@ const styles = StyleSheet.create({
   consultOptionItem: {
     alignItems: "center",
     flex: 1,
-    paddingVertical: moderateScale(4),
-    paddingHorizontal: moderateScale(2),
+    paddingVertical: s(4),
+    paddingHorizontal: s(2),
   },
   iconCircle: {
-    width: moderateScale(28),
-    height: moderateScale(28),
-    borderRadius: moderateScale(8),
+    width: s(28),
+    height: s(28),
+    borderRadius: s(8),
     backgroundColor: "#F0F4FF",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: moderateScale(4),
+    marginBottom: s(4),
     borderWidth: 1,
     borderColor: "rgba(74,143,231,0.1)",
   },
   consultOptionText: {
-    fontSize: isTablet ? 8 : moderateScale(7.5),
+    fontSize: s(7.5),
     color: "#0f172a",
     textAlign: "center",
-    lineHeight: isTablet ? 11 : moderateScale(10),
+    lineHeight: s(10),
   },
 });
 

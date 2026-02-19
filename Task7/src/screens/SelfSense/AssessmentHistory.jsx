@@ -15,12 +15,7 @@ import { Text } from "../../../components/TextWrapper";
 
 const { width, height } = Dimensions.get("window");
 
-const isTablet = width >= 768;
-const isDesktop = width >= 1024;
-
-const scale = (size) => (width / 375) * size;
-const verticalScale = (size) => (height / 812) * size;
-const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
+const s = (size) => (width / 375) * size;
 
 const COLORS = {
   brandPurple: "#5B3DF5",
@@ -320,34 +315,34 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: moderateScale(16),
+    paddingVertical: s(16),
     backgroundColor: COLORS.bgLight,
   },
   headerTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: moderateScale(4),
+    marginBottom: s(4),
   },
   backButton: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(8),
+    width: s(32),
+    height: s(32),
+    borderRadius: s(8),
     backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: moderateScale(8),
+    marginRight: s(8),
   },
   headerTitle: {
-    fontSize: isTablet ? 22 : moderateScale(20),
+    fontSize: s(20),
     color: COLORS.brandPurple,
     fontWeight: "600",
     letterSpacing: 0.2,
   },
   headerSubtitle: {
-    fontSize: isTablet ? 14 : moderateScale(13),
+    fontSize: s(13),
     color: COLORS.textSecondary,
-    lineHeight: isTablet ? 20 : moderateScale(18),
-    marginLeft: moderateScale(40),
+    lineHeight: s(18),
+    marginLeft: s(40),
   },
   content: {
     padding: 20,
@@ -610,39 +605,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   navIconWrapper: {
-    width: moderateScale(28),
-    height: moderateScale(28),
+    width: s(28),
+    height: s(28),
     alignItems: "center",
     justifyContent: "center",
   },
   dotsGrid: {
     alignItems: "center",
     justifyContent: "center",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   dotRow: {
     flexDirection: "row",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   dot: {
-    width: moderateScale(5),
-    height: moderateScale(5),
-    borderRadius: moderateScale(2.5),
+    width: s(5),
+    height: s(5),
+    borderRadius: s(2.5),
     backgroundColor: "#8E8E93",
   },
   specialityIcon: {
     alignItems: "center",
     justifyContent: "center",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   specialityRow: {
     flexDirection: "row",
-    gap: moderateScale(4),
+    gap: s(4),
   },
   specialityDot: {
-    width: moderateScale(6),
-    height: moderateScale(6),
-    borderRadius: moderateScale(3),
+    width: s(6),
+    height: s(6),
+    borderRadius: s(3),
   },
   dotPink: {
     backgroundColor: "#E91E63",
@@ -651,14 +646,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#7C4DFF",
   },
   navLabel: {
-    fontSize: moderateScale(9),
+    fontSize: s(9),
     color: "#8E8E93",
-    marginTop: moderateScale(4),
+    marginTop: s(4),
   },
   navLabelActive: {
-    fontSize: moderateScale(9),
+    fontSize: s(9),
     color: "#5B3DF5",
-    marginTop: moderateScale(4),
+    marginTop: s(4),
     fontWeight: "600",
   },
 });

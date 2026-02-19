@@ -4,8 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "./TextWrapper";
 
 const { width } = Dimensions.get("window");
-const isTablet = width >= 768;
-const moderateScale = (size, factor = 0.5) => size + ((width / 375) * size - size) * factor;
+const s = (size) => (width / 375) * size;
 
 // Gradient color presets
 const GRADIENT_PRESETS = {
@@ -50,7 +49,7 @@ const GradientButton = ({
         return {
           paddingVertical: 12,
           paddingHorizontal: 18,
-          fontSize: isTablet ? 14 : 13,
+          fontSize: s(13),
         };
     }
   };
