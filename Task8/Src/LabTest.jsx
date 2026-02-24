@@ -90,8 +90,19 @@ const LabTest = () => {
                     style={styles.viewBtnWrap}
                     activeOpacity={0.8}
                     onPress={() => {
+                      const categoryMap = {
+                        "Blood Test": "blood-test",
+                        "Diabetes Monitoring": "diabetes-monitoring",
+                        "Urine & Stool Test": "urine-stool-test",
+                        "Genetic Tests": "genetic-tests",
+                        "Hormonal Tests": "harmonal-tests",
+                        "Imaging & Scans": "imaging-scans",
+                      };
+                      const categoryId = categoryMap[test.title];
                       if (test.title === "Diabetes Monitoring") {
                         navigation.navigate("DiabetesMonitoring");
+                      } else if (categoryId) {
+                        navigation.navigate("LabTestCategory", { categoryId });
                       }
                     }}
                   >

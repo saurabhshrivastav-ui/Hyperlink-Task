@@ -13,6 +13,8 @@ import LabTest from './Src/LabTest';
 import DiabetesMonitoring from './Src/DiabetesMonitoring';
 import TestDetails from './Src/TestDetails';
 import BookingDetails from './Src/BookingDetails';
+import LabHistory from './Src/LabHistory';
+import LabTestCategory from './Src/LabTestCategory';
 
 const Stack = createStackNavigator();
 
@@ -34,6 +36,8 @@ export default function App() {
           <Stack.Screen name="DiabetesMonitoring" component={DiabetesMonitoring} />
           <Stack.Screen name="TestDetails" component={TestDetails} />
           <Stack.Screen name="BookingDetails" component={BookingDetails} />
+          <Stack.Screen name="LabHistory" component={LabHistory} />
+          <Stack.Screen name="LabTestCategory" component={LabTestCategory} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

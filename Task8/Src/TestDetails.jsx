@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   View,
   ScrollView,
@@ -7,16 +7,20 @@ import {
   Platform,
   Dimensions,
   Image,
-  FlatList,
   Modal,
+  Animated,
+  Easing,
+  PanResponder,
 } from "react-native";
-import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { Text } from "../Components/TextWrapper";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.38;
+const PKG_ITEM_WIDTH = CARD_WIDTH + 12; // card + gap
+const PKG_CLONE_COUNT = 40;
 
 const popularPackages = [
   {
@@ -41,13 +45,365 @@ const popularPackages = [
 
 const TestDetails = () => {
   const navigation = useNavigation();
-  const flatListRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const route = useRoute();
+
+  // Accept test data from route params with fallback defaults
+  const testTitle = route.params?.testTitle || "Diabetes Screening\n(HbAIC & Fasting Sugar)";
+  const testCount = route.params?.testCount || 2;
+  const reportTime = route.params?.reportTime || "15 hrs";
+  const price = route.params?.price || 479;
+  const originalPrice = route.params?.originalPrice || 625;
+  const discount = route.params?.discount || "25% off";
+
+  const pkgScrollRef = useRef(null);
+  const pkgScrollX = useRef(0);
+  const pkgLoopData = useRef(
+    Array.from({ length: popularPackages.length * PKG_CLONE_COUNT }, (_, i) => ({
+      ...popularPackages[i % popularPackages.length],
+      _key: `pkg-${i}`,
+    }))
+  ).current;
+  const PKG_ONE_SET = popularPackages.length * PKG_ITEM_WIDTH;
+  const PKG_ORIGIN = PKG_ONE_SET * Math.floor(PKG_CLONE_COUNT / 2);
+
+  useEffect(() => {
+    if (pkgScrollRef.current) {
+      pkgScrollRef.current.scrollTo({ x: PKG_ORIGIN, animated: false });
+      pkgScrollX.current = PKG_ORIGIN;
+    }
+  }, []);
+
+  const pkgRecenter = (x) => {
+    pkgScrollX.current = x;
+    const setsFromOrigin = Math.abs(x - PKG_ORIGIN) / PKG_ONE_SET;
+    if (setsFromOrigin > 5) {
+      const offset = ((x % PKG_ONE_SET) + PKG_ONE_SET) % PKG_ONE_SET;
+      const newX = PKG_ORIGIN + offset;
+      pkgScrollX.current = newX;
+      if (pkgScrollRef.current) {
+        pkgScrollRef.current.scrollTo({ x: newX, animated: false });
+      }
+    }
+  };
+
   const [showPatientSheet, setShowPatientSheet] = useState(false);
   const [showSlotSheet, setShowSlotSheet] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState(null);
+
+  // Animation refs for smooth tray transitions
+  const patientSlideAnim = useRef(new Animated.Value(height)).current;
+  const patientFadeAnim = useRef(new Animated.Value(0)).current;
+  // Staggered float anims for each content block in patient sheet
+  const patientItem1 = useRef(new Animated.Value(0)).current;
+  const patientItem2 = useRef(new Animated.Value(0)).current;
+  const patientItem3 = useRef(new Animated.Value(0)).current;
+  const patientItem4 = useRef(new Animated.Value(0)).current;
+
+  const slotSlideAnim = useRef(new Animated.Value(height)).current;
+  const slotFadeAnim = useRef(new Animated.Value(0)).current;
+  // Staggered float anims for each content block in slot sheet
+  const slotItem1 = useRef(new Animated.Value(0)).current;
+  const slotItem2 = useRef(new Animated.Value(0)).current;
+  const slotItem3 = useRef(new Animated.Value(0)).current;
+  const slotItem4 = useRef(new Animated.Value(0)).current;
+  const slotItem5 = useRef(new Animated.Value(0)).current;
+
+  // Drag-to-dismiss threshold (px)
+  const DISMISS_THRESHOLD = 120;
+
+  const patientPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 5,
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) {
+          patientSlideAnim.setValue(g.dy);
+          patientFadeAnim.setValue(1 - g.dy / (height * 0.6));
+        }
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > DISMISS_THRESHOLD || g.vy > 0.5) {
+          closePatientSheet();
+        } else {
+          Animated.parallel([
+            Animated.timing(patientSlideAnim, {
+              toValue: 0,
+              duration: 250,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(patientFadeAnim, {
+              toValue: 1,
+              duration: 250,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
+  const slotPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 5,
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) {
+          slotSlideAnim.setValue(g.dy);
+          slotFadeAnim.setValue(1 - g.dy / (height * 0.6));
+        }
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > DISMISS_THRESHOLD || g.vy > 0.5) {
+          closeSlotSheet();
+        } else {
+          Animated.parallel([
+            Animated.timing(slotSlideAnim, {
+              toValue: 0,
+              duration: 250,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(slotFadeAnim, {
+              toValue: 1,
+              duration: 250,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
+  // Helper: stagger float-in for items
+  const floatIn = (items, delay = 60) => {
+    items.forEach(a => a.setValue(0));
+    Animated.stagger(delay, items.map(anim =>
+      Animated.spring(anim, {
+        toValue: 1,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      })
+    )).start();
+  };
+
+  // Helper: build float style from an Animated.Value (0→1)
+  const floatStyle = (anim, floatY = 30) => ({
+    opacity: anim,
+    transform: [
+      { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [floatY, 0] }) },
+      { scale: anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.97, 1.02, 1] }) },
+    ],
+  });
+
+  const openPatientSheet = useCallback(() => {
+    setShowPatientSheet(true);
+    Animated.parallel([
+      Animated.timing(patientFadeAnim, {
+        toValue: 1,
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(patientSlideAnim, {
+        toValue: 0,
+        duration: 450,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      floatIn([patientItem1, patientItem2, patientItem3, patientItem4], 80);
+    });
+  }, []);
+
+  const closePatientSheet = useCallback((callback) => {
+    Animated.parallel([
+      Animated.timing(patientFadeAnim, {
+        toValue: 0,
+        duration: 280,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(patientSlideAnim, {
+        toValue: height,
+        duration: 380,
+        easing: Easing.bezier(0.4, 0, 0.6, 1),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowPatientSheet(false);
+      [patientItem1, patientItem2, patientItem3, patientItem4].forEach(a => a.setValue(0));
+      if (callback) callback();
+    });
+  }, []);
+
+  const openSlotSheet = useCallback(() => {
+    setShowSlotSheet(true);
+    Animated.parallel([
+      Animated.timing(slotFadeAnim, {
+        toValue: 1,
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slotSlideAnim, {
+        toValue: 0,
+        duration: 450,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      floatIn([slotItem1, slotItem2, slotItem3, slotItem4, slotItem5], 70);
+    });
+  }, []);
+
+  const closeSlotSheet = useCallback((callback) => {
+    Animated.parallel([
+      Animated.timing(slotFadeAnim, {
+        toValue: 0,
+        duration: 280,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slotSlideAnim, {
+        toValue: height,
+        duration: 380,
+        easing: Easing.bezier(0.4, 0, 0.6, 1),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowSlotSheet(false);
+      [slotItem1, slotItem2, slotItem3, slotItem4, slotItem5].forEach(a => a.setValue(0));
+      if (callback) callback();
+    });
+  }, []);
+
+  // ---- Info Tray (Samples / Why / Preparations) ----
+  const [showInfoSheet, setShowInfoSheet] = useState(false);
+  const infoTypeRef = useRef("samples");
+
+  const infoSlideAnim = useRef(new Animated.Value(height)).current;
+  const infoFadeAnim = useRef(new Animated.Value(0)).current;
+
+  const infoPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 5,
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) {
+          infoSlideAnim.setValue(g.dy);
+          infoFadeAnim.setValue(1 - g.dy / (height * 0.6));
+        }
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > DISMISS_THRESHOLD || g.vy > 0.5) {
+          closeInfoSheet();
+        } else {
+          Animated.parallel([
+            Animated.spring(infoSlideAnim, { toValue: 0, useNativeDriver: true }),
+            Animated.timing(infoFadeAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
+
+  const openInfoSheet = useCallback((type) => {
+    infoTypeRef.current = type;
+    setShowInfoSheet(true);
+    Animated.parallel([
+      Animated.timing(infoFadeAnim, {
+        toValue: 1,
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(infoSlideAnim, {
+        toValue: 0,
+        duration: 450,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const closeInfoSheet = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(infoFadeAnim, {
+        toValue: 0,
+        duration: 280,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(infoSlideAnim, {
+        toValue: height,
+        duration: 380,
+        easing: Easing.bezier(0.4, 0, 0.6, 1),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowInfoSheet(false);
+    });
+  }, []);
+
+  // Content data for the 3 info types
+  const infoContent = {
+    samples: {
+      icon: "flask-outline",
+      iconLib: "Ionicons",
+      title: "Samples Required",
+      color: "#7C3AED",
+      bg: "#EDE9FE",
+      sections: [
+        { heading: "Blood Sample", desc: "A small amount of blood (3-5 ml) is drawn from a vein in your arm using a sterile syringe." },
+        { heading: "Urine Sample", desc: "A mid-stream urine sample may be required in a sterile container provided at the lab." },
+        { heading: "Fasting Required?", desc: "Some tests require 8-12 hours fasting. Water is allowed. Your lab will confirm specific requirements." },
+      ],
+    },
+    why: {
+      icon: "information-circle-outline",
+      iconLib: "Ionicons",
+      title: "Why This Test Is Booked",
+      color: "#2563EB",
+      bg: "#DBEAFE",
+      sections: [
+        { heading: "Early Detection", desc: "Helps identify health conditions at an early stage when they are most treatable." },
+        { heading: "Monitor Existing Conditions", desc: "If you have a known condition, regular testing tracks progress and treatment effectiveness." },
+        { heading: "Preventive Health", desc: "Routine screening helps maintain overall wellness and catch risk factors before symptoms appear." },
+      ],
+    },
+    preparations: {
+      icon: "clipboard-outline",
+      iconLib: "Ionicons",
+      title: "Test Preparations",
+      color: "#059669",
+      bg: "#D1FAE5",
+      sections: [
+        { heading: "Before Your Test", desc: "Avoid heavy meals, alcohol, and strenuous exercise 24 hours before sample collection." },
+        { heading: "Medications", desc: "Inform the lab about any medications or supplements you are currently taking. Do not stop any medication without consulting your doctor." },
+        { heading: "On The Day", desc: "Wear comfortable clothing with sleeves that can be easily rolled up. Stay hydrated with water and arrive on time for your appointment." },
+      ],
+    },
+    collection: {
+      icon: "people-outline",
+      iconLib: "Ionicons",
+      title: "Who Will Collect Your Sample?",
+      color: "#7C3AED",
+      bg: "#EDE9FE",
+      sections: [
+        { heading: "Certified Phlebotomist", desc: "A trained & certified phlebotomist from our partner lab will visit your home at the scheduled time. They carry valid ID and proper equipment." },
+        { heading: "Home Collection Process", desc: "The phlebotomist will verify your identity (Aadhaar/ID), label the vials in front of you, and collect the sample following strict hygiene protocols." },
+        { heading: "Safety & Hygiene", desc: "Single-use sterile needles, gloves, and sealed collection tubes are used. All equipment is disposed safely after use. No cross-contamination risk." },
+        { heading: "Sample Transport", desc: "Collected samples are stored in temperature-controlled bags and transported to the nearest NABL-accredited lab within 2 hours for processing." },
+        { heading: "Lab Center Option", desc: "You can also visit any of our 500+ partner lab centers across the city. Walk-in slots available 6 AM – 6 PM, no appointment needed." },
+      ],
+    },
+  };
 
   const slotDays = [
     { label: "Today", slots: "6 slots" },
@@ -61,13 +417,7 @@ const TestDetails = () => {
     "11.00 am - 12.00 pm",
   ];
 
-  const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
-      setActiveIndex(viewableItems[0].index);
-    }
-  }).current;
 
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   return (
     <View style={styles.container}>
@@ -106,128 +456,156 @@ const TestDetails = () => {
             </View>
             <View style={styles.testInfoRight}>
               <Text weight="700" style={styles.testTitle}>
-                Diabetes Screening{"\n"}(HbAIC & Fasting Sugar)
+                {testTitle}
               </Text>
               <View style={styles.pillRow}>
                 <View style={styles.pill}>
                   <Text weight="500" style={styles.pillText}>
-                    Contains 2 tests
+                    Contains {testCount} tests
                   </Text>
                   <MaterialIcons name="keyboard-arrow-down" size={16} color="#22C55E" />
                 </View>
                 <View style={styles.pill}>
                   <Text weight="500" style={styles.pillText}>
-                    Report within 15 hrs
+                    Report within {reportTime}
                   </Text>
                 </View>
               </View>
               <View style={styles.priceRow}>
-                <Text weight="700" style={styles.price}>479/-</Text>
-                <Text weight="400" style={styles.originalPrice}>625/-</Text>
-                <Text weight="600" style={styles.discount}>25% off</Text>
+                <Text weight="700" style={styles.price}>{price}/-</Text>
+                <Text weight="400" style={styles.originalPrice}>{originalPrice}/-</Text>
+                <Text weight="600" style={styles.discount}>{discount}</Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Know More Section */}
-        <View style={styles.section}>
-          <Text weight="600" style={styles.sectionTitle}>
-            Know more about this test
-          </Text>
-          <View style={styles.knowMoreCard}>
-            <Text weight="400" style={styles.knowMoreText}>
-              {"\u2022"} Passengers travelling to and from YF endemic countries (countries
-              where Yellow Fever is persisting) are required to be in possession
-              of a "VALID YELLOW FEVER VACCINATION CERTIFICATE" issued by
-              authorized and designated vaccination centers in India.
+        {/* Learn More Section - Single Card with Sub-cards */}
+        <View style={styles.learnMoreSection}>
+          <LinearGradient
+            colors={["#E8D5F5", "#C7B8F0", "#A8A0E8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.learnMoreCard}
+          >
+            <Text weight="700" style={styles.learnMoreTitle}>
+              Learn more about this test
             </Text>
-            <Text weight="400" style={styles.knowMoreText}>
-              {"\u2022"} Those found not in possession of such Valid certificate or defective
-              certificate as enumerated by the WHO, are upon...{" "}
-              <Text weight="600" style={styles.seeMore}>See more</Text>
-            </Text>
-          </View>
-        </View>
 
-        {/* Info Grid */}
-        <View style={styles.infoGrid}>
-          <View style={styles.infoCardRow}>
-            <View style={styles.infoCard}>
-              <Text weight="400" style={styles.infoLabel}>Samples Required</Text>
-              <Text weight="700" style={styles.infoValue}>Blood</Text>
-            </View>
-            <View style={styles.infoCard}>
-              <Text weight="400" style={styles.infoLabel}>Find out</Text>
-              <Text weight="700" style={styles.infoValue}>
-                Why is this test{"\n"}booked?
+            {/* Description sub-card */}
+            <View style={styles.learnMoreDescCard}>
+              <Text weight="400" style={styles.learnMoreDescText}>
+                {testTitle.replace(/\n/g, " ")} - comprehensive diagnostic screening for accurate health assessment.
               </Text>
             </View>
-            <View style={styles.infoCard}>
-              <Text weight="400" style={styles.infoLabel}>Preparations</Text>
-              <Text weight="700" style={styles.infoValue}>
-                Overnight Fasting{"\n"}Required
-              </Text>
+
+            {/* Info sub-cards row */}
+            <View style={styles.learnMoreSubRow}>
+              <TouchableOpacity style={styles.learnMoreSubCard} activeOpacity={0.7}
+                onPress={() => openInfoSheet("samples")}
+              >
+                <View style={styles.learnMoreSubCardTop}>
+                  <View style={styles.learnMoreIconWrap}>
+                    <Ionicons name="flask-outline" size={16} color="#553FB5" />
+                  </View>
+                  <MaterialIcons name="chevron-right" size={18} color="#9CA3AF" />
+                </View>
+                <Text weight="400" style={styles.learnMoreSubLabel}>
+                  Samples{"\n"}Required
+                </Text>
+                <Text weight="700" style={styles.learnMoreSubValue}>
+                  Click to view
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.learnMoreSubCard} activeOpacity={0.7}
+                onPress={() => openInfoSheet("why")}
+              >
+                <View style={styles.learnMoreSubCardTop}>
+                  <View style={styles.learnMoreIconWrap}>
+                    <Ionicons name="information-circle-outline" size={16} color="#553FB5" />
+                  </View>
+                  <MaterialIcons name="chevron-right" size={18} color="#9CA3AF" />
+                </View>
+                <Text weight="400" style={styles.learnMoreSubLabel}>
+                  Why This Test Is{"\n"}Booked
+                </Text>
+                <Text weight="700" style={styles.learnMoreSubValue}>
+                  Know the{"\n"}purpose
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.learnMoreSubCard} activeOpacity={0.7}
+                onPress={() => openInfoSheet("preparations")}
+              >
+                <View style={styles.learnMoreSubCardTop}>
+                  <View style={styles.learnMoreIconWrap}>
+                    <Ionicons name="clipboard-outline" size={16} color="#553FB5" />
+                  </View>
+                  <MaterialIcons name="chevron-right" size={18} color="#9CA3AF" />
+                </View>
+                <Text weight="400" style={styles.learnMoreSubLabel}>
+                  Test{"\n"}Preparations
+                </Text>
+                <Text weight="700" style={styles.learnMoreSubValue}>
+                  Before your{"\n"}test
+                </Text>
+              </TouchableOpacity>
             </View>
-          </View>
-          <View style={styles.infoCardFull}>
-            <Text weight="400" style={styles.infoLabel}>Sample Collection</Text>
-            <Text weight="700" style={styles.infoValue}>
-              Who will collect your samples?
-            </Text>
-          </View>
+
+            {/* Sample Collection full-width sub-card */}
+            <TouchableOpacity
+              style={styles.learnMoreFullCard}
+              activeOpacity={0.7}
+              onPress={() => openInfoSheet("collection")}
+            >
+              <View style={styles.learnMoreFullCardInner}>
+                <View>
+                  <View style={styles.learnMoreIconWrap}>
+                    <Ionicons name="download-outline" size={16} color="#553FB5" />
+                  </View>
+                  <Text weight="400" style={styles.learnMoreFullLabel}>
+                    Sample Collection
+                  </Text>
+                  <Text weight="700" style={styles.learnMoreFullValue}>
+                    Who will collect your sample?
+                  </Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={22} color="#9CA3AF" />
+              </View>
+            </TouchableOpacity>
+          </LinearGradient>
         </View>
 
         {/* Popular Packages */}
         <View style={styles.popularSection}>
           <View style={styles.popularHeader}>
             <Text weight="700" style={styles.popularTitle}>Popular Packages</Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity>
               <Text weight="600" style={styles.viewAll}>View All</Text>
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            ref={flatListRef}
-            data={popularPackages}
+          <ScrollView
+            ref={pkgScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.packageList}
-            snapToInterval={CARD_WIDTH + 12}
-            decelerationRate="fast"
-            onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={viewabilityConfig}
-            renderItem={({ item }) => (
-              <View style={styles.packageCard}>
-                <Text weight="700" style={styles.packageTitle} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                <Text weight="600" style={styles.packageDesc}>
-                  {item.desc}
-                </Text>
-                <Text weight="800" style={styles.packagePrice}>
-                  {item.price}
-                </Text>
-                <View style={styles.packageArrowBtn}>
-                  <MaterialIcons name="keyboard-arrow-right" size={14} color="#5C3EAB" />
-                </View>
+            scrollEventThrottle={16}
+            onMomentumScrollEnd={(e) => pkgRecenter(e.nativeEvent.contentOffset.x)}
+            onScrollEndDrag={(e) => pkgRecenter(e.nativeEvent.contentOffset.x)}
+          >
+            {pkgLoopData.map((pkg) => (
+              <View key={pkg._key} style={styles.packageCard}>
+                <Text weight="700" style={styles.packageTitle}>{pkg.title}</Text>
+                <Text weight="400" style={styles.packageDesc}>{pkg.desc}</Text>
+                <Text weight="800" style={styles.packagePrice}>{pkg.price}</Text>
+                <TouchableOpacity style={styles.packageArrowBtn}>
+                  <MaterialIcons name="chevron-right" size={14} color="#7C3AED" />
+                </TouchableOpacity>
               </View>
-            )}
-          />
-
-          {/* Dots */}
-          <View style={styles.dotsRow}>
-            {popularPackages.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  activeIndex === index && styles.dotActive,
-                ]}
-              />
             ))}
-          </View>
+          </ScrollView>
         </View>
       </ScrollView>
 
@@ -240,10 +618,10 @@ const TestDetails = () => {
       >
         <View>
           <Text weight="400" style={styles.totalLabel}>Total Amount</Text>
-          <Text weight="700" style={styles.totalPrice}>479/-</Text>
+          <Text weight="700" style={styles.totalPrice}>{price}/-</Text>
         </View>
         <TouchableOpacity activeOpacity={0.8} style={styles.bookTestBtnWrap}
-          onPress={() => setShowPatientSheet(true)}
+          onPress={openPatientSheet}
         >
           <LinearGradient
             colors={["#B148FF", "#F6339B", "#9914F9"]}
@@ -260,35 +638,153 @@ const TestDetails = () => {
       {/* Patient Details Bottom Sheet */}
       <Modal
         visible={showPatientSheet}
-        animationType="slide"
         transparent
-        onRequestClose={() => setShowPatientSheet(false)}
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => closePatientSheet()}
       >
-        <TouchableOpacity
-          style={styles.sheetOverlay}
-          activeOpacity={1}
-          onPress={() => setShowPatientSheet(false)}
-        >
-          <View style={styles.sheetContainer} onStartShouldSetResponder={() => true}>
-            <LinearGradient
-              colors={["#E4CCF7", "#FFE9CF"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0.4 }}
-              style={styles.sheetGradient}
-            >
-              {/* Header */}
-              <View style={styles.sheetHeader}>
-                <TouchableOpacity onPress={() => setShowPatientSheet(false)}>
-                  <MaterialIcons name="arrow-back" size={24} color="#6D28D9" />
-                </TouchableOpacity>
-                <Text weight="700" style={styles.sheetTitle}>Patient details</Text>
-              </View>
+        {/* Backdrop */}
+        <Animated.View style={[styles.sheetOverlay, { opacity: patientFadeAnim }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => closePatientSheet()} />
+        </Animated.View>
 
+        {/* Tray */}
+        <Animated.View style={[styles.sheetContainer, { transform: [{ translateY: patientSlideAnim }] }]}>
+          <LinearGradient
+            colors={["#E4CCF7", "#F5E0EC", "#FFE9CF"]}
+            locations={[0, 0.5, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.6 }}
+            style={styles.sheetGradient}
+          >
+            {/* Handle – drag to dismiss */}
+            <View {...patientPanResponder.panHandlers} style={styles.trayHandle}>
+              <View style={styles.trayHandleBar} />
+            </View>
+
+            {/* Header */}
+            <Animated.View style={[styles.sheetHeader, floatStyle(patientItem1, 24)]}>
+              <TouchableOpacity onPress={() => closePatientSheet()} style={styles.sheetBackBtn}>
+                <MaterialIcons name="arrow-back" size={24} color="#6D28D9" />
+              </TouchableOpacity>
+              <Text weight="700" style={styles.sheetTitle}>Patient details</Text>
+            </Animated.View>
+
+            <Animated.View style={floatStyle(patientItem2, 28)}>
               <Text weight="600" style={styles.sheetSubtitle}>
                 Lets Start with your personal details
               </Text>
+            </Animated.View>
+
+            {/* Profile Card */}
+            <Animated.View style={floatStyle(patientItem3, 32)}>
+            <LinearGradient
+              colors={["#FDEFFB", "#FBF1FE", "#E9DAFD"]}
+              locations={[0, 0.5, 1]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.sheetProfileCard}
+            >
+              <View style={styles.sheetProfileRow}>
+                <LinearGradient
+                  colors={["#FDBEA5", "#F695CF", "#8E66EB"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.avatarOuterRing}
+                >
+                  <View style={styles.avatarWhiteRing}>
+                    <LinearGradient
+                      colors={["#EEA6C8", "#996EEB"]}
+                      start={{ x: 0.13, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.avatarGradient}
+                    >
+                      <Text weight="700" style={styles.avatarText}>SN</Text>
+                    </LinearGradient>
+                  </View>
+                </LinearGradient>
+
+                <View style={styles.sheetProfileInfo}>
+                  <Text weight="700" style={styles.sheetProfileName}>Sakshi Nishad</Text>
+                  <View style={styles.sheetTagsRow}>
+                    <View style={styles.sheetTag}>
+                      <Text weight="500" style={styles.sheetTagText}>Female</Text>
+                    </View>
+                    <View style={styles.sheetTag}>
+                      <Text weight="500" style={styles.sheetTagText}>22 yrs</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.sheetDropdownIcon}>
+                  <Ionicons name="chevron-down" size={22} color="#7C3AED" />
+                </View>
+              </View>
+            </LinearGradient>
+            </Animated.View>
+
+            {/* Book a Slot Button */}
+            <Animated.View style={floatStyle(patientItem4, 36)}>
+            <TouchableOpacity activeOpacity={0.8} style={styles.bookSlotBtnWrap}
+              onPress={() => {
+                closePatientSheet(() => {
+                  openSlotSheet();
+                });
+              }}
+            >
+              <LinearGradient
+                colors={["#B148FF", "#F6339B", "#9914F9"]}
+                locations={[0, 0.5, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.bookSlotBtn}
+              >
+                <Text weight="700" style={styles.bookSlotBtnText}>Book a slot</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            </Animated.View>
+          </LinearGradient>
+        </Animated.View>
+      </Modal>
+
+      {/* Slot Selection Bottom Sheet */}
+      <Modal
+        visible={showSlotSheet}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => closeSlotSheet()}
+      >
+        {/* Backdrop */}
+        <Animated.View style={[styles.sheetOverlay, { opacity: slotFadeAnim }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => closeSlotSheet()} />
+        </Animated.View>
+
+        {/* Tray */}
+        <Animated.View style={[styles.slotSheetContainer, { transform: [{ translateY: slotSlideAnim }] }]}>
+          <LinearGradient
+            colors={["#E4CCF7", "#F5E0EC", "#FFE9CF"]}
+            locations={[0, 0.5, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.6 }}
+            style={styles.slotSheetGradient}
+          >
+            {/* Handle – drag to dismiss */}
+            <View {...slotPanResponder.panHandlers} style={styles.trayHandle}>
+              <View style={styles.trayHandleBar} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Header */}
+              <Animated.View style={[styles.sheetHeader, floatStyle(slotItem1, 24)]}>
+                <TouchableOpacity onPress={() => closeSlotSheet()} style={styles.sheetBackBtn}>
+                  <MaterialIcons name="arrow-back" size={24} color="#6D28D9" />
+                </TouchableOpacity>
+                <Text weight="700" style={styles.sheetTitle}>Slot Selection</Text>
+              </Animated.View>
 
               {/* Profile Card */}
+              <Animated.View style={floatStyle(slotItem2, 26)}>
               <LinearGradient
                 colors={["#FDEFFB", "#FBF1FE", "#E9DAFD"]}
                 locations={[0, 0.5, 1]}
@@ -332,227 +828,214 @@ const TestDetails = () => {
                   </View>
                 </View>
               </LinearGradient>
+              </Animated.View>
 
-              {/* Book a Slot Button */}
-              <TouchableOpacity activeOpacity={0.8} style={styles.bookSlotBtnWrap}
-                onPress={() => {
-                  setShowPatientSheet(false);
-                  setShowSlotSheet(true);
-                }}
+              {/* Select Address */}
+              <Animated.View style={[styles.slotAddressCard, floatStyle(slotItem3, 28)]}>
+                <View style={styles.slotAddressHeader}>
+                  <Text weight="600" style={styles.slotAddressTitle}>Select Address</Text>
+                  <TouchableOpacity activeOpacity={0.7}>
+                    <Text weight="600" style={styles.slotChangeText}>Change</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.slotDivider} />
+                <Text weight="700" style={styles.slotAddressLine1}>
+                  473, Torana Chs, Ramnagar, Ghatkopar West
+                </Text>
+                <Text weight="400" style={styles.slotAddressLine2}>
+                  Mumbai, Maharashtra – 400086
+                </Text>
+              </Animated.View>
+
+              {/* Select A Slot */}
+              <Animated.View style={[styles.slotPickerCard, floatStyle(slotItem4, 32)]}>
+                <Text weight="600" style={styles.slotPickerTitle}>Select A Slot</Text>
+                <View style={styles.slotDivider} />
+
+                {/* Day Pills */}
+                <View style={styles.slotDayRow}>
+                  {slotDays.map((day, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      activeOpacity={0.8}
+                      onPress={() => setSelectedDay(index)}
+                      style={[
+                        styles.slotDayPill,
+                        selectedDay === index && styles.slotDayPillActive,
+                      ]}
+                    >
+                      <Text
+                        weight="600"
+                        style={[
+                          styles.slotDayLabel,
+                          selectedDay === index && styles.slotDayLabelActive,
+                        ]}
+                      >
+                        {day.label}
+                      </Text>
+                      <Text
+                        weight="400"
+                        style={[
+                          styles.slotDaySlots,
+                          selectedDay === index && styles.slotDaySlotsActive,
+                        ]}
+                      >
+                        {day.slots}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Time Period Pills */}
+                <View style={styles.slotPeriodRow}>
+                  {timePeriods.map((period, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      activeOpacity={0.8}
+                      onPress={() => setSelectedPeriod(index)}
+                      style={[
+                        styles.slotPeriodPill,
+                        selectedPeriod === index && styles.slotPeriodPillActive,
+                      ]}
+                    >
+                      <Text
+                        weight="500"
+                        style={[
+                          styles.slotPeriodText,
+                          selectedPeriod === index && styles.slotPeriodTextActive,
+                        ]}
+                      >
+                        {period}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Time Slots */}
+                <View style={styles.slotTimesContainer}>
+                  {timeSlots.map((slot, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      activeOpacity={0.8}
+                      onPress={() => setSelectedSlot(index)}
+                      style={styles.slotTimeRow}
+                    >
+                      <View style={styles.slotRadioOuter}>
+                        {selectedSlot === index && <View style={styles.slotRadioInner} />}
+                      </View>
+                      <Text
+                        weight={selectedSlot === index ? "600" : "400"}
+                        style={styles.slotTimeText}
+                      >
+                        {slot}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </Animated.View>
+            </ScrollView>
+
+            {/* Continue Button */}
+            <Animated.View style={floatStyle(slotItem5, 36)}>
+            <TouchableOpacity activeOpacity={0.8} style={styles.slotContinueBtnWrap}
+              onPress={() => {
+                closeSlotSheet(() => {
+                  navigation.navigate("BookingDetails");
+                });
+              }}
+            >
+              <LinearGradient
+                colors={["#B148FF", "#F6339B", "#9914F9"]}
+                locations={[0, 0.5, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.slotContinueBtn}
               >
-                <LinearGradient
-                  colors={["#B148FF", "#F6339B", "#9914F9"]}
-                  locations={[0, 0.5, 1]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.bookSlotBtn}
-                >
-                  <Text weight="700" style={styles.bookSlotBtnText}>Book a slot</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-        </TouchableOpacity>
+                <Text weight="700" style={styles.slotContinueBtnText}>Continue</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            </Animated.View>
+          </LinearGradient>
+        </Animated.View>
       </Modal>
 
-      {/* Slot Selection Bottom Sheet */}
+      {/* Info Bottom Sheet (Samples / Why / Preparations) */}
       <Modal
-        visible={showSlotSheet}
-        animationType="slide"
+        visible={showInfoSheet}
         transparent
-        onRequestClose={() => setShowSlotSheet(false)}
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={closeInfoSheet}
       >
-        <TouchableOpacity
-          style={styles.sheetOverlay}
-          activeOpacity={1}
-          onPress={() => setShowSlotSheet(false)}
-        >
-          <View style={styles.slotSheetContainer} onStartShouldSetResponder={() => true}>
-            <LinearGradient
-              colors={["#E4CCF7", "#FFE9CF"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0.4 }}
-              style={styles.slotSheetGradient}
-            >
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Header */}
-                <View style={styles.sheetHeader}>
-                  <TouchableOpacity onPress={() => setShowSlotSheet(false)}>
-                    <MaterialIcons name="arrow-back" size={24} color="#6D28D9" />
-                  </TouchableOpacity>
-                  <Text weight="700" style={styles.sheetTitle}>Slot Selection</Text>
-                </View>
+        <Animated.View style={[styles.sheetOverlay, { opacity: infoFadeAnim }]}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={closeInfoSheet} />
+        </Animated.View>
 
-                {/* Profile Card */}
-                <LinearGradient
-                  colors={["#FDEFFB", "#FBF1FE", "#E9DAFD"]}
-                  locations={[0, 0.5, 1]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={styles.sheetProfileCard}
+        <Animated.View style={[styles.infoSheetContainer, { transform: [{ translateY: infoSlideAnim }] }]}>
+          <LinearGradient
+            colors={["#E4CCF7", "#FFE9CF"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.infoSheetGradient}
+          >
+            <View {...infoPanResponder.panHandlers} style={styles.trayHandle}>
+              <View style={styles.trayHandleBar} />
+            </View>
+
+            {["samples", "why", "preparations", "collection"].map((key) => (
+              <View key={key} style={{ display: infoTypeRef.current === key ? "flex" : "none" }}>
+                <ScrollView
+                  style={styles.infoSheetScroll}
+                  showsVerticalScrollIndicator={false}
+                  bounces={true}
                 >
-                  <View style={styles.sheetProfileRow}>
+                  <View style={styles.infoHeaderRow}>
+                    <View style={[styles.infoIconWrap, { backgroundColor: infoContent[key].bg }]}>
+                      <Ionicons
+                        name={infoContent[key].icon}
+                        size={24}
+                        color={infoContent[key].color}
+                      />
+                    </View>
+                    <Text weight="700" style={styles.infoTitle}>
+                      {infoContent[key].title}
+                    </Text>
+                  </View>
+
+                  {infoContent[key].sections.map((section, idx) => (
+                    <View key={idx} style={styles.infoSectionCard}>
+                      <View style={styles.infoSectionRow}>
+                        <View style={[styles.infoSectionDot, { backgroundColor: infoContent[key].color }]} />
+                        <Text weight="700" style={styles.infoSectionHeading}>
+                          {section.heading}
+                        </Text>
+                      </View>
+                      <Text weight="400" style={styles.infoSectionDesc}>
+                        {section.desc}
+                      </Text>
+                    </View>
+                  ))}
+
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    style={styles.infoCloseBtnWrap}
+                    onPress={closeInfoSheet}
+                  >
                     <LinearGradient
-                      colors={["#FDBEA5", "#F695CF", "#8E66EB"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.avatarOuterRing}
+                      colors={["#B148FF", "#F6339B", "#9914F9"]}
+                      locations={[0, 0.5, 1]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={styles.infoCloseBtn}
                     >
-                      <View style={styles.avatarWhiteRing}>
-                        <LinearGradient
-                          colors={["#EEA6C8", "#996EEB"]}
-                          start={{ x: 0.13, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={styles.avatarGradient}
-                        >
-                          <Text weight="700" style={styles.avatarText}>SN</Text>
-                        </LinearGradient>
-                      </View>
+                      <Text weight="700" style={styles.infoCloseBtnText}>Got It</Text>
                     </LinearGradient>
-
-                    <View style={styles.sheetProfileInfo}>
-                      <Text weight="700" style={styles.sheetProfileName}>Sakshi Nishad</Text>
-                      <View style={styles.sheetTagsRow}>
-                        <View style={styles.sheetTag}>
-                          <Text weight="500" style={styles.sheetTagText}>Female</Text>
-                        </View>
-                        <View style={styles.sheetTag}>
-                          <Text weight="500" style={styles.sheetTagText}>22 yrs</Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    <View style={styles.sheetDropdownIcon}>
-                      <Ionicons name="chevron-down" size={22} color="#7C3AED" />
-                    </View>
-                  </View>
-                </LinearGradient>
-
-                {/* Select Address */}
-                <View style={styles.slotAddressCard}>
-                  <View style={styles.slotAddressHeader}>
-                    <Text weight="600" style={styles.slotAddressTitle}>Select Address</Text>
-                    <TouchableOpacity activeOpacity={0.7}>
-                      <Text weight="600" style={styles.slotChangeText}>Change</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.slotDivider} />
-                  <Text weight="700" style={styles.slotAddressLine1}>
-                    473, Torana Chs, Ramnagar, Ghatkopar West
-                  </Text>
-                  <Text weight="400" style={styles.slotAddressLine2}>
-                    Mumbai, Maharashtra – 400086
-                  </Text>
-                </View>
-
-                {/* Select A Slot */}
-                <View style={styles.slotPickerCard}>
-                  <Text weight="600" style={styles.slotPickerTitle}>Select A Slot</Text>
-                  <View style={styles.slotDivider} />
-
-                  {/* Day Pills */}
-                  <View style={styles.slotDayRow}>
-                    {slotDays.map((day, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        activeOpacity={0.8}
-                        onPress={() => setSelectedDay(index)}
-                        style={[
-                          styles.slotDayPill,
-                          selectedDay === index && styles.slotDayPillActive,
-                        ]}
-                      >
-                        <Text
-                          weight="600"
-                          style={[
-                            styles.slotDayLabel,
-                            selectedDay === index && styles.slotDayLabelActive,
-                          ]}
-                        >
-                          {day.label}
-                        </Text>
-                        <Text
-                          weight="400"
-                          style={[
-                            styles.slotDaySlots,
-                            selectedDay === index && styles.slotDaySlotsActive,
-                          ]}
-                        >
-                          {day.slots}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  {/* Time Period Pills */}
-                  <View style={styles.slotPeriodRow}>
-                    {timePeriods.map((period, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        activeOpacity={0.8}
-                        onPress={() => setSelectedPeriod(index)}
-                        style={[
-                          styles.slotPeriodPill,
-                          selectedPeriod === index && styles.slotPeriodPillActive,
-                        ]}
-                      >
-                        <Text
-                          weight="500"
-                          style={[
-                            styles.slotPeriodText,
-                            selectedPeriod === index && styles.slotPeriodTextActive,
-                          ]}
-                        >
-                          {period}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  {/* Time Slots */}
-                  <View style={styles.slotTimesContainer}>
-                    {timeSlots.map((slot, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        activeOpacity={0.8}
-                        onPress={() => setSelectedSlot(index)}
-                        style={styles.slotTimeRow}
-                      >
-                        <View style={styles.slotRadioOuter}>
-                          {selectedSlot === index && <View style={styles.slotRadioInner} />}
-                        </View>
-                        <Text
-                          weight={selectedSlot === index ? "600" : "400"}
-                          style={styles.slotTimeText}
-                        >
-                          {slot}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-              </ScrollView>
-
-              {/* Continue Button */}
-              <TouchableOpacity activeOpacity={0.8} style={styles.slotContinueBtnWrap}
-                onPress={() => {
-                  setShowSlotSheet(false);
-                  navigation.navigate("BookingDetails");
-                }}
-              >
-                <LinearGradient
-                  colors={["#B148FF", "#F6339B", "#9914F9"]}
-                  locations={[0, 0.5, 1]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.slotContinueBtn}
-                >
-                  <Text weight="700" style={styles.slotContinueBtnText}>Continue</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-        </TouchableOpacity>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            ))}
+          </LinearGradient>
+        </Animated.View>
       </Modal>
     </View>
   );
@@ -670,83 +1153,98 @@ const styles = StyleSheet.create({
     color: "#22C55E",
   },
 
-  // Know More Section
-  section: {
+  // Learn More Section
+  learnMoreSection: {
     marginHorizontal: 16,
     marginTop: 24,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 15,
-    color: "#553FB5",
-    marginBottom: 10,
+  learnMoreCard: {
+    borderRadius: 20,
+    padding: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#BF7BB9",
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: { elevation: 4, shadowColor: "#BF7BB9" },
+    }),
   },
-  knowMoreCard: {
-    width: 323,
-    height: 99,
-    alignSelf: "center",
-    backgroundColor: "#F2FCFF",
-    borderRadius: 6,
+  learnMoreTitle: {
+    fontSize: 18,
+    color: "#1A237E",
+    marginBottom: 14,
+  },
+  learnMoreDescCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
     padding: 14,
-    shadowColor: "#BF7BB9",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    marginBottom: 12,
   },
-  knowMoreText: {
-    width: 299,
-    fontSize: 9,
+  learnMoreDescText: {
+    fontSize: 13,
     color: "#374151",
-    lineHeight: 12.6,
-    marginBottom: 6,
+    lineHeight: 19,
   },
-  seeMore: {
-    fontSize: 9,
-    color: "#1f2937",
-  },
-
-  // Info Grid
-  infoGrid: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    gap: 10,
-  },
-  infoCardRow: {
+  learnMoreSubRow: {
     flexDirection: "row",
     gap: 10,
+    marginBottom: 12,
   },
-  infoCard: {
-    width: 100,
-    height: 90,
-    backgroundColor: "#F2FCFF",
-    borderRadius: 6,
-    padding: 12,
-    shadowColor: "#BF7BB9",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+  learnMoreSubCard: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    padding: 10,
   },
-  infoCardFull: {
-    backgroundColor: "#F2FCFF",
-    borderRadius: 12,
-    padding: 12,
-    shadowColor: "#BF7BB9",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+  learnMoreSubCardTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 6,
   },
-  infoLabel: {
-    fontSize: 8,
-    color: "#6B7280",
-    lineHeight: 11.2,
+  learnMoreIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#EDE9FE",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 4,
   },
-  infoValue: {
+  learnMoreSubLabel: {
     fontSize: 10,
-    color: "#1f2937",
+    color: "#6B7280",
     lineHeight: 14,
+    marginBottom: 4,
+  },
+  learnMoreSubValue: {
+    fontSize: 11,
+    color: "#1f2937",
+    lineHeight: 15,
+  },
+  learnMoreFullCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    padding: 14,
+  },
+  learnMoreFullCardInner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  learnMoreFullLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  learnMoreFullValue: {
+    fontSize: 12,
+    color: "#1f2937",
+    lineHeight: 17,
   },
 
   // Popular Packages
@@ -833,107 +1331,137 @@ const styles = StyleSheet.create({
       android: { elevation: 3 },
     }),
   },
-  dotsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#D1D5DB",
-  },
-  dotActive: {
-    backgroundColor: "#7C3AED",
-  },
+
 
   // Bottom Bar
   bottomBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    paddingBottom: Platform.OS === "ios" ? 30 : 14,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 5,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    paddingBottom: Platform.OS === "ios" ? 32 : 18,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: "#7C3AED",
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 10,
   },
   totalLabel: {
     fontSize: 12,
     color: "#6B7280",
+    letterSpacing: 0.3,
   },
   totalPrice: {
-    fontSize: 22,
-    color: "#1f2937",
+    fontSize: 24,
+    color: "#1e293b",
+    letterSpacing: -0.3,
+    marginTop: 2,
   },
   bookTestBtnWrap: {
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: "hidden",
+    shadowColor: "#9914F9",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   bookTestBtn: {
     paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 10,
+    paddingHorizontal: 32,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   bookTestBtnText: {
     color: "#fff",
     fontSize: 15,
+    letterSpacing: 0.3,
   },
 
   // Patient Details Bottom Sheet
   sheetOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-end",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    zIndex: 1,
   },
   sheetContainer: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     overflow: "hidden",
+    shadowColor: "#7C3AED",
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 16,
+    zIndex: 2,
+  },
+  trayHandle: {
+    alignItems: "center",
+    paddingTop: 14,
+    paddingBottom: 12,
+    cursor: "pointer",
+  },
+  trayHandleBar: {
+    width: 48,
+    height: 5,
+    backgroundColor: "rgba(109,40,217,0.25)",
+    borderRadius: 999,
   },
   sheetGradient: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 36 : 24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    paddingTop: 8,
+    paddingHorizontal: 22,
+    paddingBottom: Platform.OS === "ios" ? 40 : 28,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+  },
+  sheetBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "rgba(124,58,237,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
     marginBottom: 18,
   },
   sheetTitle: {
-    fontSize: 18,
-    color: "#1F2937",
+    fontSize: 20,
+    color: "#1e293b",
+    letterSpacing: -0.2,
   },
   sheetSubtitle: {
     fontSize: 14,
-    color: "#1F2937",
-    marginBottom: 16,
+    color: "#4B5563",
+    marginBottom: 18,
+    lineHeight: 20,
   },
   sheetProfileCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#FFFFFF",
-    padding: 14,
-    marginBottom: 20,
+    borderRadius: 18,
+    borderWidth: 1.2,
+    borderColor: "rgba(255,255,255,0.8)",
+    padding: 16,
+    marginBottom: 22,
     shadowColor: "#BF7BB9",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: "hidden",
   },
   sheetProfileRow: {
@@ -1003,46 +1531,62 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bookSlotBtnWrap: {
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: "hidden",
+    shadowColor: "#9914F9",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
   bookSlotBtn: {
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   bookSlotBtnText: {
     color: "#fff",
     fontSize: 16,
+    letterSpacing: 0.4,
   },
 
   // Slot Selection Bottom Sheet
   slotSheetContainer: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     overflow: "hidden",
-    maxHeight: "90%",
+    maxHeight: "92%",
+    shadowColor: "#7C3AED",
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 16,
+    zIndex: 2,
   },
   slotSheetGradient: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 36 : 24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    paddingTop: 8,
+    paddingHorizontal: 22,
+    paddingBottom: Platform.OS === "ios" ? 40 : 28,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   slotAddressCard: {
     backgroundColor: "#FBF1FE",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 0.6,
-    borderColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.8)",
     shadowColor: "#BF7BB9",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 5,
   },
   slotDivider: {
     height: 1,
@@ -1073,16 +1617,16 @@ const styles = StyleSheet.create({
   },
   slotPickerCard: {
     backgroundColor: "#FBF1FE",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 0.6,
-    borderColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.8)",
     shadowColor: "#BF7BB9",
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 5,
   },
   slotPickerTitle: {
     fontSize: 15,
@@ -1185,19 +1729,119 @@ const styles = StyleSheet.create({
     color: "#1F2937",
   },
   slotContinueBtnWrap: {
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: "hidden",
-    marginTop: 10,
+    marginTop: 12,
+    shadowColor: "#9914F9",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
   slotContinueBtn: {
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   slotContinueBtnText: {
     color: "#fff",
     fontSize: 16,
+    letterSpacing: 0.4,
+  },
+
+  // ---- Info Bottom Sheet ----
+  infoSheetContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  infoSheetGradient: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: 0,
+    paddingBottom: Platform.OS === "ios" ? 40 : 28,
+    maxHeight: height * 0.72,
+    shadowColor: "#a78bfa",
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  infoSheetScroll: {
+    paddingHorizontal: 22,
+  },
+  infoHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 18,
+    marginTop: 2,
+  },
+  infoIconWrap: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  infoTitle: {
+    fontSize: 19,
+    color: "#1f2937",
+    flex: 1,
+  },
+  infoSectionCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: "#c4b5fd",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  infoSectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 10,
+  },
+  infoSectionDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+  infoSectionHeading: {
+    fontSize: 15,
+    color: "#1f2937",
+  },
+  infoSectionDesc: {
+    fontSize: 13.5,
+    color: "#4B5563",
+    lineHeight: 21,
+    paddingLeft: 19,
+  },
+  infoCloseBtnWrap: {
+    borderRadius: 16,
+    overflow: "hidden",
+    marginTop: 10,
+    marginBottom: 12,
+    marginHorizontal: 4,
+  },
+  infoCloseBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 16,
+  },
+  infoCloseBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    letterSpacing: 0.3,
   },
 });
 

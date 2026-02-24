@@ -1,0 +1,353 @@
+{
+  "blood-test": {
+    "title": "Blood Test",
+    "cards": [
+      {
+        "id": 1,
+        "title": "Complete Blood Count\n(CBC)",
+        "tests": 14,
+        "reportTime": "12 hours",
+        "price": 399,
+        "originalPrice": 550,
+        "discount": "27% off",
+        "purpose": "Evaluate overall health, detect infections, anemia, and blood disorders.",
+        "details": [
+          "Hemoglobin (Hb)",
+          "Red Blood Cell Count (RBC)",
+          "White Blood Cell Count (WBC)",
+          "Platelet Count",
+          "Hematocrit (HCT)",
+          "Mean Corpuscular Volume (MCV)",
+          "Mean Corpuscular Hemoglobin (MCH)",
+          "Mean Corpuscular Hemoglobin Concentration (MCHC)",
+          "Red Cell Distribution Width (RDW)",
+          "Mean Platelet Volume (MPV)",
+          "Differential Leukocyte Count",
+          "Absolute Neutrophil Count",
+          "Absolute Lymphocyte Count",
+          "Absolute Eosinophil Count"
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Lipid Profile\n(Cholesterol Panel)",
+        "tests": 6,
+        "reportTime": "10 hours",
+        "price": 449,
+        "originalPrice": 600,
+        "discount": "25% off",
+        "purpose": "Assess cholesterol levels and risk of heart disease.",
+        "details": [
+          "Total Cholesterol",
+          "HDL Cholesterol",
+          "LDL Cholesterol",
+          "VLDL Cholesterol",
+          "Triglycerides",
+          "Total Cholesterol/HDL Ratio"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Liver Function Test\n(LFT)",
+        "tests": 11,
+        "reportTime": "14 hours",
+        "price": 549,
+        "originalPrice": 750,
+        "discount": "27% off",
+        "purpose": "Evaluate liver health, detect liver damage or disease.",
+        "details": [
+          "Bilirubin Total",
+          "Bilirubin Direct",
+          "Bilirubin Indirect",
+          "SGOT (AST)",
+          "SGPT (ALT)",
+          "Alkaline Phosphatase (ALP)",
+          "Gamma GT (GGT)",
+          "Total Protein",
+          "Albumin",
+          "Globulin",
+          "A/G Ratio"
+        ]
+      }
+    ]
+  },
+  "diabetes-monitoring": {
+    "title": "Diabetes Monitoring",
+    "cards": [
+      {
+        "id": 1,
+        "title": "Diabetes Screening\n(HbA1c & Fasting Sugar)",
+        "tests": 2,
+        "reportTime": "15 hours",
+        "price": 479,
+        "originalPrice": 625,
+        "discount": "23% off",
+        "purpose": "Monitor blood sugar levels and long-term glucose control.",
+        "details": [
+          "HbA1c (Glycated Hemoglobin)",
+          "Fasting Blood Sugar"
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Post Prandial\nBlood Sugar (PPBS)",
+        "tests": 1,
+        "reportTime": "6 hours",
+        "price": 149,
+        "originalPrice": 200,
+        "discount": "25% off",
+        "purpose": "Measure glucose levels after a meal to assess insulin response.",
+        "details": [
+          "Post Prandial Blood Sugar"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Comprehensive Diabetes\nPanel",
+        "tests": 8,
+        "reportTime": "24 hours",
+        "price": 1299,
+        "originalPrice": 1800,
+        "discount": "28% off",
+        "purpose": "Complete diabetes assessment including kidney and lipid markers.",
+        "details": [
+          "HbA1c",
+          "Fasting Blood Sugar",
+          "Post Prandial Blood Sugar",
+          "Fasting Insulin",
+          "Microalbumin (Urine)",
+          "Serum Creatinine",
+          "Lipid Profile",
+          "Kidney Function Test"
+        ]
+      }
+    ]
+  },
+  "urine-stool-test": {
+    "title": "Urine & Stool Test",
+    "cards": [
+      {
+        "id": 1,
+        "title": "Urine Routine\n& Microscopy",
+        "tests": 10,
+        "reportTime": "8 hours",
+        "price": 199,
+        "originalPrice": 300,
+        "discount": "34% off",
+        "purpose": "Screen for urinary tract infections, kidney disease, and diabetes.",
+        "details": [
+          "Urine Color",
+          "Urine Appearance",
+          "Specific Gravity",
+          "pH",
+          "Urine Protein",
+          "Urine Glucose",
+          "Urine Ketones",
+          "Urine Bilirubin",
+          "RBCs in Urine",
+          "WBCs in Urine"
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Stool Routine\n& Microscopy",
+        "tests": 8,
+        "reportTime": "8 hours",
+        "price": 249,
+        "originalPrice": 350,
+        "discount": "29% off",
+        "purpose": "Detect digestive disorders, infections, and parasitic conditions.",
+        "details": [
+          "Stool Color",
+          "Stool Consistency",
+          "Mucus",
+          "Occult Blood",
+          "Ova & Cysts",
+          "RBCs",
+          "WBCs (Pus Cells)",
+          "Parasites"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Urine Culture\n& Sensitivity",
+        "tests": 3,
+        "reportTime": "48 hours",
+        "price": 599,
+        "originalPrice": 800,
+        "discount": "25% off",
+        "purpose": "Identify bacterial infections and determine effective antibiotics.",
+        "details": [
+          "Bacterial Culture",
+          "Colony Count",
+          "Antibiotic Sensitivity"
+        ]
+      }
+    ]
+  },
+  "genetic-tests": {
+    "title": "Genetic Tests",
+    "cards": [
+      {
+        "id": 1,
+        "title": "BRCA1 / BRCA2\nMutation Analysis",
+        "tests": 2,
+        "reportTime": "7 days",
+        "price": 8999,
+        "originalPrice": 12000,
+        "discount": "25% off",
+        "purpose": "Screen for hereditary breast and ovarian cancer risk.",
+        "details": [
+          "BRCA1 Gene Mutation Screening",
+          "BRCA2 Gene Mutation Screening"
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Thalassemia\nScreening Panel",
+        "tests": 5,
+        "reportTime": "3 days",
+        "price": 1499,
+        "originalPrice": 2000,
+        "discount": "25% off",
+        "purpose": "Detect thalassemia carrier status and blood disorders.",
+        "details": [
+          "Hemoglobin Electrophoresis",
+          "HbA2 Level",
+          "HbF Level",
+          "Iron Studies",
+          "Complete Blood Count"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Carrier Screening\nPanel",
+        "tests": 6,
+        "reportTime": "10 days",
+        "price": 12999,
+        "originalPrice": 18000,
+        "discount": "28% off",
+        "purpose": "Identify carriers of common genetic conditions before planning a family.",
+        "details": [
+          "Cystic Fibrosis Gene Test",
+          "Spinal Muscular Atrophy (SMA)",
+          "Sickle Cell Trait",
+          "Fragile X Syndrome",
+          "Tay-Sachs Disease",
+          "Phenylketonuria (PKU)"
+        ]
+      }
+    ]
+  },
+  "harmonal-tests": {
+    "title": "Hormonal Tests",
+    "cards": [
+      {
+        "id": 1,
+        "title": "Thyroid Profile\n(T3, T4, TSH)",
+        "tests": 3,
+        "reportTime": "10 hours",
+        "price": 499,
+        "originalPrice": 700,
+        "discount": "29% off",
+        "purpose": "Evaluate thyroid gland function and detect thyroid disorders.",
+        "details": [
+          "T3 (Triiodothyronine)",
+          "T4 (Thyroxine)",
+          "TSH (Thyroid Stimulating Hormone)"
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Reproductive Hormone\nPanel (Female)",
+        "tests": 5,
+        "reportTime": "12 hours",
+        "price": 1299,
+        "originalPrice": 1800,
+        "discount": "28% off",
+        "purpose": "Assess fertility, menstrual irregularities, and hormonal balance.",
+        "details": [
+          "FSH (Follicle Stimulating Hormone)",
+          "LH (Luteinizing Hormone)",
+          "Prolactin",
+          "Estradiol (E2)",
+          "Progesterone"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Metabolic Hormone\nPanel",
+        "tests": 4,
+        "reportTime": "14 hours",
+        "price": 1599,
+        "originalPrice": 2200,
+        "discount": "27% off",
+        "purpose": "Check hormones related to metabolism, stress, and energy regulation.",
+        "details": [
+          "Cortisol (Morning)",
+          "Insulin (Fasting)",
+          "DHEA-S",
+          "Testosterone (Total)"
+        ]
+      }
+    ]
+  },
+  "imaging-scans": {
+    "title": "Imaging & Scans",
+    "cards": [
+      {
+        "id": 1,
+        "title": "Ultrasound\n(Abdomen)",
+        "tests": 6,
+        "reportTime": "Same Day",
+        "price": 999,
+        "originalPrice": 1500,
+        "discount": "33% off",
+        "purpose": "Visualize abdominal organs to detect abnormalities and conditions.",
+        "details": [
+          "Liver",
+          "Gallbladder",
+          "Pancreas",
+          "Spleen",
+          "Kidneys",
+          "Urinary Bladder"
+        ]
+      },
+      {
+        "id": 2,
+        "title": "X-Ray\n(Chest PA View)",
+        "tests": 5,
+        "reportTime": "4 hours",
+        "price": 399,
+        "originalPrice": 600,
+        "discount": "33% off",
+        "purpose": "Detect infections, lung conditions, fractures.",
+        "details": [
+          "Chest PA View X-Ray",
+          "Lung Fields Assessment",
+          "Cardiac Silhouette",
+          "Mediastinal Evaluation",
+          "Bony Thorax Review"
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Bone Densitometry\n(DEXA Scan)",
+        "tests": 6,
+        "reportTime": "Same Day",
+        "price": 1999,
+        "originalPrice": 3000,
+        "discount": "33% off",
+        "purpose": "Measure bone density to assess osteoporosis and fracture risk.",
+        "details": [
+          "Lumbar Spine BMD",
+          "Femoral Neck BMD",
+          "Total Hip BMD",
+          "T-Score",
+          "Z-Score",
+          "Fracture Risk Assessment"
+        ]
+      }
+    ]
+  }
+}

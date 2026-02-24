@@ -78,7 +78,7 @@ const NAV_ITEMS = [
     icon: "google-circles-extended",
     lib: MaterialCommunityIcons,
   },
-  { label: "RECORDS", route: "Records", icon: "folder", lib: Entypo },
+  { label: "RECORDS", route: "LabHistory", icon: "folder", lib: Entypo },
   { label: "PROFILE", route: "Profile", icon: "user-alt", lib: FontAwesome5 },
 ];
 
@@ -427,7 +427,7 @@ const UploadPrescriptionSection = () => {
         <View style={s.uploadBadgeCol}>
           <View style={s.uploadBadge}>
             <View style={s.uploadBadgeIcon}>
-              <FontAwesome5 name="user-friends" size={10} color="#3B82F6" />
+              <FontAwesome5 name="user-friends" size={14} color="#3B82F6" />
             </View>
             <Text weight="600" style={s.uploadBadgeText}>
               One to One{"\n"}Conversation
@@ -435,7 +435,7 @@ const UploadPrescriptionSection = () => {
           </View>
           <View style={s.uploadBadge}>
             <View style={s.uploadBadgeIcon}>
-              <Ionicons name="home" size={12} color="#3B82F6" />
+              <Ionicons name="home" size={16} color="#3B82F6" />
             </View>
             <Text weight="600" style={s.uploadBadgeText}>
               Your Data{"\n"}will be Private
@@ -469,44 +469,46 @@ const PACKAGES = [
   },
 ];
 
-// --- CONTINUOUS AUTO-SCROLLING PACKAGES ---
+// --- INFINITE USER-SCROLL PACKAGES (no auto-movement) ---
+const ITEM_FULL_WIDTH = moderateScale(126) + moderateScale(20);
+const CLONE_COUNT = 40;
+
 const PopularPackagesSection = () => {
-  const scrollViewRef = useRef(null);
+  const scrollRef = useRef(null);
   const scrollX = useRef(0);
-  const animationFrameId = useRef(null);
-  const isInteracting = useRef(false);
 
-  // Duplicating the array multiple times creates an infinite looping effect
-  const DISPLAY_PACKAGES = [...PACKAGES, ...PACKAGES, ...PACKAGES, ...PACKAGES];
+  // Large repeated list for endless feel
+  const loopData = useRef(
+    Array.from({ length: PACKAGES.length * CLONE_COUNT }, (_, i) => ({
+      ...PACKAGES[i % PACKAGES.length],
+      _key: `pkg-${i}`,
+    }))
+  ).current;
 
-  // Calculate exact width of one full original set to know when to seamlessly reset
-  const ITEM_WIDTH = moderateScale(126) + moderateScale(20); // card width + gap
-  const RESET_POSITION = PACKAGES.length * ITEM_WIDTH;
+  const ONE_SET = PACKAGES.length * ITEM_FULL_WIDTH;
+  const ORIGIN = ONE_SET * Math.floor(CLONE_COUNT / 2);
 
-  const animateScroll = () => {
-    if (!isInteracting.current && scrollViewRef.current) {
-      scrollX.current += 1; // Animation speed (1px per frame)
-
-      // Loop seamlessly when we reach the end of the original set
-      if (scrollX.current >= RESET_POSITION) {
-        scrollX.current -= RESET_POSITION;
-      }
-
-      scrollViewRef.current.scrollTo({
-        x: scrollX.current,
-        animated: false, // Set to false to allow smooth frame-by-frame updates
-      });
-    }
-    animationFrameId.current = requestAnimationFrame(animateScroll);
-  };
-
+  // Start in the middle so user can scroll left or right
   useEffect(() => {
-    animationFrameId.current = requestAnimationFrame(animateScroll);
-    return () => {
-      if (animationFrameId.current)
-        cancelAnimationFrame(animationFrameId.current);
-    };
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ x: ORIGIN, animated: false });
+      scrollX.current = ORIGIN;
+    }
   }, []);
+
+  // Silently recenter when user drifts far from middle
+  const recenter = (x) => {
+    scrollX.current = x;
+    const setsFromOrigin = Math.abs(x - ORIGIN) / ONE_SET;
+    if (setsFromOrigin > 5) {
+      const offset = ((x % ONE_SET) + ONE_SET) % ONE_SET;
+      const newX = ORIGIN + offset;
+      scrollX.current = newX;
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({ x: newX, animated: false });
+      }
+    }
+  };
 
   return (
     <View style={s.ppSection}>
@@ -522,27 +524,21 @@ const PopularPackagesSection = () => {
       </View>
 
       <ScrollView
-        ref={scrollViewRef}
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={s.ppScrollContent}
         scrollEventThrottle={16}
-        // Pause animation when the user is interacting with it manually
-        onScrollBeginDrag={() => {
-          isInteracting.current = true;
-        }}
-        onScrollEndDrag={(e) => {
-          isInteracting.current = false;
-          scrollX.current = e.nativeEvent.contentOffset.x;
-        }}
-        onMomentumScrollEnd={(e) => {
-          isInteracting.current = false;
-          scrollX.current = e.nativeEvent.contentOffset.x;
-        }}
+        onMomentumScrollEnd={(e) =>
+          recenter(e.nativeEvent.contentOffset.x)
+        }
+        onScrollEndDrag={(e) =>
+          recenter(e.nativeEvent.contentOffset.x)
+        }
       >
-        {DISPLAY_PACKAGES.map((pkg, index) => (
+        {loopData.map((pkg) => (
           <TouchableOpacity
-            key={`${pkg.id}-${index}`}
+            key={pkg._key}
             style={s.ppCard}
             activeOpacity={0.9}
           >
@@ -943,33 +939,46 @@ const s = StyleSheet.create({
   uploadOuter: {
     paddingHorizontal: moderateScale(16),
     marginTop: moderateScale(20),
+    alignItems: "center",
   },
   uploadGrad: {
-    borderRadius: moderateScale(18),
-    padding: moderateScale(16),
+    width: moderateScale(350),
+    height: moderateScale(155),
+    borderRadius: 10,
+    paddingVertical: moderateScale(14),
+    paddingHorizontal: moderateScale(16),
     flexDirection: "row",
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#FFFFFF",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#BF7BB9",
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      },
+      android: { elevation: 6, shadowColor: "#BF7BB9" },
+    }),
   },
-  uploadLeft: { flex: 1, paddingRight: moderateScale(6) },
+  uploadLeft: { flex: 1, paddingRight: moderateScale(6), justifyContent: "center" },
   uploadHeading: {
-    fontSize: isTablet ? 18 : moderateScale(16),
+    fontSize: isTablet ? 17 : moderateScale(15),
     color: "#1e3a8a",
-    marginBottom: moderateScale(5),
-    lineHeight: isTablet ? 24 : moderateScale(21),
+    marginBottom: moderateScale(4),
+    lineHeight: isTablet ? 22 : moderateScale(19),
   },
   uploadPara: {
-    fontSize: isTablet ? 10 : moderateScale(9.5),
+    fontSize: isTablet ? 10 : moderateScale(9),
     color: "#4B5563",
-    lineHeight: isTablet ? 15 : moderateScale(14),
-    marginBottom: moderateScale(12),
+    lineHeight: isTablet ? 14 : moderateScale(13),
+    marginBottom: moderateScale(8),
   },
   uploadBtn: {
     borderRadius: moderateScale(10),
     overflow: "hidden",
     alignSelf: "flex-start",
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(6),
   },
   uploadFormats: {
     fontSize: isTablet ? 8 : moderateScale(7.5),
@@ -983,43 +992,34 @@ const s = StyleSheet.create({
     gap: moderateScale(5),
   },
   uploadPrescImgWrap: {
-    width: moderateScale(50),
-    height: moderateScale(80),
+    width: moderateScale(60),
+    height: moderateScale(100),
     alignItems: "center",
     justifyContent: "center",
   },
   uploadPrescImg: { width: "100%", height: "100%" },
-  uploadBadgeCol: { flex: 1, gap: moderateScale(7) },
+  uploadBadgeCol: { flex: 1, gap: moderateScale(8), alignItems: "center", justifyContent: "center" },
   uploadBadge: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: moderateScale(10),
-    paddingVertical: moderateScale(6),
-    paddingHorizontal: moderateScale(4),
+    backgroundColor: "transparent",
+    paddingVertical: 0,
+    paddingHorizontal: 0,
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: { elevation: 2 },
-    }),
   },
   uploadBadgeIcon: {
-    width: moderateScale(20),
-    height: moderateScale(20),
-    borderRadius: moderateScale(6),
-    backgroundColor: "#EFF6FF",
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
+    backgroundColor: "#E8F0FE",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: moderateScale(2),
+    marginBottom: moderateScale(3),
   },
   uploadBadgeText: {
-    fontSize: isTablet ? 7 : moderateScale(6),
+    fontSize: isTablet ? 9 : moderateScale(8),
     color: "#374151",
     textAlign: "center",
-    lineHeight: isTablet ? 10 : moderateScale(8.5),
+    lineHeight: isTablet ? 13 : moderateScale(11),
+    fontWeight: "600",
   },
 
   // --- STYLES FOR POPULAR PACKAGES ---

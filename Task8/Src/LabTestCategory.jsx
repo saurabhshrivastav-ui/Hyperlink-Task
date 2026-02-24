@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -12,74 +12,42 @@ import {
   Easing,
   PanResponder,
 } from "react-native";
-import { MaterialIcons, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { Text } from "../Components/TextWrapper";
+
+import labTestsData from "../assets/labTestsData.json";
 
 const { width, height } = Dimensions.get("window");
 
-const DiabetesIcon = ({ size = 28 }) => (
-  <View style={[styles.sheetIconWrap, { backgroundColor: "#FEF3C7" }]}>
-    <MaterialCommunityIcons name="diabetes" size={size} color="#F59E0B" />
-  </View>
-);
+const scanImg = require("../assets/scan.webp");
 
-const testData = [
-  {
-    id: 1,
-    title: "Diabetes Screening\n(HbA1c & Fasting Sugar)",
-    tests: 2,
-    reportTime: "15 hours",
-    price: 479,
-    originalPrice: 625,
-    discount: "23% off",
-    image: require("../assets/scan.webp"),
-    purpose: "Monitor blood sugar levels and long-term glucose control.",
-    details: [
-      "HbA1c (Glycated Hemoglobin)",
-      "Fasting Blood Sugar",
-    ],
-  },
-  {
-    id: 2,
-    title: "Post Prandial\nBlood Sugar (PPBS)",
-    tests: 1,
-    reportTime: "6 hours",
-    price: 149,
-    originalPrice: 200,
-    discount: "25% off",
-    image: require("../assets/scan.webp"),
-    purpose: "Measure glucose levels after a meal to assess insulin response.",
-    details: [
-      "Post Prandial Blood Sugar",
-    ],
-  },
-  {
-    id: 3,
-    title: "Comprehensive Diabetes\nPanel",
-    tests: 8,
-    reportTime: "24 hours",
-    price: 1299,
-    originalPrice: 1800,
-    discount: "28% off",
-    image: require("../assets/scan.webp"),
-    purpose: "Complete diabetes assessment including kidney and lipid markers.",
-    details: [
-      "HbA1c",
-      "Fasting Blood Sugar",
-      "Post Prandial Blood Sugar",
-      "Fasting Insulin",
-      "Microalbumin (Urine)",
-      "Serum Creatinine",
-      "Lipid Profile",
-      "Kidney Function Test",
-    ],
-  },
-];
+// Icon config per disease category
+const categoryIconMap = {
+  "blood-test": { lib: "MaterialCommunityIcons", name: "blood-bag", color: "#EF4444", bg: "#FEE2E2" },
+  "diabetes-monitoring": { lib: "MaterialCommunityIcons", name: "diabetes", color: "#F59E0B", bg: "#FEF3C7" },
+  "urine-stool-test": { lib: "MaterialCommunityIcons", name: "test-tube", color: "#10B981", bg: "#D1FAE5" },
+  "genetic-tests": { lib: "MaterialCommunityIcons", name: "dna", color: "#8B5CF6", bg: "#EDE9FE" },
+  "harmonal-tests": { lib: "MaterialCommunityIcons", name: "medical-bag", color: "#EC4899", bg: "#FCE7F3" },
+  "imaging-scans": { lib: "MaterialCommunityIcons", name: "radiology-box-outline", color: "#6366F1", bg: "#E0E7FF" },
+};
 
-const DiabetesMonitoring = () => {
+const CategoryIcon = ({ categoryId, size = 30 }) => {
+  const config = categoryIconMap[categoryId] || { lib: "MaterialCommunityIcons", name: "flask-outline", color: "#7C3AED", bg: "#EDE9FE" };
+  return (
+    <View style={[styles.sheetIconWrap, { backgroundColor: config.bg }]}>  
+      <MaterialCommunityIcons name={config.name} size={size} color={config.color} />
+    </View>
+  );
+};
+
+const LabTestCategory = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { categoryId } = route.params;
+
+  const category = labTestsData[categoryId];
   const [sheetVisible, setSheetVisible] = useState(false);
   const [selectedTest, setSelectedTest] = useState(null);
   const [testsExpanded, setTestsExpanded] = useState(false);
@@ -87,12 +55,12 @@ const DiabetesMonitoring = () => {
   // Animation values
   const slideAnim = useRef(new Animated.Value(height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const itemAnim1 = useRef(new Animated.Value(0)).current;
-  const itemAnim2 = useRef(new Animated.Value(0)).current;
-  const itemAnim3 = useRef(new Animated.Value(0)).current;
-  const itemAnim4 = useRef(new Animated.Value(0)).current;
-  const itemAnim5 = useRef(new Animated.Value(0)).current;
-  const itemAnim6 = useRef(new Animated.Value(0)).current;
+  const itemAnim1 = useRef(new Animated.Value(0)).current; // header
+  const itemAnim2 = useRef(new Animated.Value(0)).current; // purpose
+  const itemAnim3 = useRef(new Animated.Value(0)).current; // report time
+  const itemAnim4 = useRef(new Animated.Value(0)).current; // tests included
+  const itemAnim5 = useRef(new Animated.Value(0)).current; // price
+  const itemAnim6 = useRef(new Animated.Value(0)).current; // book btn
 
   const DISMISS_THRESHOLD = 120;
 
@@ -182,6 +150,16 @@ const DiabetesMonitoring = () => {
     ],
   });
 
+  if (!category) {
+    return (
+      <View style={styles.container}>
+        <Text weight="600" style={{ padding: 40, textAlign: "center" }}>
+          Category not found.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -202,7 +180,7 @@ const DiabetesMonitoring = () => {
               <MaterialIcons name="arrow-back" size={26} color="#6D28D9" />
             </TouchableOpacity>
             <Text weight="700" style={styles.navTitle}>
-              Diabetes Monitoring
+              {category.title}
             </Text>
           </View>
         </LinearGradient>
@@ -217,66 +195,66 @@ const DiabetesMonitoring = () => {
 
         {/* Test Cards */}
         <View style={styles.cardList}>
-          {testData.map((test) => (
+          {category.cards.map((test) => (
             <View key={test.id} style={styles.card}>
               <View style={styles.cardTopRow}>
-              {/* Test Image */}
-              <View style={styles.cardLeft}>
-                <Image
-                  source={test.image}
-                  style={styles.testImage}
-                  resizeMode="cover"
-                />
-              </View>
-
-              {/* Test Details */}
-              <View style={styles.cardRight}>
-                {/* Chevron */}
-                <TouchableOpacity
-                  style={styles.chevronBtn}
-                  activeOpacity={0.7}
-                  onPress={() => navigation.navigate("TestDetails", {
-                    testTitle: test.title,
-                    testCount: test.tests,
-                    reportTime: test.reportTime,
-                    price: test.price,
-                    originalPrice: test.originalPrice,
-                    discount: test.discount,
-                  })}
-                >
-                  <MaterialIcons name="chevron-right" size={24} color="#7C3AED" />
-                </TouchableOpacity>
-
-                <Text weight="700" style={styles.testTitle}>
-                  {test.title}
-                </Text>
-
-                <View style={styles.containsRow}>
-                  <Text weight="500" style={styles.containsText}>
-                    Contains {test.tests} tests
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={18} color="#22C55E" />
+                {/* Test Image */}
+                <View style={styles.cardLeft}>
+                  <Image
+                    source={scanImg}
+                    style={styles.testImage}
+                    resizeMode="cover"
+                  />
                 </View>
 
-                <Text weight="400" style={styles.reportText}>
-                  Report within {test.reportTime}
-                </Text>
+                {/* Test Details */}
+                <View style={styles.cardRight}>
+                  {/* Chevron */}
+                  <TouchableOpacity
+                    style={styles.chevronBtn}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate("TestDetails", {
+                      testTitle: test.title,
+                      testCount: test.tests,
+                      reportTime: test.reportTime,
+                      price: test.price,
+                      originalPrice: test.originalPrice,
+                      discount: test.discount,
+                    })}
+                  >
+                    <MaterialIcons name="chevron-right" size={24} color="#7C3AED" />
+                  </TouchableOpacity>
 
-                <View style={styles.priceRow}>
-                  <View style={styles.priceLeft}>
-                    <Text weight="700" style={styles.price}>
-                      {test.price}/-
+                  <Text weight="700" style={styles.testTitle}>
+                    {test.title}
+                  </Text>
+
+                  <View style={styles.containsRow}>
+                    <Text weight="500" style={styles.containsText}>
+                      Contains {test.tests} tests
                     </Text>
-                    <Text weight="400" style={styles.originalPrice}>
-                      {test.originalPrice}/-
-                    </Text>
+                    <MaterialIcons name="keyboard-arrow-down" size={18} color="#22C55E" />
                   </View>
 
-                  <Text weight="600" style={styles.discount}>
-                    {test.discount}
+                  <Text weight="400" style={styles.reportText}>
+                    Report within {test.reportTime}
                   </Text>
+
+                  <View style={styles.priceRow}>
+                    <View style={styles.priceLeft}>
+                      <Text weight="700" style={styles.price}>
+                        {test.price}/-
+                      </Text>
+                      <Text weight="400" style={styles.originalPrice}>
+                        {test.originalPrice}/-
+                      </Text>
+                    </View>
+
+                    <Text weight="600" style={styles.discount}>
+                      {test.discount}
+                    </Text>
+                  </View>
                 </View>
-              </View>
               </View>
 
               {/* Bottom Buttons Row */}
@@ -337,7 +315,9 @@ const DiabetesMonitoring = () => {
           </Animated.View>
 
           <Animated.View
-            style={[{ transform: [{ translateY: slideAnim }] }]}
+            style={[
+              { transform: [{ translateY: slideAnim }] },
+            ]}
           >
             <LinearGradient
               colors={["#E4CCF7", "#FFE9CF"]}
@@ -357,7 +337,7 @@ const DiabetesMonitoring = () => {
                 >
                   {/* Icon + Title Row */}
                   <Animated.View style={[styles.sheetHeaderRow, makeItemStyle(itemAnim1)]}>
-                    <DiabetesIcon size={28} />
+                    <CategoryIcon categoryId={categoryId} size={28} />
                     <Text weight="700" style={styles.sheetTitle}>
                       {selectedTest.title.replace(/\n/g, " ")}
                     </Text>
@@ -523,11 +503,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#FFFFFF",
   },
+  cardTopRow: {
+    flexDirection: "row",
+  },
   cardLeft: {
     width: 74,
     height: 74,
     borderRadius: 10,
-    backgroundColor: "#F3EAFF",
+    backgroundColor: "#FFFFFF",
     overflow: "hidden",
     marginRight: 12,
     alignSelf: "center",
@@ -610,6 +593,12 @@ const styles = StyleSheet.create({
     color: "#22C55E",
     marginLeft: 6,
   },
+  cardBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 12,
+  },
   bookBtnWrap: {
     flex: 1,
     borderRadius: 10,
@@ -636,16 +625,7 @@ const styles = StyleSheet.create({
   },
   bookBtnText: {
     color: "#fff",
-    fontSize: 14,
-  },
-  cardBottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 12,
-  },
-  cardTopRow: {
-    flexDirection: "row",
+    fontSize: 13,
   },
   infoBtnWrap: {
     flex: 1,
@@ -665,7 +645,7 @@ const styles = StyleSheet.create({
   },
   infoBtnText: {
     color: "#1f2937",
-    fontSize: 14,
+    fontSize: 13,
   },
 
   /* ---- Bottom Sheet ---- */
@@ -824,4 +804,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DiabetesMonitoring;
+export default LabTestCategory;

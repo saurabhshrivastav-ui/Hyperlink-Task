@@ -7,15 +7,17 @@ import {
   Platform,
   Dimensions,
   Image,
-  FlatList,
 } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { Text } from "../Components/TextWrapper";
+import { addBooking } from "./BookingStore";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.38;
+const PKG_ITEM_WIDTH = CARD_WIDTH + 12;
+const PKG_CLONE_COUNT = 40;
 
 const popularPackages = [
   {
@@ -40,33 +42,38 @@ const popularPackages = [
 
 const BookingDetails = () => {
   const navigation = useNavigation();
-  const flatListRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const pkgScrollRef = useRef(null);
+  const pkgScrollX = useRef(0);
   const [hardCopyChecked, setHardCopyChecked] = useState(false);
 
-  const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
-      setActiveIndex(viewableItems[0].index);
+  const pkgLoopData = useRef(
+    Array.from({ length: popularPackages.length * PKG_CLONE_COUNT }, (_, i) => ({
+      ...popularPackages[i % popularPackages.length],
+      _key: `pkg-${i}`,
+    }))
+  ).current;
+  const PKG_ONE_SET = popularPackages.length * PKG_ITEM_WIDTH;
+  const PKG_ORIGIN = PKG_ONE_SET * Math.floor(PKG_CLONE_COUNT / 2);
+
+  React.useEffect(() => {
+    if (pkgScrollRef.current) {
+      pkgScrollRef.current.scrollTo({ x: PKG_ORIGIN, animated: false });
+      pkgScrollX.current = PKG_ORIGIN;
     }
-  }).current;
+  }, []);
 
-  const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 50,
-  }).current;
-
-  const renderPackageCard = ({ item }) => (
-    <View style={styles.packageCard}>
-      <Text weight="700" style={styles.packageTitle}>
-        {item.title}
-      </Text>
-      <Text weight="400" style={styles.packageDesc}>
-        {item.desc}
-      </Text>
-      <Text weight="700" style={styles.packagePrice}>
-        {item.price}
-      </Text>
-    </View>
-  );
+  const pkgRecenter = (x) => {
+    pkgScrollX.current = x;
+    const setsFromOrigin = Math.abs(x - PKG_ORIGIN) / PKG_ONE_SET;
+    if (setsFromOrigin > 5) {
+      const offset = ((x % PKG_ONE_SET) + PKG_ONE_SET) % PKG_ONE_SET;
+      const newX = PKG_ORIGIN + offset;
+      pkgScrollX.current = newX;
+      if (pkgScrollRef.current) {
+        pkgScrollRef.current.scrollTo({ x: newX, animated: false });
+      }
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -144,29 +151,32 @@ const BookingDetails = () => {
           Booked Together
         </Text>
 
-        <FlatList
-          ref={flatListRef}
-          data={popularPackages}
-          renderItem={renderPackageCard}
-          keyExtractor={(item) => item.id.toString()}
+        <ScrollView
+          ref={pkgScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          snapToInterval={CARD_WIDTH + 12}
-          decelerationRate="fast"
           contentContainerStyle={styles.packageListContent}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-        />
-
-        {/* Dots */}
-        <View style={styles.dotsRow}>
-          {popularPackages.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, activeIndex === i && styles.dotActive]}
-            />
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={(e) => pkgRecenter(e.nativeEvent.contentOffset.x)}
+          onScrollEndDrag={(e) => pkgRecenter(e.nativeEvent.contentOffset.x)}
+        >
+          {pkgLoopData.map((pkg) => (
+            <View key={pkg._key} style={styles.packageCard}>
+              <Text weight="700" style={styles.packageTitle} numberOfLines={1}>
+                {pkg.title}
+              </Text>
+              <Text weight="600" style={styles.packageDesc}>
+                {pkg.desc}
+              </Text>
+              <Text weight="800" style={styles.packagePrice}>
+                {pkg.price}
+              </Text>
+              <View style={styles.packageArrowBtn}>
+                <MaterialIcons name="keyboard-arrow-right" size={14} color="#5C3EAB" />
+              </View>
+            </View>
           ))}
-        </View>
+        </ScrollView>
 
         {/* Date & Time */}
         <View style={styles.dateTimeRow}>
@@ -249,10 +259,20 @@ const BookingDetails = () => {
           Value add-ons
         </Text>
 
-        <View style={styles.addOnCard}>
+        <View style={styles.addOnCardShadow}>
+        <LinearGradient
+          colors={["rgba(255, 233, 207, 0.6)", "rgba(255, 253, 251, 0.6)"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.48, y: 1 }}
+          style={styles.addOnCard}
+        >
           <View style={styles.addOnRow}>
             <View style={styles.addOnIconWrap}>
-              <Ionicons name="document-text-outline" size={22} color="#6D28D9" />
+              <Image
+                source={require("../assets/print.webp")}
+                style={styles.addOnImg}
+                resizeMode="cover"
+              />
             </View>
             <View style={styles.addOnInfo}>
               <Text weight="700" style={styles.addOnTitle}>
@@ -275,6 +295,7 @@ const BookingDetails = () => {
               )}
             </TouchableOpacity>
           </View>
+        </LinearGradient>
         </View>
 
         {/* Bill Summary */}
@@ -330,7 +351,20 @@ const BookingDetails = () => {
               479/-
             </Text>
           </View>
-          <TouchableOpacity activeOpacity={0.8}>
+          <TouchableOpacity activeOpacity={0.8} onPress={async () => {
+            await addBooking({
+              testTitle: "Diabetes Screening (HbAIC & Fasting Sugar)",
+              patientName: "Sakshi Kewat",
+              contact: "8169928844",
+              address: "Amrut Nagar, Ghatkopar West, Mumbai",
+              time: "12pm",
+              amount: "479/-",
+              paymentStatus: "Paid",
+              reportStatus: "Upcoming",
+              status: "upcoming",
+            });
+            navigation.navigate("LabHistory");
+          }}>
             <LinearGradient
               colors={["#B148FF", "#F6339B", "#9914F9"]}
               locations={[0, 0.5, 1]}
@@ -470,48 +504,65 @@ const styles = StyleSheet.create({
   },
   packageCard: {
     width: CARD_WIDTH,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 0.6,
-    borderColor: "#F3E8FF",
-    shadowColor: "#BF7BB9",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    height: CARD_WIDTH * 0.67,
+    backgroundColor: "#FCF6FF",
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#3D136B",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+      },
+      android: { elevation: 12, shadowColor: "#3D136B" },
+    }),
   },
   packageTitle: {
-    fontSize: 12,
-    color: "#1F2937",
+    fontSize: 11,
+    color: "#1A1A1A",
     marginBottom: 4,
+    textAlign: "center",
   },
   packageDesc: {
-    fontSize: 9,
-    color: "#6B7280",
+    fontSize: 8,
+    color: "#6D28D9",
+    textAlign: "center",
+    lineHeight: 10,
     marginBottom: 8,
   },
   packagePrice: {
     fontSize: 14,
-    color: "#6D28D9",
+    color: "#000000",
   },
-  dotsRow: {
-    flexDirection: "row",
+  packageArrowBtn: {
+    position: "absolute",
+    top: "38%",
+    right: -10,
+    width: 21,
+    height: 21,
+    borderRadius: 10.5,
+    borderWidth: 1,
+    borderColor: "#E2D3FE",
+    backgroundColor: "#F1E7FE",
+    alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    marginTop: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: { elevation: 4 },
+    }),
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#D1D5DB",
-  },
-  dotActive: {
-    backgroundColor: "#7C3AED",
-    width: 18,
-    borderRadius: 4,
-  },
+
 
   /* Date & Time */
   dateTimeRow: {
@@ -529,17 +580,18 @@ const styles = StyleSheet.create({
 
   /* Patient Card */
   patientCard: {
-    marginHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    width: 323,
+    alignSelf: "center",
+    backgroundColor: "#FBF1FE",
+    borderRadius: 10,
     padding: 16,
-    borderWidth: 0.6,
-    borderColor: "#F3E8FF",
+    borderWidth: 1,
+    borderColor: "#D5D5D5",
     shadowColor: "#BF7BB9",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 4,
   },
   patientRow: {
     flexDirection: "row",
@@ -561,15 +613,21 @@ const styles = StyleSheet.create({
     color: "#6D28D9",
   },
   modeChip: {
-    backgroundColor: "#F5F3FF",
-    borderRadius: 16,
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#D5D5D5",
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "flex-start",
     marginTop: 4,
   },
   modeChipText: {
     fontSize: 11,
-    color: "#6D28D9",
+    color: "#595959",
+    textAlign: "center",
   },
   addressSubline: {
     fontSize: 11,
@@ -585,18 +643,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 20,
   },
-  addOnCard: {
-    marginHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 0.6,
-    borderColor: "#F3E8FF",
+  addOnCardShadow: {
+    width: 326,
+    alignSelf: "center",
+    borderRadius: 10,
     shadowColor: "#BF7BB9",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 4,
+    backgroundColor: "#FFF5EC",
+  },
+  addOnCard: {
+    width: "100%",
+    height: 85,
+    borderRadius: 10,
+    padding: 14,
+    overflow: "hidden",
   },
   addOnRow: {
     flexDirection: "row",
@@ -610,6 +673,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F3FF",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
+  },
+  addOnImg: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
   },
   addOnInfo: {
     flex: 1,
@@ -674,11 +743,11 @@ const styles = StyleSheet.create({
   },
   billDiscountLabel: {
     fontSize: 13,
-    color: "#6D28D9",
+    color: "#17c625",
   },
   billDiscountValue: {
     fontSize: 13,
-    color: "#6D28D9",
+    color: "#17c625",
   },
   billDivider: {
     height: 1,
@@ -700,6 +769,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingBottom: Platform.OS === "ios" ? 30 : 16,
     paddingTop: 12,
     paddingHorizontal: 20,
@@ -716,10 +787,10 @@ const styles = StyleSheet.create({
   },
   bottomBarPrice: {
     fontSize: 18,
-    color: "#16A34A",
+    color: "#000000",
   },
   payNowBtn: {
-    borderRadius: 24,
+    borderRadius: 10,
     paddingHorizontal: 32,
     paddingVertical: 12,
   },
