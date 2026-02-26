@@ -305,8 +305,8 @@ const TestDetails = () => {
           closeInfoSheet();
         } else {
           Animated.parallel([
-            Animated.spring(infoSlideAnim, { toValue: 0, useNativeDriver: true }),
-            Animated.timing(infoFadeAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+            Animated.timing(infoSlideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+            Animated.timing(infoFadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
           ]).start();
         }
       },
@@ -319,14 +319,13 @@ const TestDetails = () => {
     Animated.parallel([
       Animated.timing(infoFadeAnim, {
         toValue: 1,
-        duration: 350,
-        easing: Easing.out(Easing.cubic),
+        duration: 250,
         useNativeDriver: true,
       }),
       Animated.timing(infoSlideAnim, {
         toValue: 0,
-        duration: 450,
-        easing: Easing.bezier(0.16, 1, 0.3, 1),
+        duration: 300,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
     ]).start();
@@ -336,14 +335,13 @@ const TestDetails = () => {
     Animated.parallel([
       Animated.timing(infoFadeAnim, {
         toValue: 0,
-        duration: 280,
-        easing: Easing.in(Easing.quad),
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(infoSlideAnim, {
         toValue: height,
-        duration: 380,
-        easing: Easing.bezier(0.4, 0, 0.6, 1),
+        duration: 250,
+        easing: Easing.in(Easing.ease),
         useNativeDriver: true,
       }),
     ]).start(() => {

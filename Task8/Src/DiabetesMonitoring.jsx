@@ -87,12 +87,7 @@ const DiabetesMonitoring = () => {
   // Animation values
   const slideAnim = useRef(new Animated.Value(height)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const itemAnim1 = useRef(new Animated.Value(0)).current;
-  const itemAnim2 = useRef(new Animated.Value(0)).current;
-  const itemAnim3 = useRef(new Animated.Value(0)).current;
-  const itemAnim4 = useRef(new Animated.Value(0)).current;
-  const itemAnim5 = useRef(new Animated.Value(0)).current;
-  const itemAnim6 = useRef(new Animated.Value(0)).current;
+
 
   const DISMISS_THRESHOLD = 120;
 
@@ -119,19 +114,7 @@ const DiabetesMonitoring = () => {
     })
   ).current;
 
-  const runStaggeredEntry = useCallback(() => {
-    const items = [itemAnim1, itemAnim2, itemAnim3, itemAnim4, itemAnim5, itemAnim6];
-    items.forEach((a) => a.setValue(0));
 
-    Animated.stagger(30, items.map((anim) =>
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 180,
-        easing: Easing.out(Easing.back(1.2)),
-        useNativeDriver: true,
-      })
-    )).start();
-  }, []);
 
   const openSheet = (test) => {
     setSelectedTest(test);
@@ -153,7 +136,7 @@ const DiabetesMonitoring = () => {
         duration: 150,
         useNativeDriver: true,
       }),
-    ]).start(() => runStaggeredEntry());
+    ]).start();
   };
 
   const closeSheet = () => {
@@ -175,12 +158,7 @@ const DiabetesMonitoring = () => {
     });
   };
 
-  const makeItemStyle = (anim) => ({
-    opacity: anim,
-    transform: [
-      { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) },
-    ],
-  });
+
 
   return (
     <View style={styles.container}>
@@ -356,31 +334,31 @@ const DiabetesMonitoring = () => {
                   bounces={true}
                 >
                   {/* Icon + Title Row */}
-                  <Animated.View style={[styles.sheetHeaderRow, makeItemStyle(itemAnim1)]}>
+                  <View style={styles.sheetHeaderRow}>
                     <DiabetesIcon size={28} />
                     <Text weight="700" style={styles.sheetTitle}>
                       {selectedTest.title.replace(/\n/g, " ")}
                     </Text>
-                  </Animated.View>
+                  </View>
 
                   {/* Purpose */}
-                  <Animated.View style={[styles.sheetSection, makeItemStyle(itemAnim2)]}>
+                  <View style={styles.sheetSection}>
                     <Text weight="700" style={styles.sheetSectionLabel}>Purpose</Text>
                     <Text weight="400" style={styles.sheetSectionValue}>
                       {selectedTest.purpose || "General diagnostic assessment."}
                     </Text>
-                  </Animated.View>
+                  </View>
 
                   {/* Report Time */}
-                  <Animated.View style={[styles.sheetSection, makeItemStyle(itemAnim3)]}>
+                  <View style={styles.sheetSection}>
                     <Text weight="700" style={styles.sheetSectionLabel}>Report Time</Text>
                     <Text weight="700" style={styles.sheetReportTime}>
                       {selectedTest.reportTime}
                     </Text>
-                  </Animated.View>
+                  </View>
 
                   {/* Tests Included (Collapsible) */}
-                  <Animated.View style={makeItemStyle(itemAnim4)}>
+                  <View>
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => setTestsExpanded(!testsExpanded)}
@@ -410,10 +388,10 @@ const DiabetesMonitoring = () => {
                         ))}
                       </View>
                     )}
-                  </Animated.View>
+                  </View>
 
                   {/* Price Row */}
-                  <Animated.View style={[styles.sheetPriceRow, makeItemStyle(itemAnim5)]}>
+                  <View style={styles.sheetPriceRow}>
                     <Text weight="400" style={styles.sheetOriginalPrice}>
                       {"\u20B9"}{selectedTest.originalPrice}
                     </Text>
@@ -425,10 +403,10 @@ const DiabetesMonitoring = () => {
                         {selectedTest.discount}
                       </Text>
                     </View>
-                  </Animated.View>
+                  </View>
 
                   {/* Book This Test Button */}
-                  <Animated.View style={makeItemStyle(itemAnim6)}>
+                  <View>
                     <TouchableOpacity
                       activeOpacity={0.85}
                       style={styles.sheetBookBtnWrap}
@@ -455,7 +433,7 @@ const DiabetesMonitoring = () => {
                         <Text weight="700" style={styles.sheetBookBtnText}>Book This Test</Text>
                       </LinearGradient>
                     </TouchableOpacity>
-                  </Animated.View>
+                  </View>
                 </ScrollView>
               )}
             </LinearGradient>
