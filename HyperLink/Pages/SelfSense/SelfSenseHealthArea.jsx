@@ -224,6 +224,12 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const DISMISS_THRESHOLD = 120;
 
+  // --- Earphone Warning Bottom Tray State ---
+  const [earphoneSheetVisible, setEarphoneSheetVisible] = useState(false);
+  const [pendingAudioItem, setPendingAudioItem] = useState(null);
+  const earphoneFadeAnim = useRef(new Animated.Value(0)).current;
+  const earphoneSlideAnim = useRef(new Animated.Value(height)).current;
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -300,6 +306,44 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
     return "#28a745";
   };
 
+  const openEarphoneSheet = () => {
+    setEarphoneSheetVisible(true);
+    earphoneSlideAnim.setValue(height);
+    earphoneFadeAnim.setValue(0);
+    Animated.parallel([
+      Animated.timing(earphoneSlideAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(earphoneFadeAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeEarphoneSheet = (cb) => {
+    Animated.parallel([
+      Animated.timing(earphoneSlideAnim, {
+        toValue: height,
+        duration: 250,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(earphoneFadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setEarphoneSheetVisible(false);
+      if (cb) cb();
+    });
+  };
+
   // Load users from AsyncStorage
   useEffect(() => {
     const loadData = async () => {
@@ -331,10 +375,7 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
     setExpandedCard(expandedCard === id ? null : id);
   };
 
-  const handleConditionSelect = (item) => {
-    if (!item?.id) return;
-
-    // Check if active user has existing history for this condition
+  const proceedToCondition = (item) => {
     const hasHistory =
       activeUser?.history?.length > 0 &&
       activeUser.history.some((h) => h.conditionName === item.label);
@@ -353,6 +394,28 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
         conditionImg: item.image,
       });
     }
+  };
+
+  const handleConditionSelect = (item) => {
+    if (!item?.id) return;
+
+    // Show earphone warning sheet for Audiogram
+    if (item.id === "hearing") {
+      setPendingAudioItem(item);
+      openEarphoneSheet();
+      return;
+    }
+
+    proceedToCondition(item);
+  };
+
+  const handleEarphoneReady = () => {
+    const item = pendingAudioItem;
+    closeEarphoneSheet(() => {
+      if (item) {
+        setTimeout(() => proceedToCondition(item), 180);
+      }
+    });
   };
 
   const handleRetake = () => {
@@ -679,6 +742,129 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
           </Animated.View>
         </View>
       )}
+
+      {/* Earphone Warning Bottom Tray */}
+      {earphoneSheetVisible && (
+        <View style={styles.sheetModalWrapper}>
+          <Animated.View
+            style={[styles.sheetOverlay, { opacity: earphoneFadeAnim }]}
+          >
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={() => closeEarphoneSheet()}
+            />
+          </Animated.View>
+
+          <Animated.View
+            style={[{ transform: [{ translateY: earphoneSlideAnim }] }]}
+          >
+            <LinearGradient
+              colors={["#E4CCF7", "#FFE9CF"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.sheetContainer}
+            >
+              <View style={styles.sheetHandleArea}>
+                <View style={styles.sheetHandleBar} />
+              </View>
+
+              <ScrollView
+                style={styles.sheetScroll}
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+              >
+                {/* Icon + Title */}
+                <View style={styles.sheetHeaderRow}>
+                  <View style={styles.sheetIconWrap}>
+                    <MaterialCommunityIcons
+                      name="headphones"
+                      size={28}
+                      color="#7C3AED"
+                    />
+                  </View>
+                  <Text weight="700" style={styles.sheetTitle}>
+                    Wear Your Earphones
+                  </Text>
+                </View>
+
+                {/* Message */}
+                <View style={styles.sheetSection}>
+                  <Text weight="400" style={styles.sheetSectionValue}>
+                    For an accurate hearing test, please make sure:
+                  </Text>
+                </View>
+
+                {/* Instructions */}
+                <View style={styles.sheetPrevResult}>
+                  <View style={styles.earphoneStepRow}>
+                    <MaterialCommunityIcons name="headphones" size={20} color="#7C3AED" />
+                    <Text weight="600" style={styles.earphoneStepText}>
+                      Put on your earphones / headphones
+                    </Text>
+                  </View>
+                  <View style={styles.earphoneStepRow}>
+                    <MaterialCommunityIcons name="volume-high" size={20} color="#7C3AED" />
+                    <Text weight="600" style={styles.earphoneStepText}>
+                      Set your device volume to 100%
+                    </Text>
+                  </View>
+                  <View style={[styles.earphoneStepRow, { marginBottom: 0 }]}>
+                    <MaterialCommunityIcons name="volume-off" size={20} color="#7C3AED" />
+                    <Text weight="600" style={styles.earphoneStepText}>
+                      Be in a quiet environment
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Question */}
+                <View style={styles.sheetSection}>
+                  <Text weight="600" style={styles.sheetQuestionText}>
+                    Are you ready to begin?
+                  </Text>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.sheetActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    style={styles.sheetRetakeBtnWrap}
+                    onPress={handleEarphoneReady}
+                  >
+                    <LinearGradient
+                      colors={["#B148FF", "#F6339B", "#9914F9"]}
+                      locations={[0, 0.5, 1]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={styles.sheetRetakeBtn}
+                    >
+                      <Feather
+                        name="check-circle"
+                        size={16}
+                        color="#fff"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text weight="700" style={styles.sheetRetakeBtnText}>
+                        I'm Ready, Let's Go
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.sheetCancelBtn}
+                    onPress={() => closeEarphoneSheet()}
+                  >
+                    <Text weight="700" style={styles.sheetCancelBtnText}>
+                      Not Now
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      )}
     </View>
   );
 }
@@ -987,5 +1173,18 @@ const styles = StyleSheet.create({
   sheetCancelBtnText: {
     color: "#4B5563",
     fontSize: 15,
+  },
+
+  /* ---- Earphone Step Items ---- */
+  earphoneStepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  earphoneStepText: {
+    fontSize: 14,
+    color: "#1f2937",
+    marginLeft: 10,
+    flex: 1,
   },
 });

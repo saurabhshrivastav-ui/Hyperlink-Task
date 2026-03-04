@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   View,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   Pressable,
@@ -13,14 +14,83 @@ import {
   Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { Feather, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Audio } from "expo-av";
 // Assuming TextWrapper exists
 import { Text } from "../../Components/TextWrapper";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+// --- TONE GENERATOR ---
+// Generates a WAV sine wave as a base64 data URI
+const generateToneBase64 = (frequency, durationSec = 2, sampleRate = 44100) => {
+  const numSamples = Math.floor(sampleRate * durationSec);
+  const amplitude = 0.5; // 50% volume to avoid clipping
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const dataSize = numSamples * blockAlign;
+  const fileSize = 44 + dataSize;
+
+  // Create buffer
+  const buffer = new ArrayBuffer(fileSize);
+  const view = new DataView(buffer);
+
+  // Helper to write string
+  const writeString = (offset, str) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+
+  // WAV Header
+  writeString(0, "RIFF");
+  view.setUint32(4, fileSize - 8, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true); // chunk size
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeString(36, "data");
+  view.setUint32(40, dataSize, true);
+
+  // Generate sine wave samples with fade in/out to avoid clicks
+  const fadeFrames = Math.min(Math.floor(sampleRate * 0.05), numSamples / 2); // 50ms fade
+  for (let i = 0; i < numSamples; i++) {
+    let sample = Math.sin((2 * Math.PI * frequency * i) / sampleRate) * amplitude;
+    // Fade in
+    if (i < fadeFrames) sample *= i / fadeFrames;
+    // Fade out
+    if (i > numSamples - fadeFrames) sample *= (numSamples - i) / fadeFrames;
+    const intSample = Math.max(-32768, Math.min(32767, Math.floor(sample * 32767)));
+    view.setInt16(44 + i * 2, intSample, true);
+  }
+
+  // Convert to base64
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
+
+// Pre-generate tones for each frequency
+const TONE_CACHE = {};
+const getToneUri = (frequency) => {
+  if (!TONE_CACHE[frequency]) {
+    TONE_CACHE[frequency] = `data:audio/wav;base64,${generateToneBase64(frequency, 3)}`;
+  }
+  return TONE_CACHE[frequency];
+};
 
 // --- 1. SUPPLEMENTARY DISPLAY DATA ---
 const CONDITION_DESCRIPTIONS = {
@@ -1551,7 +1621,31 @@ const HEALTH_DATA = {
         {
           id: "hearing",
           name: "Hearing",
+          image: require("../../assets/SelfSenseSensoryHealth.webp"),
+
+          risk_copy: {
+            low: {
+              label: "LOW RISK",
+              range: "Low cumulative risk score",
+              result_content:
+                "Your hearing appears to be normal. Continue protecting your ears from loud noises.",
+            },
+            moderate: {
+              label: "MODERATE RISK",
+              range: "Moderate cumulative risk score",
+              result_content:
+                "Some signs of hearing difficulty detected. Consider getting a professional audiometry test within the next 3 months.",
+            },
+            high: {
+              label: "HIGH RISK",
+              range: "High cumulative risk score",
+              result_content:
+                "Significant hearing concerns detected. Please consult an ENT specialist or audiologist as soon as possible.",
+            },
+          },
+
           questions: [
+            // --- General Hearing Questions ---
             {
               id: 1,
               question_text: "Do you often ask people to repeat themselves?",
@@ -1589,6 +1683,86 @@ const HEALTH_DATA = {
                 { text: "Sometimes", score: 5 },
                 { text: "No", score: 0 },
               ],
+            },
+
+            // --- Frequency-Based Hearing Test ---
+            // 250 Hz — Deep bass hum (like a bass guitar or deep male voice)
+            {
+              id: 5,
+              question_text:
+                "🔊 250 Hz — Deep bass hum\n(Like a bass guitar or deep male voice)\n\nCan you hear this tone?",
+              options: [
+                { text: "Yes, clearly", score: 0 },
+                { text: "Faintly / Barely", score: 5 },
+                { text: "No, I can't hear it", score: 10 },
+              ],
+              isFrequencyTest: true,
+              frequency: 250,
+            },
+            // 500 Hz — Low-mid tone (like a normal male speaking voice)
+            {
+              id: 6,
+              question_text:
+                "🔊 500 Hz — Low-mid tone\n(Like a normal male speaking voice)\n\nCan you hear this tone?",
+              options: [
+                { text: "Yes, clearly", score: 0 },
+                { text: "Faintly / Barely", score: 5 },
+                { text: "No, I can't hear it", score: 10 },
+              ],
+              isFrequencyTest: true,
+              frequency: 500,
+            },
+            // 1000 Hz — Mid tone (like a female speaking voice)
+            {
+              id: 7,
+              question_text:
+                "🔊 1000 Hz — Mid-range tone\n(Like a female speaking voice)\n\nCan you hear this tone?",
+              options: [
+                { text: "Yes, clearly", score: 0 },
+                { text: "Faintly / Barely", score: 5 },
+                { text: "No, I can't hear it", score: 10 },
+              ],
+              isFrequencyTest: true,
+              frequency: 1000,
+            },
+            // 2000 Hz — Upper-mid tone (like consonant sounds: S, T, F)
+            {
+              id: 8,
+              question_text:
+                "🔊 2000 Hz — Upper-mid tone\n(Like consonant sounds: S, T, F)\n\nCan you hear this tone?",
+              options: [
+                { text: "Yes, clearly", score: 0 },
+                { text: "Faintly / Barely", score: 5 },
+                { text: "No, I can't hear it", score: 10 },
+              ],
+              isFrequencyTest: true,
+              frequency: 2000,
+            },
+            // 4000 Hz — High tone (like a bird chirping or phone ringing)
+            {
+              id: 9,
+              question_text:
+                "🔊 4000 Hz — High-pitched tone\n(Like a bird chirping or phone ringing)\n\nCan you hear this tone?",
+              options: [
+                { text: "Yes, clearly", score: 0 },
+                { text: "Faintly / Barely", score: 5 },
+                { text: "No, I can't hear it", score: 10 },
+              ],
+              isFrequencyTest: true,
+              frequency: 4000,
+            },
+            // 8000 Hz — Very high tone (like a whistle or cymbal shimmer)
+            {
+              id: 10,
+              question_text:
+                "🔊 8000 Hz — Very high-pitched tone\n(Like a whistle or cymbal shimmer)\n\nCan you hear this tone?",
+              options: [
+                { text: "Yes, clearly", score: 0 },
+                { text: "Faintly / Barely", score: 5 },
+                { text: "No, I can't hear it", score: 10 },
+              ],
+              isFrequencyTest: true,
+              frequency: 8000,
             },
           ],
         },
@@ -1638,6 +1812,62 @@ const QuestionnairesScreen = () => {
   const [answers, setAnswers] = useState({});
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [allQuestionsAnswered, setAllQuestionsAnswered] = useState(false);
+
+  // Audio state for frequency tests
+  const soundRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync().catch(() => {});
+      }
+    };
+  }, []);
+
+  const playTone = useCallback(async (frequency) => {
+    try {
+      // Stop previous sound
+      if (soundRef.current) {
+        await soundRef.current.stopAsync().catch(() => {});
+        await soundRef.current.unloadAsync().catch(() => {});
+        soundRef.current = null;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      });
+
+      const uri = getToneUri(frequency);
+      const { sound } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: true, volume: 1.0 },
+      );
+      soundRef.current = sound;
+      setIsPlaying(true);
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          setIsPlaying(false);
+        }
+      });
+    } catch (e) {
+      console.warn("Failed to play tone:", e);
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const stopTone = useCallback(async () => {
+    if (soundRef.current) {
+      await soundRef.current.stopAsync().catch(() => {});
+      await soundRef.current.unloadAsync().catch(() => {});
+      soundRef.current = null;
+      setIsPlaying(false);
+    }
+  }, []);
 
   // Animations
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -1696,6 +1926,19 @@ const QuestionnairesScreen = () => {
       useNativeDriver: true,
     }).start();
   }, [activeQuestionIndex]);
+
+  // Auto-play tone when navigating to a frequency test question
+  useEffect(() => {
+    const currentQ = questions[activeQuestionIndex];
+    if (currentQ?.isFrequencyTest && currentQ?.frequency) {
+      // Small delay so the question card appears first
+      const timer = setTimeout(() => playTone(currentQ.frequency), 400);
+      return () => clearTimeout(timer);
+    } else {
+      // Stop any playing tone when leaving a frequency question
+      stopTone();
+    }
+  }, [activeQuestionIndex, questions, playTone, stopTone]);
 
   const changeQuestion = (newIndex) => {
     Animated.timing(fadeAnim, {
@@ -1899,10 +2142,52 @@ const QuestionnairesScreen = () => {
               },
             ]}
           >
-            <View style={styles.glassCard}>
-              <Text style={styles.questionText} weight="700" numberOfLines={3}>
+            <ScrollView
+              style={styles.glassCardScroll}
+              contentContainerStyle={styles.glassCard}
+              showsVerticalScrollIndicator={false}
+              bounces={true}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.questionText} weight="700" numberOfLines={4}>
                 {activeQ.question_text}
               </Text>
+
+              {/* Play Tone Button for frequency tests */}
+              {activeQ.isFrequencyTest && (
+                <TouchableOpacity
+                  style={[
+                    styles.playToneBtn,
+                    isPlaying && styles.playToneBtnActive,
+                  ]}
+                  onPress={() =>
+                    isPlaying ? stopTone() : playTone(activeQ.frequency)
+                  }
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={
+                      isPlaying
+                        ? ["#dc3545", "#c82333"]
+                        : ["#7C3AED", "#5B21B6"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.playToneGradient}
+                  >
+                    <MaterialCommunityIcons
+                      name={isPlaying ? "stop" : "play"}
+                      size={22}
+                      color="#fff"
+                    />
+                    <Text weight="700" style={styles.playToneText}>
+                      {isPlaying
+                        ? "Stop Tone"
+                        : `Play ${activeQ.frequency} Hz Tone`}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
 
               <View style={styles.optionsContainer}>
                 {activeQ.options.map((opt, i) => (
@@ -1914,7 +2199,7 @@ const QuestionnairesScreen = () => {
                   />
                 ))}
               </View>
-            </View>
+            </ScrollView>
           </Animated.View>
         </View>
       </View>
@@ -2142,12 +2427,16 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: "100%",
-    overflow: "hidden",
+    flex: 1,
   },
-  glassCard: {
+  glassCardScroll: {
+    flex: 1,
     backgroundColor: "#ffffff",
     borderRadius: 26,
+  },
+  glassCard: {
     padding: 24,
+    paddingBottom: 30,
   },
   questionText: {
     fontSize: 20,
@@ -2246,5 +2535,34 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginRight: 8,
     textTransform: "uppercase",
+  },
+
+  // --- Play Tone Button ---
+  playToneBtn: {
+    marginTop: 12,
+    marginBottom: 4,
+    borderRadius: 14,
+    overflow: "hidden",
+    shadowColor: "#7C3AED",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  playToneBtnActive: {
+    shadowColor: "#dc3545",
+  },
+  playToneGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    gap: 10,
+    borderRadius: 14,
+  },
+  playToneText: {
+    color: "#fff",
+    fontSize: 15,
   },
 });
