@@ -12,7 +12,6 @@ import {
   UIManager,
   Animated,
   Easing,
-  Modal,
   PanResponder,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -240,10 +239,15 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
           closeSheet();
         } else {
           Animated.parallel([
-            Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }),
+            Animated.timing(slideAnim, {
+              toValue: 0,
+              duration: 200,
+              easing: Easing.out(Easing.ease),
+              useNativeDriver: true,
+            }),
             Animated.timing(fadeAnim, {
               toValue: 1,
-              duration: 100,
+              duration: 150,
               useNativeDriver: true,
             }),
           ]).start();
@@ -257,15 +261,15 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
     slideAnim.setValue(height);
     fadeAnim.setValue(0);
     Animated.parallel([
-      Animated.spring(slideAnim, {
+      Animated.timing(slideAnim, {
         toValue: 0,
-        tension: 100,
-        friction: 8,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 150,
+        duration: 250,
         useNativeDriver: true,
       }),
     ]).start();
@@ -275,13 +279,13 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: height,
-        duration: 150,
+        duration: 250,
         easing: Easing.in(Easing.ease),
         useNativeDriver: true,
       }),
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 100,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start(() => {
@@ -526,12 +530,7 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
       </ScrollView>
 
       {/* Bottom Sheet - Already Filled Tray */}
-      <Modal
-        visible={sheetVisible}
-        transparent
-        animationType="none"
-        onRequestClose={closeSheet}
-      >
+      {sheetVisible && (
         <View style={styles.sheetModalWrapper}>
           <Animated.View style={[styles.sheetOverlay, { opacity: fadeAnim }]}>
             <TouchableOpacity
@@ -679,7 +678,7 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
             </LinearGradient>
           </Animated.View>
         </View>
-      </Modal>
+      )}
     </View>
   );
 }
@@ -842,9 +841,11 @@ const styles = StyleSheet.create({
 
   /* -------------------- Bottom Sheet -------------------- */
   sheetModalWrapper: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     backgroundColor: "transparent",
+    zIndex: 100,
+    elevation: 100,
   },
   sheetOverlay: {
     ...StyleSheet.absoluteFillObject,
