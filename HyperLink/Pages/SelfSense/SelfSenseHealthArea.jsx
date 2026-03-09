@@ -454,7 +454,7 @@ export default function SelfSenseHealthArea({ navigation: navigationProp }) {
               </Text>
             </View>
           </View>
-        </View>
+        </View>-
 
         <View style={styles.content}>
           {/* Chronic Conditions */}
