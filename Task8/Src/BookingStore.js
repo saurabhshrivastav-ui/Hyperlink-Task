@@ -20,7 +20,8 @@ export const addBooking = async (booking) => {
       month: "short",
       year: "numeric",
     }),
-    testTitle: booking.testTitle || "Diabetes Screening (HbAIC & Fasting Sugar)",
+    testTitle:
+      booking.testTitle || "Diabetes Screening (HbAIC & Fasting Sugar)",
     patientName: booking.patientName || "Sakshi Kewat",
     contact: booking.contact || "8169928844",
     address: booking.address || "Amrut Nagar, Ghatkopar West, Mumbai",

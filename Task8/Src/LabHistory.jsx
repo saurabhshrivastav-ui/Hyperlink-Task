@@ -58,9 +58,24 @@ const getPath = (indexValue) => {
 
 const NAV_ITEMS = [
   { label: "Home", route: "HyperTask", icon: "home", lib: Entypo },
-  { label: "Lab Test", route: "LabTest", icon: "test-tube", lib: MaterialCommunityIcons },
-  { label: "Speciality", route: "Speciality", icon: "grid", lib: MaterialCommunityIcons },
-  { label: "History", route: "LabHistory", icon: "clipboard-text-outline", lib: MaterialCommunityIcons },
+  {
+    label: "Lab Test",
+    route: "LabTest",
+    icon: "test-tube",
+    lib: MaterialCommunityIcons,
+  },
+  {
+    label: "Speciality",
+    route: "Speciality",
+    icon: "grid",
+    lib: MaterialCommunityIcons,
+  },
+  {
+    label: "History",
+    route: "LabHistory",
+    icon: "clipboard-text-outline",
+    lib: MaterialCommunityIcons,
+  },
   { label: "Profile", route: "Profile", icon: "user-alt", lib: FontAwesome5 },
 ];
 
@@ -104,7 +119,10 @@ const NavItem = ({ item, isFocused, onPress }) => (
     <CustomTabIcon item={item} isFocused={isFocused} />
     <Text
       weight={isFocused ? "900" : "500"}
-      style={[styles.label, isFocused ? styles.activeLabel : styles.inactiveLabel]}
+      style={[
+        styles.label,
+        isFocused ? styles.activeLabel : styles.inactiveLabel,
+      ]}
     >
       {item.label}
     </Text>
@@ -134,10 +152,22 @@ const SAMPLE_DATA = {
     color: "#7C3AED",
     bg: "#EDE9FE",
     sections: [
-      { heading: "Blood Sample (Fasting)", desc: "A 3-5 ml venous blood sample is drawn after 8-12 hours of fasting. Only plain water is allowed before the test." },
-      { heading: "HbA1c – No Fasting Needed", desc: "HbA1c measures your 3-month average blood sugar. This part does not require fasting and can be drawn any time." },
-      { heading: "Fasting Blood Sugar (FBS)", desc: "FBS measures your current glucose level after an overnight fast. Avoid tea, coffee, juice, and smoking before collection." },
-      { heading: "Home Collection Available", desc: "Our certified phlebotomist will visit your address between 6 AM – 10 AM. Keep your Aadhaar/ID ready. Reports delivered within 15 hrs." },
+      {
+        heading: "Blood Sample (Fasting)",
+        desc: "A 3-5 ml venous blood sample is drawn after 8-12 hours of fasting. Only plain water is allowed before the test.",
+      },
+      {
+        heading: "HbA1c – No Fasting Needed",
+        desc: "HbA1c measures your 3-month average blood sugar. This part does not require fasting and can be drawn any time.",
+      },
+      {
+        heading: "Fasting Blood Sugar (FBS)",
+        desc: "FBS measures your current glucose level after an overnight fast. Avoid tea, coffee, juice, and smoking before collection.",
+      },
+      {
+        heading: "Home Collection Available",
+        desc: "Our certified phlebotomist will visit your address between 6 AM – 10 AM. Keep your Aadhaar/ID ready. Reports delivered within 15 hrs.",
+      },
     ],
   },
   "Thyroid Profile (T3, T4, TSH)": {
@@ -146,10 +176,22 @@ const SAMPLE_DATA = {
     color: "#0891B2",
     bg: "#CFFAFE",
     sections: [
-      { heading: "Blood Sample", desc: "A 3 ml venous blood sample is drawn from your arm. No fasting is required for this test." },
-      { heading: "Best Time for Collection", desc: "TSH levels peak early morning. Sample collection between 7 AM – 9 AM gives the most accurate results." },
-      { heading: "Medication Note", desc: "If you are on thyroid medication (Thyroxine), take your sample before your morning dose for accurate readings." },
-      { heading: "Home Collection Available", desc: "Our phlebotomist will collect the sample at your doorstep. Reports are typically available within 12-24 hrs." },
+      {
+        heading: "Blood Sample",
+        desc: "A 3 ml venous blood sample is drawn from your arm. No fasting is required for this test.",
+      },
+      {
+        heading: "Best Time for Collection",
+        desc: "TSH levels peak early morning. Sample collection between 7 AM – 9 AM gives the most accurate results.",
+      },
+      {
+        heading: "Medication Note",
+        desc: "If you are on thyroid medication (Thyroxine), take your sample before your morning dose for accurate readings.",
+      },
+      {
+        heading: "Home Collection Available",
+        desc: "Our phlebotomist will collect the sample at your doorstep. Reports are typically available within 12-24 hrs.",
+      },
     ],
   },
   "Complete Blood Count (CBC)": {
@@ -158,10 +200,22 @@ const SAMPLE_DATA = {
     color: "#DC2626",
     bg: "#FEE2E2",
     sections: [
-      { heading: "Blood Sample (EDTA Tube)", desc: "A 2-3 ml blood sample is collected in a purple-top EDTA tube. This test measures RBC, WBC, platelets, and hemoglobin." },
-      { heading: "No Fasting Required", desc: "You can eat and drink normally before the test. Hydration actually helps with easier blood draw." },
-      { heading: "What It Detects", desc: "Screens for anemia, infections, clotting disorders, immune deficiencies, and blood cancers like leukemia." },
-      { heading: "Home Collection Available", desc: "Sample collected at home with results delivered within 6-8 hours on the same day." },
+      {
+        heading: "Blood Sample (EDTA Tube)",
+        desc: "A 2-3 ml blood sample is collected in a purple-top EDTA tube. This test measures RBC, WBC, platelets, and hemoglobin.",
+      },
+      {
+        heading: "No Fasting Required",
+        desc: "You can eat and drink normally before the test. Hydration actually helps with easier blood draw.",
+      },
+      {
+        heading: "What It Detects",
+        desc: "Screens for anemia, infections, clotting disorders, immune deficiencies, and blood cancers like leukemia.",
+      },
+      {
+        heading: "Home Collection Available",
+        desc: "Sample collected at home with results delivered within 6-8 hours on the same day.",
+      },
     ],
   },
   "Lipid Profile": {
@@ -170,10 +224,22 @@ const SAMPLE_DATA = {
     color: "#EA580C",
     bg: "#FFF7ED",
     sections: [
-      { heading: "Blood Sample (Fasting)", desc: "A 3 ml fasting blood sample is required. Fast for 9-12 hours before collection — water is fine." },
-      { heading: "What It Measures", desc: "Total Cholesterol, LDL (bad), HDL (good), Triglycerides, and VLDL. Essential for heart disease risk assessment." },
-      { heading: "Pre-Test Instructions", desc: "Avoid alcohol for 24 hrs and fatty meals the night before. Continue regular medications unless advised otherwise." },
-      { heading: "Home Collection Available", desc: "Early morning home collection recommended (6 AM – 9 AM). Reports within 12-15 hrs." },
+      {
+        heading: "Blood Sample (Fasting)",
+        desc: "A 3 ml fasting blood sample is required. Fast for 9-12 hours before collection — water is fine.",
+      },
+      {
+        heading: "What It Measures",
+        desc: "Total Cholesterol, LDL (bad), HDL (good), Triglycerides, and VLDL. Essential for heart disease risk assessment.",
+      },
+      {
+        heading: "Pre-Test Instructions",
+        desc: "Avoid alcohol for 24 hrs and fatty meals the night before. Continue regular medications unless advised otherwise.",
+      },
+      {
+        heading: "Home Collection Available",
+        desc: "Early morning home collection recommended (6 AM – 9 AM). Reports within 12-15 hrs.",
+      },
     ],
   },
   _default: {
@@ -182,22 +248,44 @@ const SAMPLE_DATA = {
     color: "#7C3AED",
     bg: "#EDE9FE",
     sections: [
-      { heading: "Blood Sample", desc: "A small blood sample (3-5 ml) is drawn from a vein in your arm using a sterile syringe. Process takes under 2 minutes." },
-      { heading: "Urine Sample", desc: "A mid-stream urine sample may be required in a sterile container provided at the time of collection." },
-      { heading: "Fasting Instructions", desc: "Some tests require 8-12 hours of fasting. Only water is allowed. Avoid heavy meals the night before." },
-      { heading: "Home Collection Available", desc: "Our certified phlebotomist visits your address at the scheduled time. Keep Aadhaar/ID ready for verification." },
+      {
+        heading: "Blood Sample",
+        desc: "A small blood sample (3-5 ml) is drawn from a vein in your arm using a sterile syringe. Process takes under 2 minutes.",
+      },
+      {
+        heading: "Urine Sample",
+        desc: "A mid-stream urine sample may be required in a sterile container provided at the time of collection.",
+      },
+      {
+        heading: "Fasting Instructions",
+        desc: "Some tests require 8-12 hours of fasting. Only water is allowed. Avoid heavy meals the night before.",
+      },
+      {
+        heading: "Home Collection Available",
+        desc: "Our certified phlebotomist visits your address at the scheduled time. Keep Aadhaar/ID ready for verification.",
+      },
     ],
   },
 };
 
-const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation }) => {
+const BookingCard = ({
+  booking,
+  onCancel,
+  onComplete,
+  onSamplePress,
+  navigation,
+}) => {
   const colors = STATUS_COLORS[booking.status] || STATUS_COLORS.upcoming;
 
   const DetailLine = ({ icon, label, value }) => (
     <View style={styles.detailLine}>
       <MaterialCommunityIcons name={icon} size={16} color="#7C3AED" />
-      <Text weight="600" style={styles.detailLabel}>{label}</Text>
-      <Text weight="400" style={styles.detailValue} numberOfLines={1}>{value}</Text>
+      <Text weight="600" style={styles.detailLabel}>
+        {label}
+      </Text>
+      <Text weight="400" style={styles.detailValue} numberOfLines={1}>
+        {value}
+      </Text>
     </View>
   );
 
@@ -211,25 +299,44 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
           end={{ x: 1, y: 0 }}
           style={styles.dateBadge}
         >
-          <MaterialCommunityIcons name="calendar-clock" size={13} color="#fff" />
-          <Text weight="600" style={styles.dateBadgeText}>{booking.date}</Text>
+          <MaterialCommunityIcons
+            name="calendar-clock"
+            size={13}
+            color="#fff"
+          />
+          <Text weight="600" style={styles.dateBadgeText}>
+            {booking.date}
+          </Text>
         </LinearGradient>
 
         <View style={styles.statusChip}>
           <View style={[styles.statusDot, { backgroundColor: colors.text }]} />
-          <Text weight="600" style={[styles.statusChipText, { color: colors.text }]}>
+          <Text
+            weight="600"
+            style={[styles.statusChipText, { color: colors.text }]}
+          >
             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
           </Text>
         </View>
       </View>
 
-      <Text weight="700" style={styles.testTitle}>{booking.testTitle}</Text>
+      <Text weight="700" style={styles.testTitle}>
+        {booking.testTitle}
+      </Text>
 
       {/* Details */}
       <View style={styles.detailsBlock}>
-        <DetailLine icon="account" label="Patient:" value={booking.patientName} />
+        <DetailLine
+          icon="account"
+          label="Patient:"
+          value={booking.patientName}
+        />
         <DetailLine icon="phone" label="Contact:" value={booking.contact} />
-        <DetailLine icon="map-marker" label="Address:" value={booking.address} />
+        <DetailLine
+          icon="map-marker"
+          label="Address:"
+          value={booking.address}
+        />
         <DetailLine icon="clock-outline" label="Time:" value={booking.time} />
       </View>
 
@@ -246,8 +353,12 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
             <Ionicons name="flask-outline" size={18} color="#7C3AED" />
           </View>
           <View>
-            <Text weight="600" style={styles.sampleCollectionTitle}>Sample Collection</Text>
-            <Text weight="400" style={styles.sampleCollectionSub}>Tap to view collection details</Text>
+            <Text weight="600" style={styles.sampleCollectionTitle}>
+              Sample Collection
+            </Text>
+            <Text weight="400" style={styles.sampleCollectionSub}>
+              Tap to view collection details
+            </Text>
           </View>
         </View>
         <MaterialIcons name="chevron-right" size={22} color="#7C3AED" />
@@ -256,17 +367,33 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
       {/* Payment & Report Status */}
       <View style={styles.statusRow}>
         <View style={styles.statusItem}>
-          <Text weight="500" style={styles.statusLabel}>Payment</Text>
+          <Text weight="500" style={styles.statusLabel}>
+            Payment
+          </Text>
           <View style={styles.paidBadge}>
             <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-            <Text weight="600" style={styles.paidText}>{booking.paymentStatus || "Paid"}</Text>
+            <Text weight="600" style={styles.paidText}>
+              {booking.paymentStatus || "Paid"}
+            </Text>
           </View>
         </View>
         <View style={styles.statusItem}>
-          <Text weight="500" style={styles.statusLabel}>Report Status</Text>
-          <View style={[styles.reportBadge, { backgroundColor: colors.text + "18" }]}>
-            <Text weight="600" style={[styles.reportText, { color: colors.text }]}>
-              {booking.reportStatus || booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+          <Text weight="500" style={styles.statusLabel}>
+            Report Status
+          </Text>
+          <View
+            style={[
+              styles.reportBadge,
+              { backgroundColor: colors.text + "18" },
+            ]}
+          >
+            <Text
+              weight="600"
+              style={[styles.reportText, { color: colors.text }]}
+            >
+              {booking.reportStatus ||
+                booking.status.charAt(0).toUpperCase() +
+                  booking.status.slice(1)}
             </Text>
           </View>
         </View>
@@ -276,11 +403,24 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
       <View style={styles.cardActions}>
         {booking.status === "upcoming" && (
           <>
-            <TouchableOpacity activeOpacity={0.8} style={styles.actionBtnOutline} onPress={() => onCancel(booking.id)}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.actionBtnOutline}
+              onPress={() => onCancel(booking.id)}
+            >
               <MaterialIcons name="cancel" size={16} color="#DC2626" />
-              <Text weight="600" style={[styles.actionBtnText, { color: "#DC2626" }]}>Cancel</Text>
+              <Text
+                weight="600"
+                style={[styles.actionBtnText, { color: "#DC2626" }]}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.8} style={{ flex: 1 }} onPress={() => onComplete(booking.id)}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={{ flex: 1 }}
+              onPress={() => onComplete(booking.id)}
+            >
               <LinearGradient
                 colors={["#22C55E", "#16A34A"]}
                 start={{ x: 0, y: 0 }}
@@ -288,7 +428,9 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
                 style={styles.actionBtnGradient}
               >
                 <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                <Text weight="700" style={styles.actionBtnTextWhite}>Mark Completed</Text>
+                <Text weight="700" style={styles.actionBtnTextWhite}>
+                  Mark Completed
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           </>
@@ -302,8 +444,14 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
                 end={{ x: 1, y: 0 }}
                 style={styles.actionBtnGradient}
               >
-                <MaterialCommunityIcons name="rotate-3d-variant" size={16} color="#fff" />
-                <Text weight="700" style={styles.actionBtnTextWhite}>View in 360°</Text>
+                <MaterialCommunityIcons
+                  name="rotate-3d-variant"
+                  size={16}
+                  color="#fff"
+                />
+                <Text weight="700" style={styles.actionBtnTextWhite}>
+                  View in 360°
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity
@@ -312,7 +460,12 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
               onPress={() => navigation.navigate("LabTest")}
             >
               <MaterialIcons name="replay" size={16} color="#7C3AED" />
-              <Text weight="600" style={[styles.actionBtnText, { color: "#7C3AED" }]}>Book Again</Text>
+              <Text
+                weight="600"
+                style={[styles.actionBtnText, { color: "#7C3AED" }]}
+              >
+                Book Again
+              </Text>
             </TouchableOpacity>
           </>
         )}
@@ -320,7 +473,9 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
           <View style={styles.cancelledRow}>
             <View style={styles.refundBadge}>
               <MaterialIcons name="info-outline" size={14} color="#DC2626" />
-              <Text weight="600" style={styles.refundText}>Refund Initiated</Text>
+              <Text weight="600" style={styles.refundText}>
+                Refund Initiated
+              </Text>
             </View>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -328,7 +483,12 @@ const BookingCard = ({ booking, onCancel, onComplete, onSamplePress, navigation 
               onPress={() => navigation.navigate("LabTest")}
             >
               <MaterialIcons name="replay" size={16} color="#7C3AED" />
-              <Text weight="600" style={[styles.actionBtnText, { color: "#7C3AED" }]}>Rebook</Text>
+              <Text
+                weight="600"
+                style={[styles.actionBtnText, { color: "#7C3AED" }]}
+              >
+                Rebook
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -374,7 +534,7 @@ const LabHistory = () => {
   useFocusEffect(
     useCallback(() => {
       loadBookings();
-    }, [loadBookings])
+    }, [loadBookings]),
   );
 
   const handleCancel = (id) => {
@@ -391,7 +551,7 @@ const LabHistory = () => {
             loadBookings();
           },
         },
-      ]
+      ],
     );
   };
 
@@ -418,66 +578,66 @@ const LabHistory = () => {
   };
 
   const filteredBookings = bookings.filter(
-    (b) => b.status === STATUS_MAP[activeTab]
+    (b) => b.status === STATUS_MAP[activeTab],
   );
 
   return (
     <View style={styles.page}>
-      {/* ── Header ── */}
-      <LinearGradient
-        colors={["#E4CCF7", "#F2DAEA", "#FFE9CF"]}
-        locations={[0, 0.5, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0.4 }}
-        style={styles.header}
-      >
-        <View style={styles.navRow}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            activeOpacity={0.7}
-            onPress={() => navigation.goBack()}
-          >
-            <MaterialIcons name="arrow-back" size={26} color="#6D28D9" />
-          </TouchableOpacity>
-          <Text weight="700" style={styles.headerTitle}>
-            Lab Test History
-          </Text>
-        </View>
-      </LinearGradient>
-
-      {/* ── Tab Pills ── */}
-      <View style={styles.tabRow}>
-        {TABS.map((tab, idx) => {
-          const isActive = idx === activeTab;
-          const tabColors =
-            idx === 2
-              ? ["#DC2626", "#B91C1C"]
-              : ["#7C3AED", "#6D28D9"];
-          return isActive ? (
-            <LinearGradient
-              key={tab}
-              colors={tabColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.tabPill}
-            >
-              <Text weight="700" style={styles.tabTextActive}>
-                {tab}
-              </Text>
-            </LinearGradient>
-          ) : (
+      {/* ── Header with Tabs at bottom border ── */}
+      <View style={styles.headerWrapper}>
+        <LinearGradient
+          colors={["#E4CCF7", "#F2DAEA", "#FFE9CF"]}
+          locations={[0, 0.5, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.4 }}
+          style={styles.header}
+        >
+          <View style={styles.navRow}>
             <TouchableOpacity
-              key={tab}
-              style={styles.tabPillInactive}
+              style={styles.backBtn}
               activeOpacity={0.7}
-              onPress={() => setActiveTab(idx)}
+              onPress={() => navigation.goBack()}
             >
-              <Text weight="500" style={styles.tabTextInactive}>
-                {tab}
-              </Text>
+              <MaterialIcons name="arrow-back" size={26} color="#6D28D9" />
             </TouchableOpacity>
-          );
-        })}
+            <Text weight="700" style={styles.headerTitle}>
+              Lab Test History
+            </Text>
+          </View>
+        </LinearGradient>
+
+        {/* ── Tab Pills – centered on header bottom border ── */}
+        <View style={styles.tabRow}>
+          {TABS.map((tab, idx) => {
+            const isActive = idx === activeTab;
+            const tabColors =
+              idx === 2 ? ["#DC2626", "#B91C1C"] : ["#7C3AED", "#6D28D9"];
+            return isActive ? (
+              <LinearGradient
+                key={tab}
+                colors={tabColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.tabPill}
+              >
+                <Text weight="700" style={styles.tabTextActive}>
+                  {tab}
+                </Text>
+              </LinearGradient>
+            ) : (
+              <TouchableOpacity
+                key={tab}
+                style={styles.tabPillInactive}
+                activeOpacity={0.7}
+                onPress={() => setActiveTab(idx)}
+              >
+                <Text weight="500" style={styles.tabTextInactive}>
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       {/* ── Content ── */}
@@ -557,8 +717,17 @@ const LabHistory = () => {
                 bounces={true}
               >
                 <View style={styles.infoHeaderRow}>
-                  <View style={[styles.infoIconWrap, { backgroundColor: sampleTrayData.bg }]}>
-                    <Ionicons name={sampleTrayData.icon} size={24} color={sampleTrayData.color} />
+                  <View
+                    style={[
+                      styles.infoIconWrap,
+                      { backgroundColor: sampleTrayData.bg },
+                    ]}
+                  >
+                    <Ionicons
+                      name={sampleTrayData.icon}
+                      size={24}
+                      color={sampleTrayData.color}
+                    />
                   </View>
                   <Text weight="700" style={styles.infoTitle}>
                     {sampleTrayData.title}
@@ -568,7 +737,12 @@ const LabHistory = () => {
                 {sampleTrayData.sections.map((section, idx) => (
                   <View key={idx} style={styles.infoSectionCard}>
                     <View style={styles.infoSectionRow}>
-                      <View style={[styles.infoSectionDot, { backgroundColor: sampleTrayData.color }]} />
+                      <View
+                        style={[
+                          styles.infoSectionDot,
+                          { backgroundColor: sampleTrayData.color },
+                        ]}
+                      />
                       <Text weight="700" style={styles.infoSectionHeading}>
                         {section.heading}
                       </Text>
@@ -591,7 +765,9 @@ const LabHistory = () => {
                     end={{ x: 1, y: 0.5 }}
                     style={styles.infoCloseBtn}
                   >
-                    <Text weight="700" style={styles.infoCloseBtnText}>Got It</Text>
+                    <Text weight="700" style={styles.infoCloseBtnText}>
+                      Got It
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </ScrollView>
@@ -634,10 +810,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFBFF",
   },
 
+  /* Header wrapper to allow tabs to overlap */
+  headerWrapper: {
+    position: "relative",
+    zIndex: 10,
+    marginBottom: 20,
+  },
   /* Header */
   header: {
     paddingTop: Platform.OS === "android" ? 44 : 54,
-    paddingBottom: 18,
+    paddingBottom: 30,
     paddingHorizontal: 16,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -655,14 +837,22 @@ const styles = StyleSheet.create({
     color: "#1f2937",
   },
 
-  /* Tabs */
+  /* Tabs – positioned at the center of header bottom border */
   tabRow: {
     flexDirection: "row",
-    marginHorizontal: 16,
-    marginTop: 20,
+    marginHorizontal: 24,
     backgroundColor: "#F3F4F6",
     borderRadius: 30,
     padding: 4,
+    position: "absolute",
+    bottom: -18,
+    left: 0,
+    right: 0,
+    elevation: 4,
+    shadowColor: "#7C3AED",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
   tabPill: {
     flex: 1,
@@ -1011,7 +1201,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     shadowColor: "#c4b5fd",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },

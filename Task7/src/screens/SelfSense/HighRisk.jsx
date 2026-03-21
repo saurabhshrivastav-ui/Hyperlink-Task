@@ -304,35 +304,37 @@ const styles = StyleSheet.create({
   /* Overall container updated for a neutral, soft backdrop with subtle texture feel */
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F6", /* warmer off-white */
+    backgroundColor: "#f7fafc",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 50,
-    paddingHorizontal: s(20),
+    paddingHorizontal: 20,
     paddingBottom: 18,
+    marginTop: 40,
     backgroundColor: "transparent",
     borderBottomWidth: 0,
   },
   backButton: {
+    backgroundColor: "rgba(255,255,255,0.25)",
     padding: 8,
-    marginRight: 12,
-    backgroundColor: "rgba(124,45,18,0.06)",
-    borderRadius: 10,
+    borderRadius: 12,
   },
   headerTitle: {
-    fontSize: s(20),
+    fontSize: 22,
     color: "#7c2d12",
-    letterSpacing: 0.2,
+    marginLeft: 12,
   },
 
   scrollContent: {
-    paddingHorizontal: s(20),
+    paddingHorizontal: 20,
     paddingBottom: 36,
     width: "100%",
     alignSelf: "center",
     maxWidth: "100%",
+  },
+  pagePadding: {
+    paddingHorizontal: 20,
   },
 
   /* Card wrapper subtle lift */
@@ -349,14 +351,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 22,
     marginBottom: 20,
-    backgroundColor: "rgba(255,255,255,0.6)",
-    shadowColor: "#000",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    shadowColor: "#6A1B9A",
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 20,
+    shadowRadius: 22,
     elevation: 6,
     borderWidth: 1,
-    borderColor: "rgba(124,45,18,0.06)",
+    borderColor: "rgba(106,27,154,0.06)",
   },
   resultRow: {
     flexDirection: "row",
@@ -395,41 +397,40 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   pillText: {
-    color: "#7c2d12",
-    fontSize: 11,
+    color: "#6A1B9A",
+    fontSize: 15,
   },
   resultTitle: {
-    fontSize: s(18),
-    color: "#0b0b0b",
+    fontSize: 20,
+    color: "#071422",
     marginBottom: 6,
-    letterSpacing: 0.2,
   },
   resultDesc: {
-    fontSize: s(13),
-    color: "#333",
-    lineHeight: s(20),
+    fontSize: 17,
+    color: "#334155",
+    lineHeight: 20,
     marginBottom: 8,
     opacity: 0.95,
   },
   resultDesc2: {
-    fontSize: s(12),
-    color: "#666",
-    lineHeight: s(18),
+    fontSize: 15,
+    color: "#64748b",
+    lineHeight: 18,
   },
 
   /* Consult Card — brighter, clearer call-to-action */
   consultCard: {
-    backgroundColor: "rgba(255,245,247,0.9)",
+    backgroundColor: "rgba(250,245,255,0.95)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 26,
     shadowColor: "#000",
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 12,
     elevation: 4,
     borderWidth: 1,
-    borderColor: "rgba(220,36,38,0.06)",
+    borderColor: "rgba(106,27,154,0.06)",
   },
   disclaimerRow: {
     flexDirection: "row",
@@ -520,8 +521,8 @@ const styles = StyleSheet.create({
 
   /* Influence Section — clearer headings */
   sectionTitle: {
-    fontSize: s(16),
-    color: "#7c2d12",
+    fontSize: 20,
+    color: "#6A1B9A",
     marginBottom: 14,
   },
   listContainer: {
@@ -540,8 +541,8 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   bulletText: {
-    fontSize: s(14),
-    color: "#444",
+    fontSize: 17,
+    color: "#374151",
   },
 
   /* Do's and Don'ts — card-like columns */
@@ -585,11 +586,11 @@ const styles = StyleSheet.create({
   },
   colTitleDo: {
     color: "#0b0b0b",
-    fontSize: 15,
+    fontSize: 20,
   },
   colTitleAvoid: {
     color: "#0b0b0b",
-    fontSize: 15,
+    fontSize: 20,
   },
   colContent: {
     paddingLeft: 2,
@@ -600,20 +601,19 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   gridBulletDo: {
-    fontSize: 14,
+    fontSize: 19,
     marginRight: 8,
     color: "#2E7D32",
   },
   gridBulletAvoid: {
-    fontSize: 14,
+    fontSize: 19,
     marginRight: 8,
     color: "#C62828",
   },
   gridText: {
-    fontSize: s(12),
+    fontSize: 17,
     color: "#222",
     flex: 1,
-    lineHeight: s(18),
   },
   cardHoverSmall: {
     transform: [{ scale: 1.01 }],
@@ -631,18 +631,18 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   researchTitle: {
-    fontSize: 15,
+    fontSize: 20,
     color: "#7c2d12",
     marginBottom: 10,
   },
   researchText: {
-    fontSize: 13,
+    fontSize: 16,
     color: "#666",
     lineHeight: 20,
     marginBottom: 10,
   },
   learnMore: {
-    fontSize: 13,
+    fontSize: 19,
     color: "#7c2d12",
     textAlign: "right",
   },

@@ -197,7 +197,7 @@ const TestDetails = () => {
     opacity: anim,
     transform: [
       { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [floatY, 0] }) },
-      { scale: anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0.97, 1.02, 1] }) },
+      { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1] }) },
     ],
   });
 
@@ -285,10 +285,17 @@ const TestDetails = () => {
 
   // ---- Info Tray (Samples / Why / Preparations) ----
   const [showInfoSheet, setShowInfoSheet] = useState(false);
+  const [infoType, setInfoType] = useState("samples");
   const infoTypeRef = useRef("samples");
 
   const infoSlideAnim = useRef(new Animated.Value(height)).current;
   const infoFadeAnim = useRef(new Animated.Value(0)).current;
+  // Staggered float anims for info sheet content
+  const infoItem1 = useRef(new Animated.Value(0)).current; // header
+  const infoItem2 = useRef(new Animated.Value(0)).current; // section 1
+  const infoItem3 = useRef(new Animated.Value(0)).current; // section 2
+  const infoItem4 = useRef(new Animated.Value(0)).current; // section 3
+  const infoItem5 = useRef(new Animated.Value(0)).current; // extra sections / button
 
   const infoPanResponder = useRef(
     PanResponder.create({
@@ -305,7 +312,7 @@ const TestDetails = () => {
           closeInfoSheet();
         } else {
           Animated.parallel([
-            Animated.timing(infoSlideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+            Animated.timing(infoSlideAnim, { toValue: 0, duration: 250, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
             Animated.timing(infoFadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
           ]).start();
         }
@@ -315,37 +322,58 @@ const TestDetails = () => {
 
   const openInfoSheet = useCallback((type) => {
     infoTypeRef.current = type;
+    setInfoType(type);
+    // Reset animated values before opening
+    infoSlideAnim.setValue(height);
+    infoFadeAnim.setValue(0);
+    [infoItem1, infoItem2, infoItem3, infoItem4, infoItem5].forEach(a => a.setValue(0));
     setShowInfoSheet(true);
+    // Smooth slide-up with no overshoot
     Animated.parallel([
       Animated.timing(infoFadeAnim, {
         toValue: 1,
-        duration: 250,
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(infoSlideAnim, {
         toValue: 0,
-        duration: 300,
-        easing: Easing.out(Easing.ease),
+        duration: 420,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      // Gentle staggered fade-in for content items (no bounce)
+      const items = [infoItem1, infoItem2, infoItem3, infoItem4, infoItem5];
+      items.forEach(a => a.setValue(0));
+      Animated.stagger(60, items.map(anim =>
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 250,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        })
+      )).start();
+    });
   }, []);
 
   const closeInfoSheet = useCallback(() => {
     Animated.parallel([
       Animated.timing(infoFadeAnim, {
         toValue: 0,
-        duration: 200,
+        duration: 280,
+        easing: Easing.in(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.timing(infoSlideAnim, {
         toValue: height,
-        duration: 250,
-        easing: Easing.in(Easing.ease),
+        duration: 350,
+        easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start(() => {
       setShowInfoSheet(false);
+      [infoItem1, infoItem2, infoItem3, infoItem4, infoItem5].forEach(a => a.setValue(0));
     });
   }, []);
 
@@ -980,30 +1008,34 @@ const TestDetails = () => {
               <View style={styles.trayHandleBar} />
             </View>
 
-            {["samples", "why", "preparations", "collection"].map((key) => (
-              <View key={key} style={{ display: infoTypeRef.current === key ? "flex" : "none" }}>
-                <ScrollView
-                  style={styles.infoSheetScroll}
-                  showsVerticalScrollIndicator={false}
-                  bounces={true}
-                >
-                  <View style={styles.infoHeaderRow}>
-                    <View style={[styles.infoIconWrap, { backgroundColor: infoContent[key].bg }]}>
-                      <Ionicons
-                        name={infoContent[key].icon}
-                        size={24}
-                        color={infoContent[key].color}
-                      />
-                    </View>
-                    <Text weight="700" style={styles.infoTitle}>
-                      {infoContent[key].title}
-                    </Text>
+            {infoContent[infoType] && (
+              <ScrollView
+                style={styles.infoSheetScroll}
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+              >
+                {/* Header with icon and title */}
+                <Animated.View style={[styles.infoHeaderRow, floatStyle(infoItem1, 24)]}>
+                  <View style={[styles.infoIconWrap, { backgroundColor: infoContent[infoType].bg }]}>
+                    <Ionicons
+                      name={infoContent[infoType].icon}
+                      size={24}
+                      color={infoContent[infoType].color}
+                    />
                   </View>
+                  <Text weight="700" style={styles.infoTitle}>
+                    {infoContent[infoType].title}
+                  </Text>
+                </Animated.View>
 
-                  {infoContent[key].sections.map((section, idx) => (
-                    <View key={idx} style={styles.infoSectionCard}>
+                {/* Content sections with staggered float-in */}
+                {infoContent[infoType].sections.map((section, idx) => {
+                  const itemAnims = [infoItem2, infoItem3, infoItem4, infoItem5];
+                  const anim = itemAnims[idx] || itemAnims[itemAnims.length - 1];
+                  return (
+                    <Animated.View key={idx} style={[styles.infoSectionCard, floatStyle(anim, 26 + idx * 4)]}>
                       <View style={styles.infoSectionRow}>
-                        <View style={[styles.infoSectionDot, { backgroundColor: infoContent[key].color }]} />
+                        <View style={[styles.infoSectionDot, { backgroundColor: infoContent[infoType].color }]} />
                         <Text weight="700" style={styles.infoSectionHeading}>
                           {section.heading}
                         </Text>
@@ -1011,9 +1043,12 @@ const TestDetails = () => {
                       <Text weight="400" style={styles.infoSectionDesc}>
                         {section.desc}
                       </Text>
-                    </View>
-                  ))}
+                    </Animated.View>
+                  );
+                })}
 
+                {/* Got It button */}
+                <Animated.View style={floatStyle(infoItem5, 36)}>
                   <TouchableOpacity
                     activeOpacity={0.85}
                     style={styles.infoCloseBtnWrap}
@@ -1029,9 +1064,9 @@ const TestDetails = () => {
                       <Text weight="700" style={styles.infoCloseBtnText}>Got It</Text>
                     </LinearGradient>
                   </TouchableOpacity>
-                </ScrollView>
-              </View>
-            ))}
+                </Animated.View>
+              </ScrollView>
+            )}
           </LinearGradient>
         </Animated.View>
       </Modal>
@@ -1272,22 +1307,22 @@ const styles = StyleSheet.create({
   packageCard: {
     width: CARD_WIDTH,
     height: CARD_WIDTH * 0.67,
-    backgroundColor: "#FCF6FF",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 10,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#FFFFFF",
+    borderColor: "#F3E8FF",
     ...Platform.select({
       ios: {
-        shadowColor: "#3D136B",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.8,
-        shadowRadius: 10,
+        shadowColor: "#BF7BB9",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
       },
-      android: { elevation: 12, shadowColor: "#3D136B" },
+      android: { elevation: 3, shadowColor: "#BF7BB9" },
     }),
   },
   packageTitle: {

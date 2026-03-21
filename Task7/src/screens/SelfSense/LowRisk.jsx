@@ -299,33 +299,36 @@ export default LowRisk;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7FFFB", /* fresher minty background */
+    backgroundColor: "#f7fafc",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 50,
-    paddingHorizontal: s(20),
+    paddingHorizontal: 20,
     paddingBottom: 18,
+    marginTop: 40,
     backgroundColor: "transparent",
+    borderBottomWidth: 0,
   },
   backButton: {
+    backgroundColor: "rgba(255,255,255,0.25)",
     padding: 8,
-    marginRight: 12,
-    backgroundColor: "rgba(6,95,70,0.06)",
-    borderRadius: 10,
+    borderRadius: 12,
   },
   headerTitle: {
-    fontSize: s(20),
-    color: "#065f46",
-    letterSpacing: 0.2,
+    fontSize: 22,
+    color: "#7c2d12",
+    marginLeft: 12,
   },
   scrollContent: {
-    paddingHorizontal: s(20),
+    paddingHorizontal: 20,
     paddingBottom: 36,
     width: "100%",
     alignSelf: "center",
     maxWidth: "100%",
+  },
+  pagePadding: {
+    paddingHorizontal: 20,
   },
   cardWrapper: {
     borderRadius: 18,
@@ -379,24 +382,24 @@ const styles = StyleSheet.create({
   },
   pillText: {
     color: "#065f46",
-    fontSize: 11,
+    fontSize: 15,
   },
   resultTitle: {
-    fontSize: s(18),
+    fontSize: 20,
     color: "#071422",
     marginBottom: 6,
   },
   resultDesc: {
-    fontSize: s(13),
+    fontSize: 17,
     color: "#334155",
-    lineHeight: s(20),
+    lineHeight: 20,
     marginBottom: 8,
     opacity: 0.95,
   },
   resultDesc2: {
-    fontSize: s(12),
+    fontSize: 15,
     color: "#64748b",
-    lineHeight: s(18),
+    lineHeight: 18,
   },
   // Consult Card
   consultCard: {
@@ -499,7 +502,7 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
   sectionTitle: {
-    fontSize: s(16),
+    fontSize: 20,
     color: "#065f46",
     marginBottom: 14,
   },
@@ -519,7 +522,7 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   bulletText: {
-    fontSize: s(14),
+    fontSize: 17,
     color: "#374151",
   },
   gridContainer: {
@@ -562,11 +565,11 @@ const styles = StyleSheet.create({
   },
   colTitleDo: {
     color: "#0b0b0b",
-    fontSize: 15,
+    fontSize: 20,
   },
   colTitleAvoid: {
     color: "#0b0b0b",
-    fontSize: 15,
+    fontSize: 20,
   },
   gridItemRow: {
     flexDirection: "row",
@@ -574,20 +577,19 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   gridBulletDo: {
-    fontSize: 14,
+    fontSize: 19,
     marginRight: 8,
-    color: "#065f46",
+    color: "#2E7D32",
   },
   gridBulletAvoid: {
-    fontSize: 14,
+    fontSize: 19,
     marginRight: 8,
     color: "#C62828",
   },
   gridText: {
-    fontSize: s(12),
-    color: "#0b1220",
+    fontSize: 17,
+    color: "#222",
     flex: 1,
-    lineHeight: s(18),
   },
   cardHoverSmall: {
     transform: [{ scale: 1.01 }],
@@ -603,19 +605,19 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   researchTitle: {
-    fontSize: 15,
-    color: "#065f46",
+    fontSize: 20,
+    color: "#7c2d12",
     marginBottom: 10,
   },
   researchText: {
-    fontSize: 13,
-    color: "#6b7280",
+    fontSize: 16,
+    color: "#666",
     lineHeight: 20,
     marginBottom: 10,
   },
   learnMore: {
-    fontSize: 13,
-    color: "#065f46",
+    fontSize: 19,
+    color: "#7c2d12",
     textAlign: "right",
   },
   linkHover: {

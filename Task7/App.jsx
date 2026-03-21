@@ -3,17 +3,17 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 // Screen Imports
+import Home from "./src/screens/Home/Home";
 import SelfSense from "./src/screens/SelfSense/SelfSense";
 import SelfSenseHealthArea from "./src/screens/SelfSense/SelfSenseHealthArea";
 import SelfSensePersonalDetails from "./src/screens/SelfSense/PersonalDetails"; 
 import SelfSenseQuestionnaires from "./src/screens/SelfSense/Questionnaires";
 import AssessmentHistory from "./src/screens/SelfSense/AssessmentHistory";
 
-// Result Screen Imports (Make sure these files exist in your folder)
-// If you haven't created them yet, the app will crash when submitting the quiz.
-import LowRisk from "./src/screens/SelfSense/LowRisk";       // ⚠️ Ensure path is correct
-import ModerateRisk from "./src/screens/SelfSense/ModerateRisk"; // ⚠️ Ensure path is correct
-import HighRisk from "./src/screens/SelfSense/HighRisk";     // ⚠️ Ensure path is correct
+// Result Screen Imports
+import LowRisk from "./src/screens/SelfSense/LowRisk";
+import ModerateRisk from "./src/screens/SelfSense/ModerateRisk";
+import HighRisk from "./src/screens/SelfSense/HighRisk";
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +22,9 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         
+        {/* 0. Home Screen */}
+        <Stack.Screen name="Home" component={Home} />
+
         {/* 1. Landing Screen - Self Sense Introduction */}
         <Stack.Screen name="SelfSense" component={SelfSense} />
         
@@ -34,7 +37,7 @@ export default function App() {
         {/* 4. Questionnaires Screen */}
         <Stack.Screen name="QuestionnairesScreen" component={SelfSenseQuestionnaires} />
 
-        {/* 5. Result Screens (Required for the quiz logic to work) */}
+        {/* 5. Result Screens */}
         <Stack.Screen name="LowRisk" component={LowRisk} />
         <Stack.Screen name="ModerateRisk" component={ModerateRisk} />
         <Stack.Screen name="HighRisk" component={HighRisk} />

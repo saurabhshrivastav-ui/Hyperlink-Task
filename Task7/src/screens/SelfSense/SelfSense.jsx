@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -14,6 +14,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "../../../components/TextWrapper";
 import GradientButton from "../../../components/GradientButton";
 import ConsultWarningCard from "../../../components/ConsultWarningCard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsFocused } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,6 +38,38 @@ const COLORS = {
 };
 
 export default function SelfSense({ navigation }) {
+  const isFocused = useIsFocused();
+  const [inProgressAssessments, setInProgressAssessments] = useState([]);
+
+  // Load in-progress assessments from AsyncStorage
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const allKeys = await AsyncStorage.getAllKeys();
+        const progressKeys = allKeys.filter((k) => k.startsWith("assessment_progress_"));
+        if (progressKeys.length === 0) {
+          setInProgressAssessments([]);
+          return;
+        }
+        const entries = await AsyncStorage.multiGet(progressKeys);
+        const progressList = entries
+          .map(([key, value]) => {
+            try {
+              return JSON.parse(value);
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean)
+          .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+        setInProgressAssessments(progressList);
+      } catch (e) {
+        console.log("Error loading progress:", e);
+      }
+    };
+    if (isFocused) loadProgress();
+  }, [isFocused]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
@@ -124,6 +158,85 @@ export default function SelfSense({ navigation }) {
 
         {/* Main Content */}
         <View style={styles.content}>
+
+          {/* In-Progress Assessment Card */}
+          {inProgressAssessments.length > 0 && (
+            <View style={styles.progressSection}>
+              <Text weight="700" style={styles.progressSectionTitle}>
+                Continue Assessment
+              </Text>
+              {inProgressAssessments.map((item) => {
+                const percent = item.totalQuestions > 0
+                  ? Math.round((item.answeredCount / item.totalQuestions) * 100)
+                  : 0;
+                return (
+                  <TouchableOpacity
+                    key={item.conditionId}
+                    style={styles.progressCard}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      navigation.navigate("Questionnaires", {
+                        conditionId: item.conditionId,
+                        conditionName: item.conditionName,
+                      })
+                    }
+                  >
+                    <LinearGradient
+                      colors={["#F5F0FF", "#FFF5FB"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.progressCardGradient}
+                    >
+                      <View style={styles.progressCardTop}>
+                        <View style={styles.progressCardInfo}>
+                          <View style={styles.progressIconCircle}>
+                            <MaterialCommunityIcons
+                              name="clipboard-text-clock-outline"
+                              size={18}
+                              color="#7C3AED"
+                            />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text weight="600" style={styles.progressConditionName}>
+                              {item.conditionName}
+                            </Text>
+                            <Text weight="400" style={styles.progressSubtext}>
+                              {item.answeredCount} of {item.totalQuestions} questions answered
+                            </Text>
+                          </View>
+                          <View style={styles.progressPercentBadge}>
+                            <Text weight="700" style={styles.progressPercentText}>
+                              {percent}%
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Progress Bar */}
+                      <View style={styles.progressBarBg}>
+                        <LinearGradient
+                          colors={["#7C3AED", "#EC4899"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[
+                            styles.progressBarFill,
+                            { width: `${percent}%` },
+                          ]}
+                        />
+                      </View>
+
+                      <View style={styles.progressCardBottom}>
+                        <Text weight="500" style={styles.progressContinueText}>
+                          Tap to continue
+                        </Text>
+                        <Feather name="arrow-right" size={14} color="#7C3AED" />
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
 
           {/* Build Health Persona Section */}
           <LinearGradient
@@ -224,7 +337,7 @@ export default function SelfSense({ navigation }) {
           </View>
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
 
       {/* Bottom Navigation Bar */}
@@ -232,71 +345,79 @@ export default function SelfSense({ navigation }) {
         <View style={styles.navbarBackground} />
         
         <View style={styles.navbarContent}>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
-            <View style={styles.navIconWrapper}>
-              <MaterialCommunityIcons name="undo-variant" size={24} color="#8E8E93" />
+          <TouchableOpacity style={styles.tabContainer} onPress={() => navigation.navigate('Home')}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <MaterialCommunityIcons name="undo-variant" size={22} color="#7f8c8d" />
+              </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Home</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Home</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItem}>
-            <View style={styles.navIconWrapper}>
-              <View style={styles.dotsGrid}>
-                <View style={styles.dotRow}>
-                  <View style={[styles.dot, styles.dotActive]} />
-                  <View style={[styles.dot, styles.dotActive]} />
-                </View>
-                <View style={styles.dotRow}>
-                  <View style={[styles.dot, styles.dotActive]} />
-                  <View style={[styles.dot, styles.dotActive]} />
+          <TouchableOpacity style={styles.tabContainer}>
+            <View style={styles.iconHolder}>
+              <View style={styles.activeOuterBuffer}>
+                <LinearGradient
+                  colors={["#6ea6e7", "#daeffe", "#e0d3ff"]}
+                  style={styles.activeCircle}
+                >
+                  <View style={styles.dotsGrid}>
+                    <View style={styles.dotRow}>
+                      <View style={[styles.dot, { backgroundColor: "#5b3cc4" }]} />
+                      <View style={[styles.dot, { backgroundColor: "#5b3cc4" }]} />
+                    </View>
+                    <View style={styles.dotRow}>
+                      <View style={[styles.dot, { backgroundColor: "#5b3cc4" }]} />
+                      <View style={[styles.dot, { backgroundColor: "#5b3cc4" }]} />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+            </View>
+            <Text weight="900" style={[styles.navLabel, styles.activeLabel]}>Self Checks</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.tabContainer}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <View style={styles.specialityIcon}>
+                  <View style={styles.specialityRow}>
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                  </View>
+                  <View style={styles.specialityRow}>
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                  </View>
+                  <View style={styles.specialityRow}>
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                  </View>
                 </View>
               </View>
             </View>
-            <Text weight="600" style={styles.navLabelActive}>Self Checks</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Speciality</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItemCenter}>
-            <View style={styles.navCenterIconOuter}>
-              <LinearGradient
-                colors={["#E0C3FC", "#8EC5FC"]}
-                style={styles.navCenterIcon}
-              >
-                <View style={styles.navCenterIconInner}>
-                  <View style={styles.specialityIcon}>
-                    <View style={styles.specialityRow}>
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                    </View>
-                    <View style={styles.specialityRow}>
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                    </View>
-                    <View style={styles.specialityRow}>
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                    </View>
-                  </View>
-                </View>
-              </LinearGradient>
+          <TouchableOpacity style={styles.tabContainer} onPress={() => navigation.navigate('AssessmentHistory')}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#7f8c8d" />
+              </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Speciality</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>History</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('AssessmentHistory')}>
-            <View style={styles.navIconWrapper}>
-              <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#8E8E93" />
+          <TouchableOpacity style={styles.tabContainer}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <MaterialCommunityIcons name="comment-account-outline" size={22} color="#7f8c8d" />
+              </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>History</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItem}>
-            <View style={styles.navIconWrapper}>
-              <MaterialCommunityIcons name="comment-account-outline" size={22} color="#8E8E93" />
-            </View>
-            <Text weight="500" style={styles.navLabel}>Profile</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Profile</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -307,7 +428,7 @@ export default function SelfSense({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FDF4FF", /* page background — gradient only in header now */
+    backgroundColor: "#f7fafc",
   },
   headerImageContainer: {
     position: "relative",
@@ -322,18 +443,11 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: s(380),
+    height: 420,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     zIndex: 0,
-    borderWidth: 1.5,
-    borderColor: "rgba(120,78,200,0.32)", /* slightly darker border */
-    shadowColor: "rgba(96,52,170,0.18)",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.18,
-    shadowRadius: 28,
-    elevation: 8,
-    overflow: "hidden",
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: "row",
@@ -347,16 +461,15 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   backButton: {
-    width: s(40),
-    height: s(40),
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.25)",
+    padding: 8,
+    borderRadius: 12,
     marginRight: s(12),
   },
   headerTitle: {
-    fontSize: s(20),
-    color: "#24106B", /* darker purple for better contrast */
-    letterSpacing: 0.3,
+    fontSize: 22,
+    color: "#553fb5",
+    marginLeft: 12,
   },
   content: {
     paddingHorizontal: s(20),
@@ -389,17 +502,16 @@ const styles = StyleSheet.create({
     paddingTop: s(5),
   },
   heroTitle: {
-    fontSize: s(16),
-    color: "#24106B", /* darker and slightly larger */
+    fontSize: 23,
+    color: "#24106B",
     lineHeight: 22,
-    fontWeight: "700",
     marginBottom: 4,
   },
   heroDescription: {
-    fontSize: s(12),
+    fontSize: 16,
     color: COLORS.textPrimary,
-    marginTop: s(6),
-    lineHeight: s(16.5),
+    marginTop: 6,
+    lineHeight: 19.5,
     opacity: 0.8,
   },
   startCheckButtonContainer: {
@@ -627,6 +739,87 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
   },
+  // In-Progress Assessment Card Styles
+  progressSection: {
+    marginBottom: s(16),
+  },
+  progressSectionTitle: {
+    fontSize: s(14),
+    color: COLORS.textPrimary,
+    marginBottom: s(10),
+  },
+  progressCard: {
+    borderRadius: s(14),
+    overflow: "hidden",
+    shadowColor: "#7C3AED",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+    marginBottom: s(10),
+  },
+  progressCardGradient: {
+    borderRadius: s(14),
+    padding: s(14),
+    borderWidth: 1,
+    borderColor: "#E9D5FF",
+  },
+  progressCardTop: {
+    marginBottom: s(10),
+  },
+  progressCardInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: s(10),
+  },
+  progressIconCircle: {
+    width: s(36),
+    height: s(36),
+    borderRadius: s(18),
+    backgroundColor: "#EDE9FE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  progressConditionName: {
+    fontSize: s(13),
+    color: "#1F2937",
+    marginBottom: 2,
+  },
+  progressSubtext: {
+    fontSize: s(10.5),
+    color: "#6B7280",
+  },
+  progressPercentBadge: {
+    backgroundColor: "#7C3AED",
+    paddingHorizontal: s(10),
+    paddingVertical: s(4),
+    borderRadius: s(10),
+  },
+  progressPercentText: {
+    fontSize: s(12),
+    color: "#FFFFFF",
+  },
+  progressBarBg: {
+    height: s(6),
+    backgroundColor: "#E5E7EB",
+    borderRadius: s(3),
+    overflow: "hidden",
+    marginBottom: s(8),
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: s(3),
+  },
+  progressCardBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: s(4),
+  },
+  progressContinueText: {
+    fontSize: s(11),
+    color: "#7C3AED",
+  },
   helpSection: {
     marginTop: s(24),
     backgroundColor: COLORS.white,
@@ -639,10 +832,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   helpTitle: {
-    fontSize: s(17),
+    fontSize: 22,
     color: COLORS.textPrimary,
-    marginBottom: s(14),
-    fontWeight: "700",
+    marginBottom: 14,
   },
   helpList: {
     gap: s(10),
@@ -653,29 +845,28 @@ const styles = StyleSheet.create({
     paddingVertical: s(4),
   },
   helpText: {
-    fontSize: s(13),
+    fontSize: 17,
     color: "#444444",
-    lineHeight: s(20),
+    lineHeight: 20,
     flex: 1,
   },
   // Bottom Navigation Styles
   bottomNav: {
     position: "absolute",
     bottom: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    justifyContent: "flex-end",
-    zIndex: 50,
+    width: "100%",
+    height: 70,
+    elevation: 10,
+    zIndex: 999,
   },
   navbarBackground: {
     position: "absolute",
-    bottom: 0,
+    top: 0,
     width: "100%",
-    height: 85,
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    height: 70,
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e2e2",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
@@ -684,91 +875,76 @@ const styles = StyleSheet.create({
   },
   navbarContent: {
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "flex-end",
-    paddingBottom: 15,
-    width: "100%",
+    justifyContent: "space-around",
+    height: 70,
+    paddingBottom: 10,
   },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    height: 85,
+  tabContainer: {
     width: width / 5,
-  },
-  navItemCenter: {
     alignItems: "center",
-    justifyContent: "flex-end",
-    height: 85,
-    width: width / 5,
-    marginBottom: 20,
   },
-  navCenterIconOuter: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: COLORS.white,
-    alignItems: "center",
+  iconHolder: {
+    height: 86,
+    width: 86,
     justifyContent: "center",
-    marginBottom: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-  navCenterIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#F0E6FF",
     alignItems: "center",
-    justifyContent: "center",
+    top: -32,
+    backgroundColor: "transparent",
   },
-  navCenterIconInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.white,
-    alignItems: "center",
+  activeOuterBuffer: {
+    height: 78,
+    width: 78,
+    borderRadius: 39,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
   },
-  navIconWrapper: {
-    width: s(28),
-    height: s(28),
-    alignItems: "center",
+  activeCircle: {
+    height: 66,
+    width: 66,
+    borderRadius: 33,
+    borderWidth: 3,
+    borderColor: "white",
     justifyContent: "center",
+    alignItems: "center",
+  },
+  inactiveCircle: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 35,
   },
   dotsGrid: {
     alignItems: "center",
     justifyContent: "center",
-    gap: s(4),
+    gap: 4,
   },
   dotRow: {
     flexDirection: "row",
-    gap: s(4),
+    gap: 4,
   },
   dot: {
-    width: s(5),
-    height: s(5),
-    borderRadius: s(2.5),
-    backgroundColor: "#8E8E93",
-  },
-  dotActive: {
-    backgroundColor: "#5B3DF5",
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#7f8c8d",
   },
   specialityIcon: {
     alignItems: "center",
     justifyContent: "center",
-    gap: s(4),
+    gap: 4,
   },
   specialityRow: {
     flexDirection: "row",
-    gap: s(4),
+    gap: 4,
   },
   specialityDot: {
-    width: s(6),
-    height: s(6),
-    borderRadius: s(3),
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   dotPink: {
     backgroundColor: "#E91E63",
@@ -777,14 +953,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#7C4DFF",
   },
   navLabel: {
-    fontSize: s(9),
-    color: "#8E8E93",
-    marginTop: s(4),
+    fontSize: 13,
+    marginTop: -35,
   },
-  navLabelActive: {
-    fontSize: s(9),
-    color: "#5B3DF5",
-    marginTop: s(4),
-    fontWeight: "600",
+  activeLabel: {
+    color: "#3498db",
+  },
+  inactiveLabel: {
+    color: "#535353ff",
   },
 });

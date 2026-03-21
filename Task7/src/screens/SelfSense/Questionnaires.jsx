@@ -13,6 +13,7 @@ import {
   Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 // Assuming TextWrapper exists
@@ -2074,14 +2075,33 @@ const QuestionnairesScreen = () => {
     );
     const cond = allConditions.find((c) => c.id === conditionId);
 
+    let loadedQuestions = [];
     if (cond) {
-      setQuestions(cond.questions);
-    } else {
-      // Fallback for visual testing
-      if (allConditions.length > 0) {
-        setQuestions(allConditions[0].questions);
-      }
+      loadedQuestions = cond.questions;
+    } else if (allConditions.length > 0) {
+      loadedQuestions = allConditions[0].questions;
     }
+    setQuestions(loadedQuestions);
+
+    // Restore saved progress for this condition
+    const restoreProgress = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(`assessment_progress_${conditionId}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.answers && Object.keys(parsed.answers).length > 0) {
+            setAnswers(parsed.answers);
+            // Jump to the next unanswered question or last answered
+            const answeredCount = Object.keys(parsed.answers).length;
+            const resumeIndex = Math.min(answeredCount, loadedQuestions.length - 1);
+            setActiveQuestionIndex(resumeIndex);
+          }
+        }
+      } catch (e) {
+        console.log('Error restoring assessment progress:', e);
+      }
+    };
+    restoreProgress();
   }, [conditionId]);
 
   useEffect(() => {
@@ -2125,7 +2145,22 @@ const QuestionnairesScreen = () => {
   };
 
   const handleSelect = (questionId, optionObj) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionObj }));
+    setAnswers((prev) => {
+      const updated = { ...prev, [questionId]: optionObj };
+      // Save progress to AsyncStorage
+      AsyncStorage.setItem(
+        `assessment_progress_${conditionId}`,
+        JSON.stringify({
+          conditionId,
+          conditionName,
+          answers: updated,
+          totalQuestions: questions.length,
+          answeredCount: Object.keys(updated).length,
+          lastUpdated: new Date().toISOString(),
+        })
+      ).catch((e) => console.log('Error saving progress:', e));
+      return updated;
+    });
     if (activeQuestionIndex < questions.length - 1) {
       setTimeout(() => changeQuestion(activeQuestionIndex + 1), 250);
     }
@@ -2175,8 +2210,14 @@ const QuestionnairesScreen = () => {
     };
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!allQuestionsAnswered) return;
+    // Clear saved progress since assessment is complete
+    try {
+      await AsyncStorage.removeItem(`assessment_progress_${conditionId}`);
+    } catch (e) {
+      console.log('Error clearing progress:', e);
+    }
     const assessment = calculateRiskAssessment();
     if (assessment.riskLevel === "Low Risk") {
       navigation.navigate("LowRisk", { assessment });

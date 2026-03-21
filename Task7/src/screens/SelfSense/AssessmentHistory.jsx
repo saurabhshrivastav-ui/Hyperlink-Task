@@ -228,7 +228,7 @@ export default function AssessmentHistory({ navigation }) {
           )}
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
 
       {/* Bottom Navigation Bar */}
@@ -236,71 +236,79 @@ export default function AssessmentHistory({ navigation }) {
         <View style={styles.navbarBackground} />
         
         <View style={styles.navbarContent}>
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Home')}>
-            <View style={styles.navIconWrapper}>
-              <MaterialCommunityIcons name="undo-variant" size={24} color="#8E8E93" />
+          <TouchableOpacity style={styles.tabContainer} onPress={() => navigation.navigate('Home')}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <MaterialCommunityIcons name="undo-variant" size={22} color="#7f8c8d" />
+              </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Home</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Home</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('SelfSense')}>
-            <View style={styles.navIconWrapper}>
-              <View style={styles.dotsGrid}>
-                <View style={styles.dotRow}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                </View>
-                <View style={styles.dotRow}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
+          <TouchableOpacity style={styles.tabContainer} onPress={() => navigation.navigate('SelfSense')}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <View style={styles.dotsGrid}>
+                  <View style={styles.dotRow}>
+                    <View style={styles.dot} />
+                    <View style={styles.dot} />
+                  </View>
+                  <View style={styles.dotRow}>
+                    <View style={styles.dot} />
+                    <View style={styles.dot} />
+                  </View>
                 </View>
               </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Self Checks</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Self Checks</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItemCenter}>
-            <View style={styles.navCenterIconOuter}>
-              <LinearGradient
-                colors={["#E0C3FC", "#8EC5FC"]}
-                style={styles.navCenterIcon}
-              >
-                <View style={styles.navCenterIconInner}>
-                  <View style={styles.specialityIcon}>
-                    <View style={styles.specialityRow}>
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                    </View>
-                    <View style={styles.specialityRow}>
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                    </View>
-                    <View style={styles.specialityRow}>
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                      <View style={[styles.specialityDot, styles.dotPurple]} />
-                      <View style={[styles.specialityDot, styles.dotPink]} />
-                    </View>
+          <TouchableOpacity style={styles.tabContainer}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <View style={styles.specialityIcon}>
+                  <View style={styles.specialityRow}>
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                  </View>
+                  <View style={styles.specialityRow}>
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                  </View>
+                  <View style={styles.specialityRow}>
+                    <View style={[styles.specialityDot, styles.dotPink]} />
+                    <View style={[styles.specialityDot, styles.dotPurple]} />
+                    <View style={[styles.specialityDot, styles.dotPink]} />
                   </View>
                 </View>
-              </LinearGradient>
+              </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Speciality</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Speciality</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItem}>
-            <View style={styles.navIconWrapper}>
-              <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#5B3DF5" />
+          <TouchableOpacity style={styles.tabContainer}>
+            <View style={styles.iconHolder}>
+              <View style={styles.activeOuterBuffer}>
+                <LinearGradient
+                  colors={["#6ea6e7", "#daeffe", "#e0d3ff"]}
+                  style={styles.activeCircle}
+                >
+                  <MaterialCommunityIcons name="clipboard-text-outline" size={22} color="#5b3cc4" />
+                </LinearGradient>
+              </View>
             </View>
-            <Text weight="600" style={styles.navLabelActive}>History</Text>
+            <Text weight="900" style={[styles.navLabel, styles.activeLabel]}>History</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navItem}>
-            <View style={styles.navIconWrapper}>
-              <MaterialCommunityIcons name="comment-account-outline" size={22} color="#8E8E93" />
+          <TouchableOpacity style={styles.tabContainer}>
+            <View style={styles.iconHolder}>
+              <View style={styles.inactiveCircle}>
+                <MaterialCommunityIcons name="comment-account-outline" size={22} color="#7f8c8d" />
+              </View>
             </View>
-            <Text weight="500" style={styles.navLabel}>Profile</Text>
+            <Text weight="500" style={[styles.navLabel, styles.inactiveLabel]}>Profile</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -534,20 +542,19 @@ const styles = StyleSheet.create({
   bottomNav: {
     position: "absolute",
     bottom: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    justifyContent: "flex-end",
-    zIndex: 50,
+    width: "100%",
+    height: 70,
+    elevation: 10,
+    zIndex: 999,
   },
   navbarBackground: {
     position: "absolute",
-    bottom: 0,
+    top: 0,
     width: "100%",
-    height: 85,
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    height: 70,
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e2e2",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
@@ -556,88 +563,76 @@ const styles = StyleSheet.create({
   },
   navbarContent: {
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "flex-end",
-    paddingBottom: 15,
-    width: "100%",
+    justifyContent: "space-around",
+    height: 70,
+    paddingBottom: 10,
   },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    height: 85,
+  tabContainer: {
     width: width / 5,
-  },
-  navItemCenter: {
     alignItems: "center",
-    justifyContent: "flex-end",
-    height: 85,
-    width: width / 5,
-    marginBottom: 20,
   },
-  navCenterIconOuter: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: COLORS.white,
-    alignItems: "center",
+  iconHolder: {
+    height: 86,
+    width: 86,
     justifyContent: "center",
-    marginBottom: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-  navCenterIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#F0E6FF",
     alignItems: "center",
-    justifyContent: "center",
+    top: -32,
+    backgroundColor: "transparent",
   },
-  navCenterIconInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.white,
-    alignItems: "center",
+  activeOuterBuffer: {
+    height: 78,
+    width: 78,
+    borderRadius: 39,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
   },
-  navIconWrapper: {
-    width: s(28),
-    height: s(28),
-    alignItems: "center",
+  activeCircle: {
+    height: 66,
+    width: 66,
+    borderRadius: 33,
+    borderWidth: 3,
+    borderColor: "white",
     justifyContent: "center",
+    alignItems: "center",
+  },
+  inactiveCircle: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 35,
   },
   dotsGrid: {
     alignItems: "center",
     justifyContent: "center",
-    gap: s(4),
+    gap: 4,
   },
   dotRow: {
     flexDirection: "row",
-    gap: s(4),
+    gap: 4,
   },
   dot: {
-    width: s(5),
-    height: s(5),
-    borderRadius: s(2.5),
-    backgroundColor: "#8E8E93",
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#7f8c8d",
   },
   specialityIcon: {
     alignItems: "center",
     justifyContent: "center",
-    gap: s(4),
+    gap: 4,
   },
   specialityRow: {
     flexDirection: "row",
-    gap: s(4),
+    gap: 4,
   },
   specialityDot: {
-    width: s(6),
-    height: s(6),
-    borderRadius: s(3),
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   dotPink: {
     backgroundColor: "#E91E63",
@@ -646,14 +641,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#7C4DFF",
   },
   navLabel: {
-    fontSize: s(9),
-    color: "#8E8E93",
-    marginTop: s(4),
+    fontSize: 13,
+    marginTop: -35,
   },
-  navLabelActive: {
-    fontSize: s(9),
-    color: "#5B3DF5",
-    marginTop: s(4),
-    fontWeight: "600",
+  activeLabel: {
+    color: "#3498db",
+  },
+  inactiveLabel: {
+    color: "#535353ff",
   },
 });

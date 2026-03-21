@@ -10,6 +10,7 @@ import {
   Image,
   ImageBackground,
   Dimensions,
+  Platform,
 } from "react-native";
 import {
   useNavigation,
@@ -29,7 +30,21 @@ import {
 import { Text } from "../../../components/TextWrapper";
 import GradientButton from "../../../components/GradientButton";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+
+const CONDITION_IMAGES = {
+  "diabetes_pre-diabetes": require("../../../assets/SelfSenseDiabetes.webp"),
+  hypertension: require("../../../assets/SelfSenseHyperTension.webp"),
+  obesity: require("../../../assets/SelfSenseObesity.webp"),
+  pcod_pcos: require("../../../assets/SelfSensePCOD.webp"),
+  breast_cancer: require("../../../assets/SelfSenseBreastCancer.webp"),
+  cervical_cancer: require("../../../assets/SelfSenseCervicalCancer.webp"),
+  oral_cancer: require("../../../assets/SelfSenseOralCancer.webp"),
+  prostate_cancer: require("../../../assets/SelfSenseProstateCancer.webp"),
+  colonrectal_cancer: require("../../../assets/SelfSenseColorectalCancer.webp"),
+  stress: require("../../../assets/SelfSenseMentalWellBeing.webp"),
+  hearing: require("../../../assets/SelfSenseSensoryHealth.webp"),
+};
 
 const PersonalDetails = () => {
   const navigation = useNavigation();
@@ -44,6 +59,14 @@ const PersonalDetails = () => {
   // --- 🚀 1. CLEARED INITIAL DATA (Starts Empty) ---
   const [users, setUsers] = useState([]);
   const [activeUserId, setActiveUserId] = useState(null);
+
+  const handleBeginAssessment = () => {
+    navigation.navigate("QuestionnairesScreen", {
+      conditionId: conditionId,
+      conditionName: conditionName,
+      activeUserId: activeUserId,
+    });
+  };
 
   // Derived state for the currently active user
   const activeUser = users.find((user) => user.id === activeUserId) || null;
@@ -258,7 +281,10 @@ const PersonalDetails = () => {
 
         <View style={styles.illustrationContainer}>
           <Image
-            source={require("../../../assets/MobHands.png")}
+            source={
+              CONDITION_IMAGES[conditionId] ||
+              require("../../../assets/MobHands.png")
+            }
             style={styles.illustration}
             resizeMode="contain"
           />
@@ -501,13 +527,7 @@ const PersonalDetails = () => {
             <GradientButton
               title="Begin Assessment"
               variant="pink"
-              onPress={() => {
-                navigation.navigate("QuestionnairesScreen", {
-                  conditionId: conditionId,
-                  conditionName: conditionName,
-                  activeUserId: activeUserId,
-                });
-              }}
+              onPress={handleBeginAssessment}
               icon={<Feather name="arrow-right" size={20} color="#FFFFFF" />}
               iconPosition="right"
               style={styles.beginButton}
@@ -616,6 +636,7 @@ const PersonalDetails = () => {
           <Text style={styles.resetButtonText}>Reset All Data (Debug)</Text>
         </TouchableOpacity>
       </View>
+
     </ScrollView>
   );
 };
@@ -997,4 +1018,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textDecorationLine: "underline",
   },
+
 }); 
