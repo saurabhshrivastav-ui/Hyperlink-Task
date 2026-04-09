@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -171,7 +171,7 @@ export default function SharedRecords({ navigation }) {
 
             <Text style={styles.emptyTitle} weight="700">Sorry, No Shared Reports Found</Text>
             <Text style={styles.emptySubtitle} weight="400">
-              You haven’t shared any records yet. Select a report from your HealthVault to share it securely with a doctor or family member.
+              You havenâ€™t shared any records yet. Select a report from your HealthVault to share it securely with a doctor or family member.
             </Text>
 
             <TouchableOpacity

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -71,20 +71,17 @@ const TestReports = ({ navigation }) => {
         if (gesture.dy > 0) {
           slideAnim.setValue(gesture.dy);
         } else {
-          // allow slight upward resistance
           slideAnim.setValue(gesture.dy * 0.15);
         }
       },
       onPanResponderRelease: (_, gesture) => {
         if (gesture.dy > 80 || gesture.vy > 0.8) {
-          // dragged far enough down — close
           Animated.timing(slideAnim, {
             toValue: 300,
             duration: 200,
             useNativeDriver: true,
           }).start(() => setMenuReport(null));
         } else {
-          // snap back to open
           Animated.spring(slideAnim, {
             toValue: 0,
             useNativeDriver: true,
@@ -105,14 +102,12 @@ const TestReports = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Background */}
         <ImageBackground
           source={require("../../assets/HeaderTestReports.webp")}
           style={styles.headerBackground}
           imageStyle={styles.headerImage}
           resizeMode="cover"
         >
-          {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation && navigation.goBack()}
@@ -127,7 +122,6 @@ const TestReports = ({ navigation }) => {
             Securely store and manage your health documents.
           </Text>
 
-          {/* Secure Vault Button */}
           <TouchableOpacity style={styles.secureVaultBtn}>
             <View style={styles.lockBox}>
               <Ionicons name="lock-closed" size={22} color="#6D28D9" />
@@ -137,7 +131,6 @@ const TestReports = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Bottom fade overlay */}
           <LinearGradient
             colors={["transparent", "rgba(200, 226, 245, 0.6)", "#F7F8FA"]}
             locations={[0, 0.5, 1]}
@@ -145,7 +138,6 @@ const TestReports = ({ navigation }) => {
           />
         </ImageBackground>
 
-        {/* Profile Card */}
         <View style={styles.profileCardWrapper}>
           <LinearGradient
             colors={["#FDEFFB", "#FBF1FE", "#FBF1FE"]}
@@ -154,7 +146,6 @@ const TestReports = ({ navigation }) => {
             style={styles.profileCardOuter}
           >
             <View style={styles.profileCardContent}>
-              {/* Avatar with outer gradient ring */}
               <LinearGradient
                 colors={["#FDBEA5", "#F695CF", "#8E66EB"]}
                 start={{ x: 0, y: 0 }}
@@ -200,9 +191,7 @@ const TestReports = ({ navigation }) => {
           </LinearGradient>
         </View>
 
-        {/* Content */}
         <View style={styles.contentPadding}>
-          {/* Tabs */}
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[styles.tab, activeTab === "test" && styles.tabActive]}
@@ -237,7 +226,6 @@ const TestReports = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Search Bar */}
           <View style={styles.searchContainer}>
             <View style={styles.searchInputWrap}>
               <TextInput
@@ -256,11 +244,9 @@ const TestReports = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Report Cards Grid */}
           <View style={styles.reportsGrid}>
             {REPORTS.map((report) => (
               <View key={report.id} style={styles.reportCard}>
-                {/* Card Top: title row */}
                 <View style={styles.reportCardHeader}>
                   <View style={styles.reportCardTitleRow}>
                     <MaterialCommunityIcons
@@ -289,9 +275,7 @@ const TestReports = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
 
-                {/* PDF Icon Preview */}
                 <TouchableOpacity style={styles.pdfPreview} activeOpacity={0.8}>
-                  {/* Document icon with folded corner */}
                   <View style={styles.pdfDocWrap}>
                     <LinearGradient
                       colors={["#FF8A65", "#EF5350"]}
@@ -301,13 +285,11 @@ const TestReports = ({ navigation }) => {
                     >
                       <Text weight="700" style={styles.pdfIconText}>Pdf</Text>
                     </LinearGradient>
-                    {/* Folded corner — white triangle at top-right */}
                     <View style={styles.pdfFoldCover} />
                     <View style={styles.pdfFoldTriangle} />
                   </View>
                 </TouchableOpacity>
 
-                {/* Footer: date + button */}
                 <View style={styles.reportCardFooter}>
                   <View style={styles.reportDateRow}>
                     <View style={styles.dateDot}>
@@ -336,7 +318,6 @@ const TestReports = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Three-dots popup modal */}
       <Modal
         visible={!!menuReport}
         transparent
@@ -358,16 +339,12 @@ const TestReports = ({ navigation }) => {
                 end={{ x: 0.96, y: 0.69 }}
                 style={styles.modalGradient}
               >
-                {/* Inset shadow — bottom-right: #BF7BB940 */}
                 <View style={styles.insetShadowDark} pointerEvents="none" />
-                {/* Inset shadow — top-left: #EFDFEE66 */}
                 <View style={styles.insetShadowLight} pointerEvents="none" />
-                {/* Drag handle */}
                 <View style={styles.dragHandleRow} {...panResponder.panHandlers}>
                   <View style={styles.dragHandle} />
                 </View>
 
-                {/* Header */}
                 <View style={styles.shareHeader}>
                   <TouchableOpacity onPress={closeMenu} style={styles.backArrow}>
                     <Ionicons name="chevron-back" size={24} color="#0056D2" />
@@ -377,7 +354,6 @@ const TestReports = ({ navigation }) => {
                   </Text>
                 </View>
 
-                {/* Menu items — scrollable so nothing is clipped */}
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   bounces={true}
@@ -466,7 +442,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F8FA",
   },
 
-  /* Header */
   headerBackground: {
     width: "100%",
     height: 190,
@@ -545,7 +520,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
 
-  /* Profile Card */
   profileCardWrapper: {
     width: width - 32,
     marginTop: -44,
@@ -631,7 +605,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  /* Tabs */
   tabsContainer: {
     flexDirection: "row",
     marginTop: 20,
@@ -661,7 +634,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 
-  /* Search */
   searchContainer: {
     marginTop: 16,
   },
@@ -698,7 +670,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* Reports Grid */
   reportsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -707,7 +678,6 @@ const styles = StyleSheet.create({
     rowGap: 14,
   },
 
-  /* Card — exact spec: 155 × 145 */
   reportCard: {
     width: 155,
     height: 145,
@@ -724,7 +694,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  /* Card header row */
   reportCardHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -745,7 +714,6 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
 
-  /* PDF preview area */
   pdfPreview: {
     height: 76,
     backgroundColor: "#F8F8FB",
@@ -754,7 +722,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* Document icon wrapper — holds gradient body + corner fold */
   pdfDocWrap: {
     width: 44,
     height: 54,
@@ -779,7 +746,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginTop: 4,
   },
-  /* White square covering gradient at folded corner */
   pdfFoldCover: {
     position: "absolute",
     top: 0,
@@ -789,7 +755,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F8FB",
     borderBottomLeftRadius: 3,
   },
-  /* Dark triangle — fold shadow */
   pdfFoldTriangle: {
     position: "absolute",
     top: 0,
@@ -803,7 +768,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(180,40,30,0.4)",
   },
 
-  /* Card footer */
   reportCardFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -842,7 +806,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
-  /* Three-dots modal */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.28)",
@@ -867,7 +830,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     position: "relative",
   },
-  /* Inset box-shadow: 1px 1px 4px 0px #BF7BB940 — bottom-right inner glow */
   insetShadowDark: {
     position: "absolute",
     bottom: 0,
@@ -884,7 +846,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 0,
     pointerEvents: "none",
   },
-  /* Inset box-shadow: -1px -1px 4px 0px #EFDFEE66 — top-left inner glow */
   insetShadowLight: {
     position: "absolute",
     top: 0,

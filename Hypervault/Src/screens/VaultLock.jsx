@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -24,7 +24,6 @@ const isMini = width <= 360;
 const isSmall = width <= 390;
 
 const TRAY_HEIGHT = height * 0.62;
-// How far the lock circle must move up so it clears the tray (with 24px gap)
 const LOCK_SHIFT = (height / 2 - TRAY_HEIGHT - 107);
 
 export default function VaultLock({ navigation, onUnlock }) {
@@ -36,7 +35,6 @@ export default function VaultLock({ navigation, onUnlock }) {
 
   const inputs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
-  // On first launch (no credentials), seed PIN "1234" as default
   useEffect(() => {
     getBiometricProfile().then(async (profile) => {
       if (!profile?.pinEnabled && !profile?.biometricEnabled) {
@@ -176,10 +174,8 @@ export default function VaultLock({ navigation, onUnlock }) {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* Positioning root — all absolute children are relative to this */}
       <View style={styles.root}>
 
-        {/* ── Header — exact copy of HyperVaultHome header ── */}
         <ImageBackground
           source={require('../../assets/HeaderTestReports.webp')}
           style={styles.headerBackground}
@@ -212,10 +208,8 @@ export default function VaultLock({ navigation, onUnlock }) {
           />
         </ImageBackground>
 
-        {/* ── White body below header ── */}
         <View style={styles.whiteBody} />
 
-        {/* ── Dim overlay ── */}
         {trayOpen && (
           <Animated.View
             style={[styles.overlay, { opacity: overlayAnim }]}
@@ -224,7 +218,6 @@ export default function VaultLock({ navigation, onUnlock }) {
           </Animated.View>
         )}
 
-        {/* ── Bottom tray ── */}
         <Animated.View
           style={[styles.tray, { transform: [{ translateY: Animated.subtract(trayAnim, keyboardAnim) }] }]}
         >
@@ -296,7 +289,6 @@ export default function VaultLock({ navigation, onUnlock }) {
           </LinearGradient>
         </Animated.View>
 
-        {/* ── Lock circle — animates upward when tray opens ── */}
         <Animated.View style={[styles.lockCircleWrap, { transform: [{ translateY: lockAnim }] }]}>
         <TouchableOpacity
           activeOpacity={0.82}
@@ -333,7 +325,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  /* ── Header — identical to HyperVaultHome ── */
   headerBackground: {
     width: '100%',
     height: 200,
@@ -390,13 +381,11 @@ const styles = StyleSheet.create({
     height: 80,
   },
 
-  /* ── White body ── */
   whiteBody: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
 
-  /* ── Lock circle — centered on full screen, above tray ── */
   lockCircleWrap: {
     position: 'absolute',
     top: height / 2 - 83,
@@ -415,10 +404,9 @@ const styles = StyleSheet.create({
     borderRadius: 83,
     alignItems: 'center',
     justifyContent: 'center',
-    // box-shadow: 10px 10px 10px 0px #FFFFFF80 inset
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 10, height: 10 },
-    shadowOpacity: 0.502,  // #80 = 128/255
+    shadowOpacity: 0.502,
     shadowRadius: 10,
     elevation: 0,
   },
@@ -427,14 +415,12 @@ const styles = StyleSheet.create({
     height: 90,
   },
 
-  /* ── Dim overlay ── */
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.25)',
     zIndex: 5,
   },
 
-  /* ── Bottom tray ── */
   tray: {
     position: 'absolute',
     bottom: 0,
@@ -445,10 +431,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     zIndex: 10,
     overflow: 'hidden',
-    // box-shadow: 0px 4px 16px 0px #00000029
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,  // #29 = 41/255
+    shadowOpacity: 0.16,
     shadowRadius: 8,
     elevation: 16,
   },

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -72,7 +72,6 @@ export default function HyperVaultHome({ navigation }) {
   const [expanded, setExpanded] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isBiometricEnrolled, setIsBiometricEnrolled] = useState(false);
-  // ── Biometric tray ──
   const [trayOpen, setTrayOpen] = useState(false);
   const trayAnim = useRef(new Animated.Value(800)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -94,7 +93,6 @@ export default function HyperVaultHome({ navigation }) {
 
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // ── Folder open/close animation ──
   const [folderOpen, setFolderOpen] = useState(false);
   const folderAnim = useRef(new Animated.Value(0)).current;
 
@@ -111,9 +109,6 @@ export default function HyperVaultHome({ navigation }) {
     }).start();
   };
 
-  // Both rectangles are ALWAYS at the same fixed position.
-  // Closed = back + front visible, tabs hidden.
-  // Open   = tabs slide up from inside the folder.
   const tabsOpacity      = folderAnim.interpolate({ inputRange: [0, 0.16, 0.48, 1], outputRange: [0, 0, 0.72, 1] });
   const tabsTranslateY   = folderAnim.interpolate({ inputRange: [0, 0.66, 1], outputRange: [220, -18, 0] });
   const tabsScale        = folderAnim.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.9, 1.02, 1] });
@@ -129,18 +124,16 @@ export default function HyperVaultHome({ navigation }) {
   const blurVeilOpacity = folderAnim.interpolate({ inputRange: [0, 0.48, 1], outputRange: [0.14, 0.05, 0] });
   const containerExpand = folderAnim.interpolate({ inputRange: [0, 0.68, 1], outputRange: [1, 1.015, 1.01] });
 
-  // pixel constants (folder is centred in the full-width container)
   const FOLDER_W    = 270;
   const FOLDER_LEFT = (width - FOLDER_W) / 2;
   const BACK_TOP    = 150;
   const BACK_H      = 218;
-  const NOTCH_H     = 34;           // restore original folder geometry
+  const NOTCH_H     = 34;
   const FRONT_TOP   = BACK_TOP + NOTCH_H;
   const FRONT_H     = BACK_H  - NOTCH_H;
   const TABS_TOP    = 18;
   const TABS_H      = FRONT_TOP - TABS_TOP - 4;
 
-  // ── PIN setup tray ──
   const [pinTrayOpen, setPinTrayOpen] = useState(false);
   const pinTrayAnim = useRef(new Animated.Value(800)).current;
   const keyboardAnim = useRef(new Animated.Value(0)).current;
@@ -286,7 +279,6 @@ export default function HyperVaultHome({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header — extends behind status bar */}
         <ImageBackground
           source={require('../../assets/HeaderTestReports.webp')}
           style={styles.headerBackground}
@@ -294,12 +286,9 @@ export default function HyperVaultHome({ navigation }) {
           resizeMode="cover"
           fadeDuration={0}
         >
-          {/* Status bar spacer */}
           <View style={styles.statusBarSpacer} />
 
-          {/* Header content row */}
           <View style={styles.headerRow}>
-            {/* Left: back arrow + title block */}
             <View style={styles.headerLeft}>
               <TouchableOpacity
                 style={styles.backBtn}
@@ -315,7 +304,6 @@ export default function HyperVaultHome({ navigation }) {
               </View>
             </View>
 
-            {/* Right: Secure Vault */}
             <TouchableOpacity
               style={styles.secureVaultBtn}
               onPress={openTray}
@@ -336,7 +324,6 @@ export default function HyperVaultHome({ navigation }) {
 
         <View style={styles.body}>
 
-          {/* Profile Card */}
           <View style={styles.profileCardWrapper}>
             <LinearGradient
               colors={['#FDEFFB', '#FBF1FE', '#FBF1FE']}
@@ -385,7 +372,6 @@ export default function HyperVaultHome({ navigation }) {
             </LinearGradient>
           </View>
 
-          {/* Stats Row */}
           <LinearGradient
             colors={['#FFFFFF', '#FBF9FF']}
             start={{ x: 0, y: 0 }}
@@ -415,10 +401,8 @@ export default function HyperVaultHome({ navigation }) {
             ))}
           </LinearGradient>
 
-          {/* Quick Actions */}
           <Text style={styles.sectionTitle} weight="700">Quick Actions</Text>
           <View style={styles.quickActionsRow}>
-            {/* Add Reports — blue */}
             <TouchableOpacity style={styles.qaCardWrap} activeOpacity={0.85}>
               <LinearGradient
                 colors={['#CDE8FF', '#FFF8EF', '#CDE8FF']}
@@ -433,7 +417,6 @@ export default function HyperVaultHome({ navigation }) {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Privacy & Access — warm orange */}
             <TouchableOpacity style={styles.qaCardWrap} activeOpacity={0.85}>
               <LinearGradient
                 colors={['#FFE9CA', '#FFF8EF', '#FFE9CA']}
@@ -448,7 +431,6 @@ export default function HyperVaultHome({ navigation }) {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Health 360 — coral */}
             <TouchableOpacity style={styles.qaCardWrap} activeOpacity={0.85}>
               <LinearGradient
                 colors={['#FFD3CA', '#FFF8EF', '#FFD3CA']}
@@ -464,7 +446,6 @@ export default function HyperVaultHome({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Categories */}
           <Text style={styles.sectionTitle} weight="700">Categories</Text>
           <Animated.View style={[styles.categoriesContainer, { transform: [{ scale: containerExpand }] }]}> 
 
@@ -483,7 +464,6 @@ export default function HyperVaultHome({ navigation }) {
               ]}
             />
 
-            {/* ── Back rectangle image ── */}
             <Animated.View
               style={[
                 styles.folderBack,
@@ -513,7 +493,6 @@ export default function HyperVaultHome({ navigation }) {
               <View pointerEvents="none" style={styles.folderBackEdge} />
             </Animated.View>
 
-            {/* ── Tabs — slide up from inside the folder ── */}
             <Animated.View
               style={[
                 styles.folderTabs,
@@ -586,7 +565,6 @@ export default function HyperVaultHome({ navigation }) {
               </View>
             </Animated.View>
 
-            {/* ── Front rectangle image (tappable) ── */}
             <Animated.View
               style={[
                 styles.folderFrontWrap,
@@ -641,14 +619,12 @@ export default function HyperVaultHome({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* ── Dim overlay ── */}
       {trayOpen && (
         <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={closeTray} />
         </Animated.View>
       )}
 
-      {/* ── Biometric tray ── */}
       <Animated.View style={[styles.tray, { transform: [{ translateY: trayAnim }] }]}>
         <LinearGradient
           colors={['#E4CCF7', '#FFE9CF']}
@@ -693,7 +669,6 @@ export default function HyperVaultHome({ navigation }) {
         </LinearGradient>
       </Animated.View>
 
-      {/* ── PIN setup tray ── */}
       {pinTrayOpen && (
         <Animated.View style={[styles.tray, styles.pinTrayZ, { transform: [{ translateY: Animated.subtract(pinTrayAnim, keyboardAnim) }] }]}>
           <LinearGradient
@@ -771,7 +746,6 @@ export default function HyperVaultHome({ navigation }) {
         </Animated.View>
       )}
 
-      {/* ── Success popup ── */}
       {showSuccess && (
         <TouchableOpacity
           style={styles.successOverlay}
@@ -813,7 +787,6 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
 
-  /* Header */
   headerBackground: {
     width: '100%',
     height: 200,
@@ -893,7 +866,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
 
-  /* Profile Card */
   profileCardWrapper: {
     width: 313,
     height: 108,
@@ -980,7 +952,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  /* Stats */
   statsRow: {
     borderRadius: 16,
     flexDirection: 'row',
@@ -1028,7 +999,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E3D7FB',
   },
 
-  /* Quick Actions */
   sectionTitle: {
     fontSize: 16,
     color: '#1F1F1F',
@@ -1039,7 +1009,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 24,
   },
-  /* Outer wrapper carries the combined box-shadows */
   qaCardWrap: {
     flex: 1,
     borderRadius: 14,
@@ -1049,7 +1018,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  /* Inner gradient carries border + content */
   qaCard: {
     borderRadius: 14,
     padding: 10,
@@ -1076,7 +1044,6 @@ const styles = StyleSheet.create({
     lineHeight: 13,
   },
 
-  /* Categories */
   categoriesContainer: {
     position: 'relative',
     height: 400,
@@ -1095,7 +1062,6 @@ const styles = StyleSheet.create({
     elevation: 9,
     zIndex: 0,
   },
-  /* ── Folder (fixed position for both open & closed) ── */
   folderBack: {
     position: 'absolute',
     zIndex: 1,
@@ -1169,7 +1135,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#B30000',
   },
   categoryTopStrip: {
-    display: 'none', // Removed since we use borderTopColor
+    display: 'none',
   },
   categoryBlurVeil: {
     ...StyleSheet.absoluteFillObject,
@@ -1250,19 +1216,16 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 
-  /* ── Root positioning context ── */
   root: {
     flex: 1,
   },
 
-  /* ── Overlay ── */
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.3)',
     zIndex: 10,
   },
 
-  /* ── Biometric tray ── */
   tray: {
     position: 'absolute',
     bottom: 0,
@@ -1337,7 +1300,6 @@ const styles = StyleSheet.create({
   },
 
 
-  /* ── PIN inputs ── */
   pinLabel: {
     fontSize: 12,
     color: '#6B7280',
@@ -1369,7 +1331,6 @@ const styles = StyleSheet.create({
     color: '#3730A3',
   },
 
-  /* ── Set Pin & Lock button ── */
   setPinBtn: {
     width: '100%',
     borderRadius: 30,
@@ -1388,7 +1349,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  /* ── Success popup ── */
   successOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.45)',

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -25,10 +25,8 @@ const TRAY_HEIGHT = height * 0.62;
 const MASKED_PHONE = '8**** **844';
 const CORRECT_OTP = '123456';
 
-// trayMode: null | 'pin' | 'bio' | 'success'
 
 export default function ResetVaultPin({ navigation }) {
-  // OTP
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const otpRefs = [
@@ -36,13 +34,11 @@ export default function ResetVaultPin({ navigation }) {
     useRef(null), useRef(null), useRef(null),
   ];
 
-  // Tray
   const [trayMode, setTrayMode] = useState(null);
   const trayAnim = useRef(new Animated.Value(TRAY_HEIGHT)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
   const keyboardAnim = useRef(new Animated.Value(0)).current;
 
-  // PIN fields
   const [newPin, setNewPin] = useState(['', '', '', '']);
   const [confirmPin, setConfirmPin] = useState(['', '', '', '']);
   const [isSaving, setIsSaving] = useState(false);
@@ -50,7 +46,6 @@ export default function ResetVaultPin({ navigation }) {
   const newPinRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
   const confirmRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
-  // Keyboard listener
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
@@ -80,7 +75,6 @@ export default function ResetVaultPin({ navigation }) {
   };
 
   const switchTray = (mode) => {
-    // Slide out, swap content, slide back in
     Animated.timing(trayAnim, { toValue: TRAY_HEIGHT, duration: 220, useNativeDriver: true }).start(() => {
       Keyboard.dismiss();
       setTrayMode(mode);
@@ -96,7 +90,6 @@ export default function ResetVaultPin({ navigation }) {
     ]).start(() => { setTrayMode(null); onDone && onDone(); });
   };
 
-  // ── OTP handlers ──
   const handleOtpChange = (text, index) => {
     const digit = text.slice(-1);
     const next = [...otp];
@@ -136,7 +129,6 @@ export default function ResetVaultPin({ navigation }) {
     Alert.alert('OTP Resent', `A new OTP has been sent to ${MASKED_PHONE}.`);
   };
 
-  // ── PIN handlers ──
   const handleNewPinChange = (text, index) => {
     const digit = text.slice(-1);
     setNewPin((prev) => { const n = [...prev]; n[index] = digit; return n; });
@@ -179,7 +171,6 @@ export default function ResetVaultPin({ navigation }) {
     }
   };
 
-  // ── Biometric handlers ──
   const handleEnrollBiometric = async () => {
     try {
       setIsEnrolling(true);
@@ -196,7 +187,6 @@ export default function ResetVaultPin({ navigation }) {
     closeTray(() => navigation && navigation.goBack());
   };
 
-  // ── Tray content ──
   const renderTrayContent = () => {
     if (trayMode === 'pin') {
       return (
@@ -318,7 +308,6 @@ export default function ResetVaultPin({ navigation }) {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <View style={styles.bg}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation && navigation.goBack()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={22} color="#4C1D95" />
@@ -326,7 +315,6 @@ export default function ResetVaultPin({ navigation }) {
           <Text style={styles.headerTitle} weight="700">Reset Vault PIN</Text>
         </View>
 
-        {/* OTP Card */}
         <LinearGradient colors={['#E4CCF7', '#FFE9CF']} start={{ x: 0.12, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
           <Text style={styles.cardHeading} weight="600">
             To reset your PIN, verify your identity
@@ -376,14 +364,12 @@ export default function ResetVaultPin({ navigation }) {
         </LinearGradient>
       </View>
 
-      {/* Dim overlay */}
       {trayMode !== null && (
         <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
           <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => trayMode !== 'success' && closeTray()} />
         </Animated.View>
       )}
 
-      {/* Bottom tray — shared for all modes */}
       {trayMode !== null && (
         <Animated.View
           style={[
@@ -404,12 +390,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
   bg: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingTop: 16 },
 
-  /* Header */
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 32, gap: 10 },
   backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: isMini ? 18 : 20, color: '#3B0764' },
 
-  /* OTP Card */
   card: {
     borderRadius: 24,
     paddingHorizontal: 24,
@@ -439,20 +423,16 @@ const styles = StyleSheet.create({
   otpBoxFilled: { borderColor: '#A855F7', backgroundColor: 'rgba(245,240,255,0.5)' },
   otpInput: { width: '100%', height: '100%', textAlign: 'center', fontSize: 18, color: '#4C1D95' },
 
-  /* Shared button */
   actionBtnWrap: { borderRadius: 14, overflow: 'hidden', marginBottom: 18, width: '100%' },
   actionBtn: { paddingVertical: 16, alignItems: 'center', borderRadius: 14 },
   actionBtnText: { fontSize: 17, color: '#FFFFFF', letterSpacing: 0.3 },
 
-  /* Resend */
   resendRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   resendNote: { fontSize: 13, color: '#6B7280' },
   resendLink: { fontSize: 13, color: '#7C3AED' },
 
-  /* Overlay */
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.25)', zIndex: 5 },
 
-  /* Tray */
   tray: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
@@ -477,7 +457,6 @@ const styles = StyleSheet.create({
   trayTitle: { fontSize: isMini ? 20 : 22, color: '#3730A3', textAlign: 'center', marginBottom: 8 },
   traySubtitle: { fontSize: isMini ? 13 : 14, color: '#111111', textAlign: 'center', marginBottom: 24, lineHeight: 21 },
 
-  /* PIN tray */
   pinLabel: { fontSize: 13, color: '#6B7280', alignSelf: 'flex-start', marginBottom: 12 },
   pinRow: { flexDirection: 'row', gap: 12, marginBottom: 20, width: '100%' },
   pinBox: {
@@ -494,11 +473,9 @@ const styles = StyleSheet.create({
   orText: { fontSize: 15, color: '#374151', marginBottom: 12 },
   linkText: { fontSize: 18, color: '#3730A3' },
 
-  /* Bio tray */
   fingerprintWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 80, maxHeight: 130 },
   touchHint: { fontSize: 14, color: '#6B7280', marginTop: 16, marginBottom: 12 },
 
-  /* Success tray */
   successImage: { width: 140, height: 140, marginBottom: 20, marginTop: 8 },
   successTitle: { fontSize: isMini ? 20 : 22, color: '#3730A3', textAlign: 'center', marginBottom: 12 },
   successSubtitle: { fontSize: isMini ? 13 : 14, color: '#111111', textAlign: 'center', lineHeight: 22, marginBottom: 28 },
