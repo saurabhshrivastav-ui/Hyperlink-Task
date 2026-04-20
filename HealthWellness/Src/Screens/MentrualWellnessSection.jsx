@@ -1,15 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Platform,
   StatusBar,
-  Animated,
+  FlatList,
   ScrollView,
   Dimensions,
   Image,
   ImageBackground,
+  Animated,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +22,7 @@ const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
 const AVAILABLE_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
+const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
 
 const CATEGORIES = [
@@ -54,32 +56,86 @@ export default function MentrualWellnessSection({
   onNavigateMedicine,
   hideHeader = false,
 }) {
+  const CURRENT_CATEGORY = 'Mentrual';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('Mentrual');
+  const flatListRef = useRef(null);
 
-  const chipAnimMap = useRef(
-    CATEGORIES.reduce((acc, item) => {
-      acc[item.label] = new Animated.Value(item.label === 'Mentrual' ? 1 : 0);
-      return acc;
-    }, {})
-  ).current;
+  // Content transition animation - opacity and slide - start hidden
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+  const contentSlideAnim = useRef(new Animated.Value(30)).current;
 
-  const handleChipPress = (label) => {
-    setActive(label);
+  // Content transition animation when active tab changes
+  useEffect(() => {
+    // Delay animation by 500ms before components become visible
+    const animationTimeout = setTimeout(() => {
+      // All components animate together at the same time
+      Animated.parallel([
+        Animated.spring(contentOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(contentSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+      ]).start();
+    }, 500);
 
-    CATEGORIES.forEach((item) => {
-      Animated.timing(chipAnimMap[item.label], {
-        toValue: item.label === label ? 1 : 0,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
+    return () => clearTimeout(animationTimeout);
+  }, [active]);
+
+  const handleChipPress = (label, index) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: false,
+      viewPosition: 0.5,
     });
 
-    if (label === 'All' && typeof onNavigateAll === 'function') onNavigateAll();
-    if (label === 'Sleep' && typeof onNavigateSleep === 'function') onNavigateSleep();
-    if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') onNavigateNutrition();
-    if (label === 'Fitness' && typeof onNavigateFitness === 'function') onNavigateFitness();
-    if (label === 'Medicine' && typeof onNavigateMedicine === 'function') onNavigateMedicine();
+    setActive(label);
+
+    if (label !== CURRENT_CATEGORY) {
+      if (label === 'All' && typeof onNavigateAll === 'function') onNavigateAll();
+      if (label === 'Sleep' && typeof onNavigateSleep === 'function') onNavigateSleep();
+      if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') onNavigateNutrition();
+      if (label === 'Fitness' && typeof onNavigateFitness === 'function') onNavigateFitness();
+      if (label === 'Medicine' && typeof onNavigateMedicine === 'function') onNavigateMedicine();
+      return;
+    }
+
+    setActive(CURRENT_CATEGORY);
+  };
+
+  const getItemLayout = (_, index) => ({
+    length: CHIP_ITEM_WIDTH,
+    offset: CHIP_ITEM_WIDTH * index,
+    index,
+  });
+
+  const renderChipItem = ({ item: chip, index }) => {
+    const isActive = active === chip.label;
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => handleChipPress(chip.label, index)}
+        style={[styles.chipTouch, index === CATEGORIES.length - 1 && { marginRight: 0 }]}
+      >
+        <View>
+          {isActive ? (
+            <ActiveChip label={chip.label} color={chip.color} />
+          ) : (
+            <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
+              <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>{chip.label}</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -100,32 +156,26 @@ export default function MentrualWellnessSection({
         )}
 
         <View style={styles.chipRowContainer}>
-          <View style={styles.chipRow}>
-            {CATEGORIES.map((chip, index) => {
-              const isActive = active === chip.label;
-              const anim = chipAnimMap[chip.label];
-              const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] });
-
-              return (
-                <TouchableOpacity
-                  key={chip.label}
-                  activeOpacity={0.85}
-                  onPress={() => handleChipPress(chip.label)}
-                  style={[styles.chipTouch, index === CATEGORIES.length - 1 && { marginRight: 0 }]}
-                >
-                  <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
-                    {isActive ? (
-                      <ActiveChip label={chip.label} color={chip.color} />
-                    ) : (
-                      <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
-                        <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>{chip.label}</Text>
-                      </View>
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <FlatList
+            ref={flatListRef}
+            horizontal
+            data={CATEGORIES}
+            keyExtractor={(item) => item.label}
+            renderItem={renderChipItem}
+            getItemLayout={getItemLayout}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={styles.chipRow}
+            onScrollToIndexFailed={({ index }) => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index,
+                  animated: false,
+                  viewPosition: 0.5,
+                });
+              }, 120);
+            }}
+          />
         </View>
 
         <LinearGradient
@@ -141,6 +191,14 @@ export default function MentrualWellnessSection({
             resizeMode="cover"
           />
 
+          <Animated.View
+            style={[
+              {
+                opacity: contentOpacityAnim,
+                transform: [{ translateY: contentSlideAnim }],
+              },
+            ]}
+          >
           <View style={styles.periodCard}>
             <View style={styles.phoneBlock}>
               <Image
@@ -165,8 +223,17 @@ export default function MentrualWellnessSection({
               </TouchableOpacity>
             </View>
           </View>
+          </Animated.View>
         </LinearGradient>
 
+        <Animated.View
+          style={[
+            {
+              opacity: contentOpacityAnim,
+              transform: [{ translateY: contentSlideAnim }],
+            },
+          ]}
+        >
         <View style={styles.insightsCardWrap}>
           <View style={styles.insightsCardShadowLayer}>
             <ImageBackground
@@ -195,6 +262,8 @@ export default function MentrualWellnessSection({
             </ImageBackground>
           </View>
         </View>
+        </Animated.View>
+
       </ScrollView>
     </View>
   );
@@ -260,6 +329,8 @@ const styles = StyleSheet.create({
     width: CHIP_WIDTH,
     height: CHIP_HEIGHT + 10,
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 10,
   },
   activeChipSurface: {
@@ -338,56 +409,6 @@ const styles = StyleSheet.create({
     width: 90,
     height: 120,
   },
-  phoneOuter: {
-    width: 56,
-    height: 98,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#E5A1CA',
-    backgroundColor: '#FFEAF7',
-    padding: 4,
-  },
-  phoneInner: {
-    flex: 1,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    paddingTop: 4,
-  },
-  monthText: {
-    fontSize: 8,
-    color: '#3C7E7B',
-  },
-  dotRow: {
-    flexDirection: 'row',
-    gap: 2,
-    marginTop: 3,
-  },
-  cycleDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#4BC6B8',
-  },
-  cycleBadge: {
-    marginTop: 8,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 2,
-    borderColor: '#5DC8C0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#8EE4DF',
-  },
-  cycleBadgeText: {
-    fontSize: 6,
-    color: '#1E6863',
-  },
-  dayText: {
-    fontSize: 10,
-    color: '#1E6863',
-  },
   periodTextWrap: {
     flex: 1,
     alignItems: 'flex-end',
@@ -418,15 +439,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   addBtnText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#FFFFFF',
   },
   insightsCardWrap: {
     width: 323,
     minHeight: 129,
     alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 10,
+    marginTop: 6,
     borderRadius: 10,
     shadowColor: '#BF7BB9',
     shadowOffset: { width: 1, height: 1 },
@@ -478,9 +498,10 @@ const styles = StyleSheet.create({
   insightsBtn: {
     minHeight: 30,
     minWidth: 92,
-    paddingHorizontal: 12,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 12,
   },
   insightsBtnText: {
     fontSize: 12,

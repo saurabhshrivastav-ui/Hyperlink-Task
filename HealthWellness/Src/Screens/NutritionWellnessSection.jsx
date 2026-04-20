@@ -1,18 +1,21 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Platform,
   StatusBar,
-  Animated,
+  FlatList,
   ScrollView,
   Dimensions,
   Image,
+  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '../../components/TextWrapper';
+import PressableCard from '../components/PressableCard';
+import useParallaxHeader from '../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -20,6 +23,7 @@ const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
 const AVAILABLE_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
+const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
 
 const CATEGORIES = [
@@ -49,7 +53,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
     return (
       <View style={[styles.logActionWrap, containerStyle]}>
         <View style={styles.logActionShadowLayer}>
-          <TouchableOpacity activeOpacity={0.85} style={[styles.actionCard, styles.logActionCard]}>
+          <PressableCard style={[styles.actionCard, styles.logActionCard]}>
             <LinearGradient
               colors={['#FFFFFF', '#E6FFE5']}
               locations={[0, 1]}
@@ -63,7 +67,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
               <Text weight="600" style={[styles.actionTitle, { color }]}>{title}</Text>
               <Text weight="400" style={[styles.actionSub, { color }]}>{subtitle}</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableCard>
         </View>
       </View>
     );
@@ -72,7 +76,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
   if (variant === 'scanFood') {
     return (
       <View style={[styles.actionItem, containerStyle]}>
-        <TouchableOpacity activeOpacity={0.85} style={[styles.actionCard, styles.logActionCard]}>
+        <PressableCard style={[styles.actionCard, styles.logActionCard]}>
           <LinearGradient
             colors={['#FFFFFF', '#FFE7F4']}
             locations={[0, 1]}
@@ -86,7 +90,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
             <Text weight="600" style={[styles.actionTitle, { color }]}>{title}</Text>
             <Text weight="400" style={[styles.actionSub, { color }]}>{subtitle}</Text>
           </LinearGradient>
-        </TouchableOpacity>
+        </PressableCard>
       </View>
     );
   }
@@ -95,7 +99,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
     return (
       <View style={[styles.logActionWrap, containerStyle]}>
         <View style={styles.logActionShadowLayer}>
-          <TouchableOpacity activeOpacity={0.85} style={[styles.actionCard, styles.logActionCard]}>
+          <PressableCard style={[styles.actionCard, styles.logActionCard]}>
             <LinearGradient
               colors={['#FFFFFF', '#FFFBE7']}
               locations={[0, 1]}
@@ -109,7 +113,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
               <Text weight="600" style={[styles.actionTitle, { color }]}>{title}</Text>
               <Text weight="400" style={[styles.actionSub, { color }]}>{subtitle}</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableCard>
         </View>
       </View>
     );
@@ -126,52 +130,113 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
   );
 };
 
-export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+  const CURRENT_CATEGORY = 'Nutrition';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('Nutrition');
+  const flatListRef = useRef(null);
+  const { scrollHandler, heroAnimatedStyle } = useParallaxHeader();
 
-  const chipAnimMap = useRef(
-    CATEGORIES.reduce((acc, item) => {
-      acc[item.label] = new Animated.Value(item.label === 'Nutrition' ? 1 : 0);
-      return acc;
-    }, {})
-  ).current;
+  // Content transition animation - opacity and slide - start hidden
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+  const contentSlideAnim = useRef(new Animated.Value(30)).current;
 
-  const handleChipPress = (label) => {
-    setActive(label);
+  // Content transition animation when active tab changes
+  useEffect(() => {
+    // Delay animation by 500ms before components become visible
+    const animationTimeout = setTimeout(() => {
+      // All components animate together at the same time
+      Animated.parallel([
+        Animated.spring(contentOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(contentSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+      ]).start();
+    }, 500);
 
-    CATEGORIES.forEach((item) => {
-      Animated.timing(chipAnimMap[item.label], {
-        toValue: item.label === label ? 1 : 0,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
+    return () => clearTimeout(animationTimeout);
+  }, [active]);
+
+  const handleChipPress = (label, index) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: false,
+      viewPosition: 0.5,
     });
 
-    if (label === 'All' && typeof onNavigateAll === 'function') {
-      onNavigateAll();
+    if (label !== CURRENT_CATEGORY) {
+      if (label === 'All' && typeof onNavigateAll === 'function') {
+        onNavigateAll();
+      }
+
+      if (label === 'Sleep' && typeof onNavigateSleep === 'function') {
+        onNavigateSleep();
+      }
+
+      if (label === 'Fitness' && typeof onNavigateFitness === 'function') {
+        onNavigateFitness();
+      }
+
+      if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
+        onNavigateMedicine();
+      }
+
+      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
+        onNavigateMentrual();
+      }
+      return;
     }
 
-    if (label === 'Sleep' && typeof onNavigateSleep === 'function') {
-      onNavigateSleep();
-    }
+    setActive(CURRENT_CATEGORY);
+  };
 
-    if (label === 'Fitness' && typeof onNavigateFitness === 'function') {
-      onNavigateFitness();
-    }
+  const getItemLayout = (_, index) => ({
+    length: CHIP_ITEM_WIDTH,
+    offset: CHIP_ITEM_WIDTH * index,
+    index,
+  });
 
-    if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
-      onNavigateMedicine();
-    }
+  const renderChipItem = ({ item: chip, index }) => {
+    const isActive = active === chip.label;
 
-    if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-      onNavigateMentrual();
-    }
+    return (
+      <View
+        style={[
+          styles.chipTouch,
+          index === CATEGORIES.length - 1 && { marginRight: 0 },
+        ]}
+      >
+        <TouchableOpacity activeOpacity={1} onPress={() => handleChipPress(chip.label, index)} style={{ width: '100%' }}>
+          {isActive ? (
+            <ActiveChip label={chip.label} color={chip.color} />
+          ) : (
+            <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
+              <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
+                {chip.label}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         {!hideHeader && (
           <View style={[styles.headerBlock, { paddingTop: topOffset }]}> 
             <View style={styles.headerRow}>
@@ -187,39 +252,29 @@ export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavi
         )}
 
         <View style={styles.chipRowContainer}>
-          <View style={styles.chipRow}>
-            {CATEGORIES.map((chip, index) => {
-              const isActive = active === chip.label;
-              const anim = chipAnimMap[chip.label];
-              const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] });
-
-              return (
-                <TouchableOpacity
-                  key={chip.label}
-                  activeOpacity={0.85}
-                  onPress={() => handleChipPress(chip.label)}
-                  style={[
-                    styles.chipTouch,
-                    index === CATEGORIES.length - 1 && { marginRight: 0 },
-                  ]}
-                >
-                  <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
-                    {isActive ? (
-                      <ActiveChip label={chip.label} color={chip.color} />
-                    ) : (
-                      <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
-                        <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
-                          {chip.label}
-                        </Text>
-                      </View>
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <FlatList
+            ref={flatListRef}
+            horizontal
+            data={CATEGORIES}
+            keyExtractor={(item) => item.label}
+            renderItem={renderChipItem}
+            getItemLayout={getItemLayout}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={styles.chipRow}
+            onScrollToIndexFailed={({ index }) => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index,
+                  animated: false,
+                  viewPosition: 0.5,
+                });
+              }, 120);
+            }}
+          />
         </View>
 
+        <View style={heroAnimatedStyle}>
         <LinearGradient
           colors={['#98D96D', 'rgba(186, 233, 160, 0.65)', 'rgba(222, 243, 210, 0.15)', 'rgba(243, 239, 235, 0)']}
           locations={[0, 0.35, 0.72, 1]}
@@ -233,9 +288,17 @@ export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavi
             resizeMode="contain"
           />
 
+          <Animated.View
+            style={[
+              {
+                opacity: contentOpacityAnim,
+                transform: [{ translateY: contentSlideAnim }],
+              },
+            ]}
+          >
           <View style={styles.goalHero}>
             <Text weight="700" style={styles.goalTitle}>Track your meals to maintain{`\n`}a balanced diet.</Text>
-            <TouchableOpacity activeOpacity={0.85} style={styles.goalButtonWrap}>
+            <PressableCard style={styles.goalButtonWrap}>
               <LinearGradient
                 colors={['#8BD25B', '#4DBA36', '#3AA72A']}
                 locations={[0, 0.5, 1]}
@@ -245,10 +308,21 @@ export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavi
               >
                 <Text weight="600" style={styles.goalButtonText}>Set Goal</Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </PressableCard>
           </View>
+          </Animated.View>
+        </LinearGradient>
+        </View>
 
-          <View style={styles.actionsRow}>
+        <Animated.View
+          style={[
+            {
+              opacity: contentOpacityAnim,
+              transform: [{ translateY: contentSlideAnim }],
+            },
+          ]}
+        >
+        <View style={styles.actionsRow}>
             <NutritionAction
               title="Log Meal"
               subtitle="Today: 2 meals logged"
@@ -273,8 +347,16 @@ export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavi
               variant="barcode"
             />
           </View>
-        </LinearGradient>
+        </Animated.View>
 
+        <Animated.View
+          style={[
+            {
+              opacity: contentOpacityAnim,
+              transform: [{ translateY: contentSlideAnim }],
+            },
+          ]}
+        >
         <View style={styles.dailyBlock}>
           <Text weight="700" style={styles.dailyTitle}>Your Daily Calorie Target</Text>
           <LinearGradient
@@ -299,7 +381,7 @@ export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavi
                 <View style={styles.hintChip}><Text weight="500" style={styles.hintChipText}>Lose fat</Text></View>
                 <View style={styles.hintChip}><Text weight="500" style={styles.hintChipText}>Build muscle</Text></View>
               </View>
-              <TouchableOpacity style={styles.calcBtnWrap} activeOpacity={0.85}>
+              <PressableCard style={styles.calcBtnWrap}>
                 <LinearGradient
                   colors={['#B148FF', '#F6339B', '#9914F9']}
                   locations={[0, 0.5, 1]}
@@ -309,14 +391,17 @@ export default function NutritionWellnessSection({ onBack, onNavigateAll, onNavi
                 >
                   <Text weight="600" style={styles.calcBtnText}>Calculate Now</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             </View>
           </LinearGradient>
         </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
 }
+
+export default React.memo(NutritionWellnessSection);
 
 const styles = StyleSheet.create({
   screen: {
@@ -361,6 +446,8 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     paddingBottom: 0,
     backgroundColor: 'transparent',
+    zIndex: 12,
+    overflow: 'visible',
   },
   chipRow: {
     flexDirection: 'row',
@@ -430,10 +517,11 @@ const styles = StyleSheet.create({
   },
   goalHero: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     minHeight: 160,
     paddingHorizontal: 20,
     zIndex: 2,
+    flexDirection: 'column',
   },
   fruitOverlay: {
     position: 'absolute',
@@ -451,7 +539,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   goalButtonWrap: {
-    marginTop: 10,
+    marginTop: 0,
     borderRadius: 8,
     overflow: 'hidden',
   },

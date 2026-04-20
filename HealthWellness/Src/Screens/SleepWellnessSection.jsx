@@ -1,19 +1,22 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Platform,
   StatusBar,
-  Animated,
+  FlatList,
   ScrollView,
   Dimensions,
   ImageBackground,
   Image,
+  Animated,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '../../components/TextWrapper';
+import PressableCard from '../components/PressableCard';
+import useParallaxHeader from '../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -21,6 +24,7 @@ const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
 const AVAILABLE_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
+const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
 const SLEEP_LAYER_TOP = '#E4CCF7';
 const SLEEP_LAYER_MID = '#CFE1FF';
@@ -107,7 +111,7 @@ const DeviceTileIcon = () => (
 );
 
 const ActionTile = ({ icon, title, color, bg, border, gradientColors }) => (
-  <TouchableOpacity activeOpacity={0.85} style={styles.actionTileTouch}>
+  <PressableCard style={styles.actionTileTouch}>
     {gradientColors ? (
       <View style={styles.actionTileShadowA}>
         <View style={styles.actionTileShadowB}>
@@ -128,55 +132,134 @@ const ActionTile = ({ icon, title, color, bg, border, gradientColors }) => (
         <Text weight="600" style={[styles.actionText, { color }]}>{title}</Text>
       </View>
     )}
-  </TouchableOpacity>
+  </PressableCard>
 );
 
-export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+  const CURRENT_CATEGORY = 'Sleep';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('Sleep');
+  const flatListRef = useRef(null);
+  const { scrollHandler, heroAnimatedStyle } = useParallaxHeader();
 
-  const chipAnimMap = useRef(
-    CATEGORIES.reduce((acc, item) => {
-      acc[item.label] = new Animated.Value(item.label === 'Sleep' ? 1 : 0);
-      return acc;
-    }, {})
-  ).current;
+  // Content transition animation - opacity and slide for hero card - start hidden
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+  const contentSlideAnim = useRef(new Animated.Value(30)).current;
 
-  const handleChipPress = (label) => {
-    setActive(label);
+  // Separate animations for action tiles and insights card - start hidden
+  const actionOpacityAnim = useRef(new Animated.Value(0)).current;
+  const actionSlideAnim = useRef(new Animated.Value(30)).current;
 
-    CATEGORIES.forEach((item) => {
-      Animated.timing(chipAnimMap[item.label], {
-        toValue: item.label === label ? 1 : 0,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
+  // Content transition animation when active tab changes
+  useEffect(() => {
+    // Delay animation by 500ms before components become visible
+    const animationTimeout = setTimeout(() => {
+      // All components animate together at the same time
+      Animated.parallel([
+        // Hero card animation
+        Animated.spring(contentOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(contentSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        // Action tiles and insights card animation
+        Animated.spring(actionOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(actionSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+      ]).start();
+    }, 500);
+
+    return () => clearTimeout(animationTimeout);
+  }, [active]);
+
+  const handleChipPress = (label, index) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: false,
+      viewPosition: 0.5,
     });
 
-    if (label === 'All' && typeof onNavigateAll === 'function') {
-      onNavigateAll();
+    if (label !== CURRENT_CATEGORY) {
+      if (label === 'All' && typeof onNavigateAll === 'function') {
+        onNavigateAll();
+      }
+
+      if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') {
+        onNavigateNutrition();
+      }
+
+      if (label === 'Fitness' && typeof onNavigateFitness === 'function') {
+        onNavigateFitness();
+      }
+
+      if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
+        onNavigateMedicine();
+      }
+
+      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
+        onNavigateMentrual();
+      }
+      return;
     }
 
-    if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') {
-      onNavigateNutrition();
-    }
+    setActive(CURRENT_CATEGORY);
+  };
 
-    if (label === 'Fitness' && typeof onNavigateFitness === 'function') {
-      onNavigateFitness();
-    }
+  const getItemLayout = (_, index) => ({
+    length: CHIP_ITEM_WIDTH,
+    offset: CHIP_ITEM_WIDTH * index,
+    index,
+  });
 
-    if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
-      onNavigateMedicine();
-    }
+  const renderChipItem = ({ item: chip, index }) => {
+    const isActive = active === chip.label;
 
-    if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-      onNavigateMentrual();
-    }
+    return (
+      <View
+        style={[
+          styles.chipTouch,
+          index === CATEGORIES.length - 1 && { marginRight: 0 },
+        ]}
+      >
+        <TouchableOpacity activeOpacity={1} onPress={() => handleChipPress(chip.label, index)} style={{ width: '100%' }}>
+          {isActive ? (
+            <ActiveChip label={chip.label} color={chip.color} />
+          ) : (
+            <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
+              <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
+                {chip.label}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         {!hideHeader && (
           <View style={[styles.headerBlock, { paddingTop: topOffset }]}> 
             <View style={styles.headerRow}>
@@ -192,39 +275,29 @@ export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigate
         )}
 
         <View style={styles.chipRowContainer}>
-          <View style={styles.chipRow}>
-            {CATEGORIES.map((chip, index) => {
-              const isActive = active === chip.label;
-              const anim = chipAnimMap[chip.label];
-              const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] });
-
-              return (
-                <TouchableOpacity
-                  key={chip.label}
-                  activeOpacity={0.85}
-                  onPress={() => handleChipPress(chip.label)}
-                  style={[
-                    styles.chipTouch,
-                    index === CATEGORIES.length - 1 && { marginRight: 0 },
-                  ]}
-                >
-                  <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
-                    {isActive ? (
-                      <ActiveChip label={chip.label} color={chip.color} />
-                    ) : (
-                      <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
-                        <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
-                          {chip.label}
-                        </Text>
-                      </View>
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <FlatList
+            ref={flatListRef}
+            horizontal
+            data={CATEGORIES}
+            keyExtractor={(item) => item.label}
+            renderItem={renderChipItem}
+            getItemLayout={getItemLayout}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={styles.chipRow}
+            onScrollToIndexFailed={({ index }) => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index,
+                  animated: false,
+                  viewPosition: 0.5,
+                });
+              }, 120);
+            }}
+          />
         </View>
 
+        <View style={heroAnimatedStyle}>
         <LinearGradient
           colors={[
             SLEEP_LAYER_TOP,
@@ -238,7 +311,15 @@ export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigate
           style={styles.topSection}
         >
 
-          <View style={styles.heroWrap}>
+          <Animated.View
+            style={[
+              styles.heroWrap,
+              {
+                opacity: contentOpacityAnim,
+                transform: [{ translateY: contentSlideAnim }],
+              },
+            ]}
+          >
             <LinearGradient
               colors={['#4c3c92', '#3a2c7a', '#2c1f5c']}
               start={{ x: 0.5, y: 0 }}
@@ -318,7 +399,7 @@ export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigate
 
               <Text weight="700" style={styles.heroTitle}>Your Sleep Score will appear here</Text>
               <Text weight="400" style={styles.heroSubtitle}>Start logging your sleep to track patterns, recovery, and energy levels.</Text>
-              <TouchableOpacity activeOpacity={0.85} style={styles.logBtnWrap}>
+              <PressableCard style={styles.logBtnWrap}>
                 <LinearGradient
                   colors={['#B148FF', '#F6339B', '#9914F9']}
                   locations={[0, 0.5, 1]}
@@ -328,35 +409,50 @@ export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigate
                 >
                   <Text weight="600" style={styles.logBtnText}>Log Sleep</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             </LinearGradient>
-          </View>
-
-          <View style={styles.actionsRow}>
-            <ActionTile
-              title="Set Sleep"
-              color="#6D36D1"
-              gradientColors={['#F8F4FF', '#EFE2FF']}
-              icon={<SetSleepIcon />}
-            />
-            <ActionTile
-              title="Reminders"
-              color="#DF5A69"
-              gradientColors={['#F8F4FF', '#FFDEE0']}
-              icon={<ReminderTileIcon />}
-            />
-            <ActionTile
-              title="Devices"
-              color="#2D5FA8"
-              gradientColors={['#F8F4FF', '#E7EDFC']}
-              icon={<DeviceTileIcon />}
-            />
-          </View>
+          </Animated.View>
         </LinearGradient>
+        </View>
 
-        <View style={styles.spacer} />
+        <Animated.View
+          style={[
+            styles.actionsRow,
+            {
+              opacity: actionOpacityAnim,
+              transform: [{ translateY: actionSlideAnim }],
+            },
+          ]}
+        >
+          <ActionTile
+            title="Set Sleep"
+            color="#6D36D1"
+            gradientColors={['#F8F4FF', '#EFE2FF']}
+            icon={<SetSleepIcon />}
+          />
+          <ActionTile
+            title="Reminders"
+            color="#DF5A69"
+            gradientColors={['#F8F4FF', '#FFDEE0']}
+            icon={<ReminderTileIcon />}
+          />
+          <ActionTile
+            title="Devices"
+            color="#2D5FA8"
+            gradientColors={['#F8F4FF', '#E7EDFC']}
+            icon={<DeviceTileIcon />}
+          />
+        </Animated.View>
 
-        <View style={styles.insightsCardWrap}>
+        <Animated.View
+          style={[
+            styles.insightsCardWrap,
+            {
+              opacity: actionOpacityAnim,
+              transform: [{ translateY: actionSlideAnim }],
+            },
+          ]}
+        >
           <View style={styles.insightsCardShadowLayer}>
             <ImageBackground
               source={require('../../assets/bg.webp')}
@@ -366,7 +462,7 @@ export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigate
             >
               <Text weight="700" style={styles.insightsTitle}>Helix Wellness Insights</Text>
               <Text weight="500" style={styles.insightsSubtitle}>Insights unlock after 5 days of tracking.</Text>
-              <TouchableOpacity activeOpacity={0.85} style={styles.insightsBtnWrap}>
+              <PressableCard style={styles.insightsBtnWrap}>
                 <LinearGradient
                   colors={['#B148FF', '#F6339B', '#9914F9']}
                   locations={[0, 0.5, 1]}
@@ -376,14 +472,16 @@ export default function SleepWellnessSection({ onBack, onNavigateAll, onNavigate
                 >
                   <Text weight="600" style={styles.insightsBtnText}>Learn How it Works</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             </ImageBackground>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
 }
+
+export default React.memo(SleepWellnessSection);
 
 const styles = StyleSheet.create({
   screen: {
@@ -433,6 +531,8 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     paddingBottom: 0,
     backgroundColor: 'transparent',
+    zIndex: 12,
+    overflow: 'visible',
   },
   chipRow: {
     flexDirection: 'row',
@@ -505,6 +605,8 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 14,
     overflow: 'hidden',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   heroBackgroundScene: {
     position: 'absolute',
@@ -627,8 +729,8 @@ const styles = StyleSheet.create({
     maxWidth: '68%',
   },
   logBtnWrap: {
-    marginTop: 14,
-    alignSelf: 'flex-start',
+    marginTop: 0,
+    alignSelf: 'center',
     borderRadius: 8,
     overflow: 'hidden',
   },

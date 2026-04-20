@@ -1,19 +1,22 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Platform,
   StatusBar,
-  Animated,
+  FlatList,
   ScrollView,
   Dimensions,
   Image,
   ImageBackground,
+  Animated,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '../../components/TextWrapper';
+import PressableCard from '../components/PressableCard';
+import useParallaxHeader from '../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -21,6 +24,7 @@ const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
 const AVAILABLE_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
+const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
 const FITNESS_LAYER_TOP = '#FFD890';
 const SUN_RAY_COUNT = 30;
@@ -58,7 +62,7 @@ const FitnessAction = ({ icon, title, subtitle, titleColor, variant = 'default',
     return (
       <View style={[styles.logActionWrap, containerStyle]}>
         <View style={styles.logActionShadowLayer}>
-          <TouchableOpacity activeOpacity={0.85} style={[styles.actionCard, styles.logActionCard]}>
+          <PressableCard style={[styles.actionCard, styles.logActionCard]} fillInner>
             <LinearGradient
               colors={gradientMap[variant]}
               locations={[0, 1]}
@@ -70,22 +74,22 @@ const FitnessAction = ({ icon, title, subtitle, titleColor, variant = 'default',
               <Text weight="600" style={[styles.actionTitle, { color: titleColor }]}>{title}</Text>
               <Text weight="400" style={styles.actionSub}>{subtitle}</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableCard>
         </View>
       </View>
     );
   }
 
   return (
-    <TouchableOpacity activeOpacity={0.85} style={[styles.actionCard, containerStyle]}>
+    <PressableCard style={[styles.actionCard, containerStyle]} fillInner>
       <View style={styles.actionIcon}>{icon}</View>
       <Text weight="600" style={[styles.actionTitle, { color: titleColor }]}>{title}</Text>
       <Text weight="400" style={styles.actionSub}>{subtitle}</Text>
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 
-export default function FitnessWellnessSection({
+function FitnessWellnessSection({
   onBack,
   onNavigateAll,
   onNavigateSleep,
@@ -94,47 +98,108 @@ export default function FitnessWellnessSection({
   onNavigateMentrual,
   hideHeader = false,
 }) {
+  const CURRENT_CATEGORY = 'Fitness';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('Fitness');
+  const flatListRef = useRef(null);
+  const { scrollHandler } = useParallaxHeader();
 
-  const chipAnimMap = useRef(
-    CATEGORIES.reduce((acc, item) => {
-      acc[item.label] = new Animated.Value(item.label === 'Fitness' ? 1 : 0);
-      return acc;
-    }, {})
-  ).current;
+  // Content transition animation - opacity and slide - start hidden
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+  const contentSlideAnim = useRef(new Animated.Value(30)).current;
 
-  const handleChipPress = (label) => {
-    setActive(label);
+  // Content transition animation when active tab changes
+  useEffect(() => {
+    // Delay animation by 500ms before components become visible
+    const animationTimeout = setTimeout(() => {
+      // All components animate together at the same time
+      Animated.parallel([
+        Animated.spring(contentOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(contentSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+      ]).start();
+    }, 500);
 
-    CATEGORIES.forEach((item) => {
-      Animated.timing(chipAnimMap[item.label], {
-        toValue: item.label === label ? 1 : 0,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
+    return () => clearTimeout(animationTimeout);
+  }, [active]);
+
+  const handleChipPress = (label, index) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: false,
+      viewPosition: 0.5,
     });
 
-    if (label === 'All' && typeof onNavigateAll === 'function') {
-      onNavigateAll();
+    if (label !== CURRENT_CATEGORY) {
+      if (label === 'All' && typeof onNavigateAll === 'function') {
+        onNavigateAll();
+      }
+      if (label === 'Sleep' && typeof onNavigateSleep === 'function') {
+        onNavigateSleep();
+      }
+      if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') {
+        onNavigateNutrition();
+      }
+      if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
+        onNavigateMedicine();
+      }
+      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
+        onNavigateMentrual();
+      }
+      return;
     }
-    if (label === 'Sleep' && typeof onNavigateSleep === 'function') {
-      onNavigateSleep();
-    }
-    if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') {
-      onNavigateNutrition();
-    }
-    if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
-      onNavigateMedicine();
-    }
-    if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-      onNavigateMentrual();
-    }
+
+    setActive(CURRENT_CATEGORY);
+  };
+
+  const getItemLayout = (_, index) => ({
+    length: CHIP_ITEM_WIDTH,
+    offset: CHIP_ITEM_WIDTH * index,
+    index,
+  });
+
+  const renderChipItem = ({ item: chip, index }) => {
+    const isActive = active === chip.label;
+
+    return (
+      <View
+        style={[
+          styles.chipTouch,
+          index === CATEGORIES.length - 1 && { marginRight: 0 },
+        ]}
+      >
+        <TouchableOpacity activeOpacity={1} onPress={() => handleChipPress(chip.label, index)} style={{ width: '100%' }}>
+          {isActive ? (
+            <ActiveChip label={chip.label} color={chip.color} />
+          ) : (
+            <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
+              <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
+                {chip.label}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
         {!hideHeader && (
           <View style={[styles.headerBlock, { paddingTop: topOffset }]}> 
             <View style={styles.headerRow}>
@@ -150,40 +215,30 @@ export default function FitnessWellnessSection({
         )}
 
         <View style={styles.chipRowContainer}>
-          <View style={styles.chipRow}>
-            {CATEGORIES.map((chip, index) => {
-              const isActive = active === chip.label;
-              const anim = chipAnimMap[chip.label];
-              const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] });
-
-              return (
-                <TouchableOpacity
-                  key={chip.label}
-                  activeOpacity={0.85}
-                  onPress={() => handleChipPress(chip.label)}
-                  style={[
-                    styles.chipTouch,
-                    index === CATEGORIES.length - 1 && { marginRight: 0 },
-                  ]}
-                >
-                  <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
-                    {isActive ? (
-                      <ActiveChip label={chip.label} color={chip.color} />
-                    ) : (
-                      <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
-                        <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
-                          {chip.label}
-                        </Text>
-                      </View>
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <FlatList
+            ref={flatListRef}
+            horizontal
+            data={CATEGORIES}
+            keyExtractor={(item) => item.label}
+            renderItem={renderChipItem}
+            getItemLayout={getItemLayout}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={styles.chipRow}
+            onScrollToIndexFailed={({ index }) => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index,
+                  animated: false,
+                  viewPosition: 0.5,
+                });
+              }, 120);
+            }}
+          />
         </View>
 
         <View style={styles.topSection}>
+          <View>
           <LinearGradient
             colors={['#FFD890', '#FFF5FF']}
             locations={[0.0207, 0.9793]}
@@ -193,6 +248,14 @@ export default function FitnessWellnessSection({
           />
 
           <View style={styles.heroWrap}>
+            <Animated.View
+              style={[
+                {
+                  opacity: contentOpacityAnim,
+                  transform: [{ translateY: contentSlideAnim }],
+                },
+              ]}
+            >
             <LinearGradient
               colors={['#E48A22', '#F6AF55', '#FFE0BA']}
               locations={[0, 0.6, 1]}
@@ -250,13 +313,22 @@ export default function FitnessWellnessSection({
                 </View>
               </View>
             </LinearGradient>
+            </Animated.View>
           </View>
 
+          <Animated.View
+            style={[
+              {
+                opacity: contentOpacityAnim,
+                transform: [{ translateY: contentSlideAnim }],
+              },
+            ]}
+          >
           <View style={styles.actionsRow}>
             <FitnessAction
               icon={<MaterialCommunityIcons name="run" size={14} color="#E67E22" />}
               title="Log Activity"
-              subtitle="Lost :45min walk"
+              subtitle="Last :45min walk"
               titleColor="#E67E22"
               variant="log"
               containerStyle={styles.actionItemSpacing}
@@ -264,7 +336,7 @@ export default function FitnessWellnessSection({
             <FitnessAction
               icon={<MaterialCommunityIcons name="timer-refresh" size={14} color="#EF4444" />}
               title="Start Activity"
-              subtitle="Lost :45min wk"
+              subtitle="Last :45min walk"
               titleColor="#EF4444"
               variant="start"
               containerStyle={styles.actionItemSpacing}
@@ -277,12 +349,22 @@ export default function FitnessWellnessSection({
               variant="devices"
             />
           </View>
+          </Animated.View>
+          </View>
         </View>
 
+        <Animated.View
+          style={[
+            {
+              opacity: contentOpacityAnim,
+              transform: [{ translateY: contentSlideAnim }],
+            },
+          ]}
+        >
         <View style={styles.activitySection}>
           <Text weight="700" style={styles.activityTitle}>Today's Activities</Text>
           <Text weight="500" style={styles.activityEmpty}>No Activity Logged</Text>
-          <TouchableOpacity activeOpacity={0.85} style={[styles.logBtnWrap, styles.activityLogBtnWrap]}>
+          <PressableCard style={[styles.logBtnWrap, styles.activityLogBtnWrap]}>
             <LinearGradient
               colors={['#F3BA64', '#D87E18']}
               start={{ x: 0, y: 0.5 }}
@@ -291,7 +373,7 @@ export default function FitnessWellnessSection({
             >
               <Text weight="600" style={styles.logBtnText}>Log Activity</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableCard>
         </View>
 
         <View style={styles.deviceCardWrap}>
@@ -304,7 +386,7 @@ export default function FitnessWellnessSection({
             <View style={styles.deviceTextWrap}>
               <Text weight="700" style={styles.deviceTitle}>Connect Device</Text>
               <Text weight="400" style={styles.deviceSub}>Log activities through devices</Text>
-              <TouchableOpacity activeOpacity={0.85} style={styles.logBtnWrap}>
+              <PressableCard style={styles.logBtnWrap}>
                 <LinearGradient
                   colors={['#F3BA64', '#D87E18']}
                   start={{ x: 0, y: 0.5 }}
@@ -313,7 +395,7 @@ export default function FitnessWellnessSection({
                 >
                   <Text weight="600" style={styles.logBtnText}>Log Activity</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             </View>
 
             <View style={styles.watchWrap}>
@@ -336,7 +418,7 @@ export default function FitnessWellnessSection({
             >
               <Text weight="700" style={styles.insightsTitle}>Helix Wellness Insights</Text>
               <Text weight="500" style={styles.insightsSubtitle}>Insights unlock after 5 days of tracking.</Text>
-              <TouchableOpacity activeOpacity={0.85} style={styles.insightsBtnWrap}>
+              <PressableCard style={styles.insightsBtnWrap}>
                 <LinearGradient
                   colors={['#B148FF', '#F6339B', '#9914F9']}
                   locations={[0, 0.5, 1]}
@@ -346,14 +428,18 @@ export default function FitnessWellnessSection({
                 >
                   <Text weight="600" style={styles.insightsBtnText}>Learn How it Works</Text>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             </ImageBackground>
           </View>
         </View>
+        </Animated.View>
+
       </ScrollView>
     </View>
   );
 }
+
+export default React.memo(FitnessWellnessSection);
 
 const styles = StyleSheet.create({
   screen: {
@@ -398,6 +484,8 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     paddingBottom: 0,
     backgroundColor: 'transparent',
+    zIndex: 12,
+    overflow: 'visible',
   },
   chipRow: {
     flexDirection: 'row',

@@ -1,19 +1,23 @@
-﻿import React, { useRef, useState } from 'react';
+﻿import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Platform,
   StatusBar,
-  Animated,
+  FlatList,
   ScrollView,
   Dimensions,
   Image,
-  ImageBackground
+  ImageBackground,
+  Animated,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '../../components/TextWrapper';
+import PressableCard from '../components/PressableCard';
+import AnimatedCounter from '../components/AnimatedCounter';
+import useParallaxHeader from '../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -21,6 +25,7 @@ const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
 const AVAILABLE_WIDTH = SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
+const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 
 const CHIP_HEIGHT = 36;
 const BOTTOM_NOTCH_SIZE = 18;
@@ -56,10 +61,89 @@ const ActiveChip = ({ label, color }) => (
   </View>
 );
 
-export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+  const CURRENT_CATEGORY = 'All';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('All');
+  const flatListRef = useRef(null);
   const [progressTrackWidth, setProgressTrackWidth] = useState(0);
+  const { scrollHandler, heroAnimatedStyle, scrollY } = useParallaxHeader();
+
+  // ========== ANIMATION STATE ==========
+  // Sliding pill animation - tracks position and width of active tab
+  const pillAnimatedValue = useRef(new Animated.Value(0)).current;
+  const pillWidthAnimatedValue = useRef(new Animated.Value(CHIP_WIDTH)).current;
+  
+  // Tab measurements for sliding pill
+  const [tabMeasurements, setTabMeasurements] = useState({});
+  
+  // Content transition animation - opacity and slide - start hidden
+  const contentOpacityAnim = useRef(new Animated.Value(0)).current;
+  const contentSlideAnim = useRef(new Animated.Value(30)).current;
+
+  // Score card animation - opacity and slide - start hidden
+  const scoreCardOpacityAnim = useRef(new Animated.Value(0)).current;
+  const scoreCardSlideAnim = useRef(new Animated.Value(30)).current;
+
+  // ========== ANIMATION EFFECTS ==========
+  // Content transition animation when active tab changes
+  useEffect(() => {
+    // Delay animation by 500ms before components become visible
+    const animationTimeout = setTimeout(() => {
+      // All components animate together at the same time
+      Animated.parallel([
+        // Score card animation
+        Animated.spring(scoreCardOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(scoreCardSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        // Content animation
+        Animated.spring(contentOpacityAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+        Animated.spring(contentSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 10,
+        }),
+      ]).start();
+    }, 500);
+
+    return () => clearTimeout(animationTimeout);
+  }, [active]);
+
+  // Placeholder for future scroll-based animations if needed
+  useEffect(() => {
+    // Tab measurements for sliding pill animation (non-content related)
+    const activeTabMeasurement = tabMeasurements[active];
+    if (activeTabMeasurement) {
+      Animated.spring(pillAnimatedValue, {
+        toValue: activeTabMeasurement.x,
+        useNativeDriver: true,
+        tension: 70,
+        friction: 10,
+      }).start();
+      
+      Animated.spring(pillWidthAnimatedValue, {
+        toValue: activeTabMeasurement.width,
+        useNativeDriver: false,
+        tension: 70,
+        friction: 10,
+      }).start();
+    }
+  }, [active, tabMeasurements]);
 
   const calorieFillWidth = (CALORIE_PROGRESS / 100) * progressTrackWidth;
   const targetBadgeLeft = Math.min(
@@ -67,42 +151,77 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
     Math.max(progressTrackWidth - TARGET_BADGE_WIDTH, 0)
   );
 
-  const chipAnimMap = useRef(
-    CATEGORIES.reduce((acc, item) => {
-      acc[item.label] = new Animated.Value(item.label === 'All' ? 1 : 0);
-      return acc;
-    }, {})
-  ).current;
-
-  const handleChipPress = (label) => {
-    setActive(label);
-    CATEGORIES.forEach((item) => {
-      Animated.timing(chipAnimMap[item.label], {
-        toValue: item.label === label ? 1 : 0,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
+  const handleChipPress = (label, index) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: false,
+      viewPosition: 0.5,
     });
 
-    if (label === 'Sleep' && typeof onNavigateSleep === 'function') {
-      onNavigateSleep();
-    }
+    setActive(label);
 
-    if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') {
-      onNavigateNutrition();
-    }
+    if (label !== CURRENT_CATEGORY) {
+      if (label === 'Sleep' && typeof onNavigateSleep === 'function') {
+        onNavigateSleep();
+      }
 
-    if (label === 'Fitness' && typeof onNavigateFitness === 'function') {
-      onNavigateFitness();
-    }
+      if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') {
+        onNavigateNutrition();
+      }
 
-    if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
-      onNavigateMedicine();
-    }
+      if (label === 'Fitness' && typeof onNavigateFitness === 'function') {
+        onNavigateFitness();
+      }
 
-    if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-      onNavigateMentrual();
+      if (label === 'Medicine' && typeof onNavigateMedicine === 'function') {
+        onNavigateMedicine();
+      }
+
+      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
+        onNavigateMentrual();
+      }
+      return;
     }
+  };
+
+  const getItemLayout = (_, index) => ({
+    length: CHIP_ITEM_WIDTH,
+    offset: CHIP_ITEM_WIDTH * index,
+    index,
+  });
+
+  const renderChipItem = ({ item: chip, index }) => {
+    const isActive = active === chip.label;
+
+    const handleTabLayout = (event) => {
+      const { x, width } = event.nativeEvent.layout;
+      setTabMeasurements(prev => ({
+        ...prev,
+        [chip.label]: { x: x - HORIZONTAL_PADDING, width }
+      }));
+    };
+
+    return (
+      <View
+        style={[
+          styles.chipTouch,
+          index === CATEGORIES.length - 1 && { marginRight: 0 },
+        ]}
+        onLayout={handleTabLayout}
+      >
+        <TouchableOpacity activeOpacity={1} onPress={() => handleChipPress(chip.label, index)} style={{ width: '100%' }}>
+          {isActive ? (
+            <ActiveChip label={chip.label} color={chip.color} />
+          ) : (
+            <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
+              <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
+                {chip.label}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   const activeIndex = CATEGORIES.findIndex(c => c.label === active);
@@ -110,60 +229,78 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
 
   return (
     <View style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {!hideHeader && (
-          <View style={[styles.headerBlock, { paddingTop: topOffset }]}> 
-            <View style={styles.headerRow}>
-              <TouchableOpacity activeOpacity={0.8} style={styles.backBtn}>
-                <Ionicons name="arrow-back" size={25} color="#5A3FB8" />
-              </TouchableOpacity>
-              <View style={styles.titleWrap}>
-                <Text weight="700" style={styles.headerTitle}>Health Wellness</Text>
-                <Text weight="400" style={styles.headerSubtitle}>Build healthy habits, one day at a time.</Text>
-              </View>
+      {/* ===== FIXED HEADER ===== */}
+      {!hideHeader && (
+        <View style={[styles.headerBlock, { paddingTop: topOffset }]}> 
+          <View style={styles.headerRow}>
+            <TouchableOpacity activeOpacity={0.8} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={25} color="#5A3FB8" />
+            </TouchableOpacity>
+            <View style={styles.titleWrap}>
+              <Text weight="700" style={styles.headerTitle}>Health Wellness</Text>
+              <Text weight="400" style={styles.headerSubtitle}>Build healthy habits, one day at a time.</Text>
             </View>
           </View>
-        )}
-
-        {/* ============ CHIP ROW (OUTSIDE MAIN SECTION) ============ */}
-        <View style={styles.chipRowContainer}>
-          <View style={styles.chipRow}>
-            {CATEGORIES.map((chip, index) => {
-              const isActive = active === chip.label;
-              const anim = chipAnimMap[chip.label];
-              const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.02] });
-
-              return (
-                <TouchableOpacity
-                  key={chip.label}
-                  activeOpacity={0.85}
-                  onPress={() => handleChipPress(chip.label)}
-                  style={[
-                    styles.chipTouch,
-                    index === CATEGORIES.length - 1 && { marginRight: 0 },
-                  ]}
-                >
-                  <Animated.View style={{ transform: [{ scale }], width: '100%' }}>
-                    {isActive ? (
-                      // ACTIVE: white tab with bottom corner cutouts
-                      <ActiveChip label={chip.label} color={chip.color} />
-                    ) : (
-                      // INACTIVE: White chip with colored border
-                      <View style={[styles.inactiveChip, { borderColor: chip.color }]}>
-                        <Text weight="500" style={[styles.inactiveChipText, { color: chip.color }]}>
-                          {chip.label}
-                        </Text>
-                      </View>
-                    )}
-                  </Animated.View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
         </View>
+      )}
 
-        {/* ============ MAIN SECTION ============ */}
+      {/* ===== STICKY TAB BAR WITH SLIDING PILL ===== */}
+      <View style={styles.stickyTabBarContainer}>
+        {/* Outer animated view for position (translateX with native driver) */}
+        <Animated.View
+          style={[
+            styles.slidingPillOuter,
+            {
+              transform: [{ translateX: pillAnimatedValue }],
+            },
+          ]}
+        >
+          {/* Inner view for width (no native driver) */}
+          <Animated.View
+            style={[
+              styles.slidingPill,
+              {
+                width: pillWidthAnimatedValue,
+              },
+            ]}
+          />
+        </Animated.View>
+
+        {/* Tab bar content */}
+        <FlatList
+          ref={flatListRef}
+          horizontal
+          data={CATEGORIES}
+          keyExtractor={(item) => item.label}
+          renderItem={renderChipItem}
+          getItemLayout={getItemLayout}
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          contentContainerStyle={styles.chipRow}
+          scrollEnabled={false}
+          onScrollToIndexFailed={({ index }) => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToIndex({
+                index,
+                animated: false,
+                viewPosition: 0.5,
+              });
+            }, 120);
+          }}
+          style={styles.tabFlatList}
+        />
+      </View>
+
+      {/* ===== SCROLLABLE CONTENT ===== */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+      >
+        {/* ============ MAIN SECTION (STATIC - NO ANIMATION) ============ */}
         <View style={styles.mainSection}>
+          <View style={heroAnimatedStyle}>
           {/* 
             LAYER 1: DIAGONAL GRADIENT BACKGROUND
             Purple (top-left) → Pink (center) → Peach (bottom-right)
@@ -176,33 +313,59 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
             style={styles.diagonalGradient}
           />
 
-          {/* LAYER 4: SCORE CARD */}
+          {/* LAYER 4: SCORE CARD - WITH ANIMATION */}
+          <Animated.View
+            style={[
+              styles.scoreCardAnimatedWrapper,
+              {
+                opacity: scoreCardOpacityAnim,
+                transform: [{ translateY: scoreCardSlideAnim }],
+              },
+            ]}
+          >
           <View style={styles.scoreCardContainer}>
             <View style={styles.scoreCard}>
               <View style={styles.scoreContent}>
-                <Text weight="700" style={styles.scoreValue}>0%</Text>
+                <AnimatedCounter
+                  value={0}
+                  suffix="%"
+                  duration={600}
+                  TextComponent={Text}
+                  textStyle={styles.scoreValue}
+                  scrollY={scrollY}
+                />
                 <Text weight="600" style={styles.scoreTitle}>Your Wellness Score will appear here</Text>
                 <Text weight="400" style={styles.scoreSubtitle}>Start tracking your habits to generate your score.</Text>
 
-                <TouchableOpacity activeOpacity={0.85} style={styles.trackBtnWrap}>
-                  <View style={styles.trackBtnShadowLayer}>
-                    <LinearGradient
-                      colors={['#B148FF', '#F6339B', '#9914F9']}
-                      locations={[0, 0.5, 1]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={styles.trackBtn}
-                    >
-                      <Text weight="500" style={styles.trackBtnText}>Start Tracking</Text>
-                    </LinearGradient>
-                  </View>
-                </TouchableOpacity>
+                  <PressableCard style={styles.trackBtnWrap}>
+                    <View style={styles.trackBtnShadowLayer}>
+                      <LinearGradient
+                        colors={['#B148FF', '#F6339B', '#9914F9']}
+                        locations={[0, 0.5, 1]}
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        style={styles.trackBtn}
+                      >
+                        <Text weight="500" style={styles.trackBtnText}>Start Tracking</Text>
+                      </LinearGradient>
+                    </View>
+                  </PressableCard>
+                </View>
               </View>
             </View>
-          </View>
-        </View>
+          </Animated.View>
 
-        <View style={styles.plainSection}>
+          {/* ============ LOWER SECTIONS (WITH TRANSITION ANIMATION) ============ */}
+          <Animated.View
+            style={[
+              styles.animatedLowerContent,
+              {
+                opacity: contentOpacityAnim,
+                transform: [{ translateY: contentSlideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.plainSection}>
           <View style={styles.energyBlock}>
             <Text weight="700" style={styles.energyTitle}>Today's Energy Status</Text>
             <Text weight="400" style={styles.energySub}>Track your meals and activity to see your calorie balance.</Text>
@@ -235,7 +398,13 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                         },
                       ]}
                     >
-                      <Text weight="600" style={styles.targetBadgeText}>{CALORIES_CONSUMED}</Text>
+                      <AnimatedCounter
+                        value={CALORIES_CONSUMED}
+                        duration={600}
+                        TextComponent={Text}
+                        textStyle={styles.targetBadgeText}
+                        scrollY={scrollY}
+                      />
                     </View>
                   </View>
                   <Text weight="500" style={styles.progressTargetText}>{CALORIES_CONSUMED}/{CALORIE_TARGET}</Text>
@@ -258,7 +427,7 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                 </View>
 
                 <View style={styles.actionRowSmall}>
-                  <TouchableOpacity style={styles.smallBtnWrap} activeOpacity={0.85}>
+                  <PressableCard style={styles.smallBtnWrap}>
                     <View style={styles.smallBtnShadowLayer}>
                       <LinearGradient
                         colors={['#A2DF71', '#F2FFEC', '#A2DF71']}
@@ -270,9 +439,9 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                         <Text weight="600" style={styles.smallBtnTextGreen}>Add Meal</Text>
                       </LinearGradient>
                     </View>
-                  </TouchableOpacity>
+                  </PressableCard>
 
-                  <TouchableOpacity style={styles.smallBtnWrap} activeOpacity={0.85}>
+                  <PressableCard style={styles.smallBtnWrap}>
                     <View style={styles.smallBtnShadowLayer}>
                       <LinearGradient
                         colors={['#FFB348', '#FFF0D5', '#FFB348']}
@@ -284,7 +453,7 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                         <Text weight="600" style={styles.smallBtnTextOrange}>Add Activity</Text>
                       </LinearGradient>
                     </View>
-                  </TouchableOpacity>
+                  </PressableCard>
                 </View>
               </View>
             </View>
@@ -316,7 +485,7 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                   <View style={styles.hintChip}><Text weight="500" style={styles.hintChipText}>Lose fat</Text></View>
                   <View style={styles.hintChip}><Text weight="500" style={styles.hintChipText}>Build muscle</Text></View>
                 </View>
-                <TouchableOpacity style={styles.calcBtnWrap}>
+                <PressableCard style={styles.calcBtnWrap}>
                   <View style={styles.calcBtnShadowLayer}>
                     <LinearGradient
                       colors={['#B148FF', '#F6339B', '#9914F9']}
@@ -328,7 +497,7 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                       <Text weight="600" style={styles.calcBtnText} numberOfLines={1}>Calculate Now</Text>
                     </LinearGradient>
                   </View>
-                </TouchableOpacity>
+                </PressableCard>
               </View>
             </View>
           </View>
@@ -343,7 +512,7 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
               >
                 <Text weight="700" style={styles.insightsTitle}>Helix Wellness Insights</Text>
                 <Text weight="500" style={styles.insightsSubtitle}>Insights unlock after 5 days of tracking.</Text>
-                <TouchableOpacity activeOpacity={0.85} style={styles.insightsBtnWrap}>
+                <PressableCard style={styles.insightsBtnWrap}>
                   <LinearGradient
                     colors={['#B148FF', '#F6339B', '#9914F9']}
                     locations={[0, 0.5, 1]}
@@ -353,15 +522,20 @@ export default function WellnessHeaderSection({ onNavigateSleep, onNavigateNutri
                   >
                     <Text weight="600" style={styles.insightsBtnText}>Learn How it Works</Text>
                   </LinearGradient>
-                </TouchableOpacity>
+                </PressableCard>
               </ImageBackground>
             </View>
           </View>
-        </View>
-      </ScrollView>
+            </View>
+          </Animated.View>
+          </View>
+          </View>
+        </ScrollView>
     </View>
   );
 }
+
+export default React.memo(WellnessHeaderSection);
 
 const styles = StyleSheet.create({
   screen: {
@@ -372,6 +546,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   headerBlock: {
+    zIndex: 12,
+    overflow: 'visible',
     paddingHorizontal: 16,
     paddingBottom: 4,
     backgroundColor: '#F3EFEB',
@@ -418,7 +594,41 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
 
-  // CHIP ROW CONTAINER (moved outside mainSection)
+  // ==================== STICKY TAB BAR ====================
+  stickyTabBarContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F3EFEB',
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 2,
+    paddingBottom: 0,
+    zIndex: 20,
+    position: 'relative',
+    borderBottomWidth: 0,
+  },
+  
+  // Outer animated view - handles position (native driver)
+  slidingPillOuter: {
+    position: 'absolute',
+    left: HORIZONTAL_PADDING,
+    bottom: 0,
+    height: CHIP_HEIGHT,
+    zIndex: 5,
+  },
+  
+  // Inner animated view - handles width (JS driver)
+  slidingPill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+  },
+  
+  // Tab FlatList styling
+  tabFlatList: {
+    position: 'relative',
+    zIndex: 10,
+  },
+
+  // CHIP ROW CONTAINER (now moved outside mainSection as sticky)
   chipRowContainer: {
     paddingHorizontal: HORIZONTAL_PADDING,
     paddingTop: 2,
@@ -426,6 +636,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     backgroundColor: 'transparent',
     zIndex: 10,
+    overflow: 'visible',
   },
   chipRow: {
     flexDirection: 'row',
@@ -438,6 +649,16 @@ const styles = StyleSheet.create({
     height: CHIP_HEIGHT + 10,
     marginRight: CHIP_GAP,
     justifyContent: 'flex-start',
+  },
+
+  // ==================== CONTENT CONTAINER ====================
+  contentContainer: {
+    flex: 1,
+  },
+
+  // Animated lower content - only the plainSection and below animate
+  animatedLowerContent: {
+    flex: 1,
   },
 
   // ACTIVE CHIP - SVG curved button
@@ -460,21 +681,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
   },
-  activeChipNotch: {
-    position: 'absolute',
-    width: BOTTOM_NOTCH_SIZE,
-    height: BOTTOM_NOTCH_SIZE,
-    borderRadius: BOTTOM_NOTCH_SIZE / 2,
-    backgroundColor: '#F3EFEB',
-    bottom: -BOTTOM_NOTCH_SIZE,
-    zIndex: 12,
-  },
-  activeChipNotchLeft: {
-    left: -BOTTOM_NOTCH_SIZE,
-  },
-  activeChipNotchRight: {
-    right: -BOTTOM_NOTCH_SIZE,
-  },
   activeChipLabel: {
     position: 'absolute',
     top: 8,
@@ -483,7 +689,6 @@ const styles = StyleSheet.create({
     height: CHIP_HEIGHT - 8,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 11,
   },
   activeChipText: {
     fontSize: 11,
@@ -503,6 +708,11 @@ const styles = StyleSheet.create({
   inactiveChipText: {
     fontSize: 11,
     textAlign: 'center',
+  },
+
+  // SCORE CARD ANIMATION WRAPPER
+  scoreCardAnimatedWrapper: {
+    zIndex: 4,
   },
 
   // SCORE CARD
