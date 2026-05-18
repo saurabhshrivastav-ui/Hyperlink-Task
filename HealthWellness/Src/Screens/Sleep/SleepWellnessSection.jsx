@@ -14,9 +14,9 @@ import {
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text } from '../../components/TextWrapper';
-import PressableCard from '../components/PressableCard';
-import useParallaxHeader from '../hooks/useParallaxHeader';
+import { Text } from '../../../components/TextWrapper';
+import PressableCard from '../../components/PressableCard';
+import useParallaxHeader from '../../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -73,7 +73,7 @@ const CATEGORIES = [
   { label: 'Nutrition', color: '#16A34A' },
   { label: 'Fitness', color: '#EA580C' },
   { label: 'Medicine', color: '#1D4ED8' },
-  { label: 'Mentrual', color: '#DB2777' },
+  { label: 'Menstrual', color: '#DB2777' },
 ];
 
 const ActiveChip = ({ label, color }) => {
@@ -135,7 +135,7 @@ const ActionTile = ({ icon, title, color, bg, border, gradientColors }) => (
   </PressableCard>
 );
 
-function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMenstrual, hideHeader = false }) {
   const CURRENT_CATEGORY = 'Sleep';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('Sleep');
@@ -212,8 +212,8 @@ function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNa
         onNavigateMedicine();
       }
 
-      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-        onNavigateMentrual();
+      if (label === 'Menstrual' && typeof onNavigateMenstrual === 'function') {
+        onNavigateMenstrual();
       }
       return;
     }
@@ -389,7 +389,7 @@ function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNa
                 />
 
                 <Image
-                  source={require('../../assets/birds.webp')}
+                  source={require('../../../assets/birds.webp')}
                   style={styles.heroBirds}
                   resizeMode="contain"
                   resizeMethod="resize"
@@ -455,7 +455,7 @@ function SleepWellnessSection({ onBack, onNavigateAll, onNavigateNutrition, onNa
         >
           <View style={styles.insightsCardShadowLayer}>
             <ImageBackground
-              source={require('../../assets/bg.webp')}
+              source={require('../../../assets/bg.webp')}
               style={styles.insightsCard}
               imageStyle={styles.insightsCardImage}
               resizeMode="cover"

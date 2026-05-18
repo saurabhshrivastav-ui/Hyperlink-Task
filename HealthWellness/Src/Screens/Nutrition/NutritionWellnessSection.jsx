@@ -13,9 +13,9 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text } from '../../components/TextWrapper';
-import PressableCard from '../components/PressableCard';
-import useParallaxHeader from '../hooks/useParallaxHeader';
+import { Text } from '../../../components/TextWrapper';
+import PressableCard from '../../components/PressableCard';
+import useParallaxHeader from '../../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -32,7 +32,7 @@ const CATEGORIES = [
   { label: 'Nutrition', color: '#16A34A' },
   { label: 'Fitness', color: '#EA580C' },
   { label: 'Medicine', color: '#1D4ED8' },
-  { label: 'Mentrual', color: '#DB2777' },
+  { label: 'Menstrual', color: '#DB2777' },
 ];
 
 const ActiveChip = ({ label, color }) => {
@@ -130,7 +130,7 @@ const NutritionAction = ({ title, subtitle, color, icon, bg = '#F4F7F4', border 
   );
 };
 
-function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNavigateFitness, onNavigateMedicine, onNavigateMenstrual, hideHeader = false }) {
   const CURRENT_CATEGORY = 'Nutrition';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('Nutrition');
@@ -189,8 +189,8 @@ function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNa
         onNavigateMedicine();
       }
 
-      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-        onNavigateMentrual();
+      if (label === 'Menstrual' && typeof onNavigateMenstrual === 'function') {
+        onNavigateMenstrual();
       }
       return;
     }
@@ -283,7 +283,7 @@ function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNa
           style={styles.topSection}
         >
           <Image
-            source={require('../../assets/fruits.webp')}
+            source={require('../../../assets/fruits.webp')}
             style={styles.fruitOverlay}
             resizeMode="contain"
           />
@@ -368,7 +368,7 @@ function NutritionWellnessSection({ onBack, onNavigateAll, onNavigateSleep, onNa
           >
             <View style={styles.dailyIconWrap}>
               <Image
-                source={require('../../assets/foodplate.webp')}
+                source={require('../../../assets/foodplate.webp')}
                 style={styles.dailyPlateImage}
                 resizeMode="contain"
               />

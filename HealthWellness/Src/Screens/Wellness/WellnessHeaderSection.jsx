@@ -14,10 +14,10 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text } from '../../components/TextWrapper';
-import PressableCard from '../components/PressableCard';
-import AnimatedCounter from '../components/AnimatedCounter';
-import useParallaxHeader from '../hooks/useParallaxHeader';
+import { Text } from '../../../components/TextWrapper';
+import PressableCard from '../../components/PressableCard';
+import AnimatedCounter from '../../components/AnimatedCounter';
+import useParallaxHeader from '../../hooks/useParallaxHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -41,7 +41,7 @@ const CATEGORIES = [
   { label: 'Nutrition', color: '#16A34A' },
   { label: 'Fitness', color: '#EA580C' },
   { label: 'Medicine', color: '#1D4ED8' },
-  { label: 'Mentrual', color: '#DB2777' },
+  { label: 'Menstrual', color: '#DB2777' },
 ];
 
 const MACROS = [
@@ -61,7 +61,7 @@ const ActiveChip = ({ label, color }) => (
   </View>
 );
 
-function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMentrual, hideHeader = false }) {
+function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigateFitness, onNavigateMedicine, onNavigateMenstrual, hideHeader = false }) {
   const CURRENT_CATEGORY = 'All';
   const topOffset = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState('All');
@@ -177,8 +177,8 @@ function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigat
         onNavigateMedicine();
       }
 
-      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') {
-        onNavigateMentrual();
+      if (label === 'Menstrual' && typeof onNavigateMenstrual === 'function') {
+        onNavigateMenstrual();
       }
       return;
     }
@@ -375,7 +375,7 @@ function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigat
             <View style={styles.calorieTopRow}>
               <View style={styles.plateCircle}>
                 <Image 
-                  source={require('../../assets/food.webp')} 
+                  source={require('../../../assets/food.webp')} 
                   style={styles.foodImage}
                   resizeMode="contain"
                 />
@@ -472,7 +472,7 @@ function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigat
             <View style={styles.dailyCard}>
               <View style={styles.dailyIconWrap}>
                 <Image
-                  source={require('../../assets/foodplate.webp')}
+                  source={require('../../../assets/foodplate.webp')}
                   style={styles.dailyPlateImage}
                   resizeMode="contain"
                 />
@@ -505,7 +505,7 @@ function WellnessHeaderSection({ onNavigateSleep, onNavigateNutrition, onNavigat
           <View style={styles.insightsCardWrap}>
             <View style={styles.insightsCardShadowLayer}>
               <ImageBackground
-                source={require('../../assets/bg.webp')}
+                source={require('../../../assets/bg.webp')}
                 style={styles.insightsCard}
                 imageStyle={styles.insightsCardImage}
                 resizeMode="cover"

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text } from '../../components/TextWrapper';
+import { Text } from '../../../components/TextWrapper';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HORIZONTAL_PADDING = 10;
@@ -31,7 +31,7 @@ const CATEGORIES = [
   { label: 'Nutrition', color: '#16A34A' },
   { label: 'Fitness', color: '#EA580C' },
   { label: 'Medicine', color: '#1D4ED8' },
-  { label: 'Mentrual', color: '#DB2777' },
+  { label: 'Menstrual', color: '#DB2777' },
 ];
 
 const ActiveChip = ({ label, color }) => {
@@ -41,7 +41,7 @@ const ActiveChip = ({ label, color }) => {
     <View style={styles.activeChipContainer}>
       {isMedicine ? (
         <ImageBackground
-          source={require('../../assets/medicines.webp')}
+          source={require('../../../assets/medicines.webp')}
           style={styles.activeChipSurface}
           imageStyle={styles.activeMedicineChipImage}
           resizeMode="cover"
@@ -67,7 +67,7 @@ export default function MedicineWellnessSection({
   onNavigateSleep,
   onNavigateNutrition,
   onNavigateFitness,
-  onNavigateMentrual,
+  onNavigateMenstrual,
   hideHeader = false,
 }) {
   const CURRENT_CATEGORY = 'Medicine';
@@ -131,7 +131,7 @@ export default function MedicineWellnessSection({
       if (label === 'Sleep' && typeof onNavigateSleep === 'function') onNavigateSleep();
       if (label === 'Nutrition' && typeof onNavigateNutrition === 'function') onNavigateNutrition();
       if (label === 'Fitness' && typeof onNavigateFitness === 'function') onNavigateFitness();
-      if (label === 'Mentrual' && typeof onNavigateMentrual === 'function') onNavigateMentrual();
+      if (label === 'Menstrual' && typeof onNavigateMenstrual === 'function') onNavigateMenstrual();
       return;
     }
 
@@ -206,7 +206,7 @@ export default function MedicineWellnessSection({
 
         <View style={styles.canvas}>
           <Image
-            source={require('../../assets/medicines.webp')}
+            source={require('../../../assets/medicines.webp')}
             style={styles.topFloatingImage}
             resizeMode="cover"
           />
@@ -214,7 +214,7 @@ export default function MedicineWellnessSection({
           <View style={styles.insightsCardWrap}>
             <View style={styles.insightsCardShadowLayer}>
               <ImageBackground
-                source={require('../../assets/bg.webp')}
+                source={require('../../../assets/bg.webp')}
                 style={styles.insightsCard}
                 imageStyle={styles.insightsCardImage}
                 resizeMode="cover"
@@ -227,7 +227,7 @@ export default function MedicineWellnessSection({
                 </Text>
                 <TouchableOpacity activeOpacity={0.85} style={styles.insightsBtnWrap}>
                   <ImageBackground
-                    source={require('../../assets/medicines.webp')}
+                    source={require('../../../assets/medicines.webp')}
                     style={styles.insightsBtn}
                     imageStyle={styles.insightsBtnImage}
                     resizeMode="cover"
@@ -248,7 +248,7 @@ export default function MedicineWellnessSection({
           </View>
 
           <Image
-            source={require('../../assets/medicines2.webp')}
+            source={require('../../../assets/medicines2.webp')}
             style={styles.bottomFooterImage}
             resizeMode="cover"
           />

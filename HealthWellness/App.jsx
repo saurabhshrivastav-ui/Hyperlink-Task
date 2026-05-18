@@ -8,12 +8,16 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
-import WellnessHeaderSection from "./Src/Screens/WellnessHeaderSection";
-import SleepWellnessSection from "./Src/Screens/SleepWellnessSection";
-import NutritionWellnessSection from "./Src/Screens/NutritionWellnessSection";
-import FitnessWellnessSection from "./Src/Screens/FitnessWellnessSection";
-import MedicineWellnessSection from "./Src/Screens/MedicineWellnessSection";
-import MentrualWellnessSection from "./Src/Screens/MentrualWellnessSection";
+import WellnessHeaderSection from "./Src/Screens/Wellness/WellnessHeaderSection";
+import SleepWellnessSection from "./Src/Screens/Sleep/SleepWellnessSection";
+import NutritionWellnessSection from "./Src/Screens/Nutrition/NutritionWellnessSection";
+import FitnessWellnessSection from "./Src/Screens/Fitness/FitnessWellnessSection";
+import LogActivityScreen from "./Src/Screens/Fitness/LogActivityScreen";
+import MedicineWellnessSection from "./Src/Screens/Medicine/MedicineWellnessSection";
+import MenstrualWellnessSection from "./Src/Screens/Menstrual/MenstrualWellnessSection";
+import MenstrualDetailsForm from "./Src/Screens/Menstrual/MenstrualDetailsForm";
+import PeriodStatistics from "./Src/Screens/Menstrual/PeriodStatistics";
+import MenstrualCalendarScreen from "./Src/Screens/Menstrual/MenstrualCalendarScreen";
 import { Text } from "./components/TextWrapper";
 
 const SCREEN_ORDER = [
@@ -22,11 +26,15 @@ const SCREEN_ORDER = [
   "nutrition",
   "fitness",
   "medicine",
-  "mentrual",
+  "menstrual",
+  "statistics",
+  "menstrualDetails",
+  "menstrualCalendar",
 ];
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState("wellness");
+  const [menstrualDetails, setMenstrualDetails] = useState(null);
   const topOffset =
     Platform.OS === "android" ? (RNStatusBar.currentHeight || 0) + 10 : 18;
 
@@ -46,7 +54,7 @@ export default function App() {
           onNavigateNutrition={() => navigateTo("nutrition")}
           onNavigateFitness={() => navigateTo("fitness")}
           onNavigateMedicine={() => navigateTo("medicine")}
-          onNavigateMentrual={() => navigateTo("mentrual")}
+          onNavigateMenstrual={() => navigateTo("menstrual")}
         />
       );
     }
@@ -60,7 +68,7 @@ export default function App() {
           onNavigateNutrition={() => navigateTo("nutrition")}
           onNavigateFitness={() => navigateTo("fitness")}
           onNavigateMedicine={() => navigateTo("medicine")}
-          onNavigateMentrual={() => navigateTo("mentrual")}
+          onNavigateMenstrual={() => navigateTo("menstrual")}
         />
       );
     }
@@ -74,7 +82,7 @@ export default function App() {
           onNavigateSleep={() => navigateTo("sleep")}
           onNavigateFitness={() => navigateTo("fitness")}
           onNavigateMedicine={() => navigateTo("medicine")}
-          onNavigateMentrual={() => navigateTo("mentrual")}
+          onNavigateMenstrual={() => navigateTo("menstrual")}
         />
       );
     }
@@ -88,7 +96,17 @@ export default function App() {
           onNavigateSleep={() => navigateTo("sleep")}
           onNavigateNutrition={() => navigateTo("nutrition")}
           onNavigateMedicine={() => navigateTo("medicine")}
-          onNavigateMentrual={() => navigateTo("mentrual")}
+          onNavigateMenstrual={() => navigateTo("menstrual")}
+          onNavigateLogActivity={() => navigateTo("logActivity")}
+        />
+      );
+    }
+
+    if (screen === "logActivity") {
+      return (
+        <LogActivityScreen
+          onBack={() => navigateTo("fitness")}
+          onActivityAdded={() => navigateTo("fitness")}
         />
       );
     }
@@ -102,13 +120,38 @@ export default function App() {
           onNavigateSleep={() => navigateTo("sleep")}
           onNavigateNutrition={() => navigateTo("nutrition")}
           onNavigateFitness={() => navigateTo("fitness")}
-          onNavigateMentrual={() => navigateTo("mentrual")}
+          onNavigateMenstrual={() => navigateTo("menstrual")}
+        />
+      );
+    }
+
+    if (screen === "menstrualDetails") {
+      return (
+        <MenstrualDetailsForm
+          onBack={() => navigateTo("menstrual")}
+          onSaveDetails={(details) => {
+            setMenstrualDetails(details);
+            navigateTo("menstrual");
+          }}
+        />
+      );
+    }
+
+    if (screen === "statistics") {
+      return <PeriodStatistics onBack={() => navigateTo("menstrual")} />;
+    }
+
+    if (screen === "menstrualCalendar") {
+      return (
+        <MenstrualCalendarScreen
+          onBack={() => navigateTo("menstrual")}
+          menstrualDetails={menstrualDetails}
         />
       );
     }
 
     return (
-      <MentrualWellnessSection
+      <MenstrualWellnessSection
         hideHeader
         onBack={() => navigateTo("wellness")}
         onNavigateAll={() => navigateTo("wellness")}
@@ -116,6 +159,10 @@ export default function App() {
         onNavigateNutrition={() => navigateTo("nutrition")}
         onNavigateFitness={() => navigateTo("fitness")}
         onNavigateMedicine={() => navigateTo("medicine")}
+        onNavigateStatistics={() => navigateTo("statistics")}
+        onNavigateMenstrualDetails={() => navigateTo("menstrualDetails")}
+        onNavigateMenstrualCalendar={() => navigateTo("menstrualCalendar")}
+        menstrualDetails={menstrualDetails}
       />
     );
   };
@@ -123,29 +170,34 @@ export default function App() {
   return (
     <>
       <StatusBar style="dark" translucent={false} backgroundColor="#F3EFEB" />
-      <View style={[styles.headerBlock, { paddingTop: topOffset }]}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => {
-              if (currentScreen !== "wellness") {
-                navigateTo("wellness");
-              }
-            }}
-          >
-            <Ionicons name="arrow-back" size={25} color="#5A3FB8" />
-          </TouchableOpacity>
-          <View style={styles.titleWrap}>
-            <Text weight="700" style={styles.headerTitle}>
-              Health Wellness
-            </Text>
-            <Text weight="400" style={styles.headerSubtitle}>
-              Build healthy habits, one day at a time.
-            </Text>
+      {currentScreen !== "menstrualDetails" &&
+        currentScreen !== "statistics" &&
+        currentScreen !== "menstrualCalendar" &&
+        currentScreen !== "logActivity" && (
+        <View style={[styles.headerBlock, { paddingTop: topOffset }]}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.backBtn}
+              onPress={() => {
+                if (currentScreen !== "wellness") {
+                  navigateTo("wellness");
+                }
+              }}
+            >
+              <Ionicons name="arrow-back" size={25} color="#5A3FB8" />
+            </TouchableOpacity>
+            <View style={styles.titleWrap}>
+              <Text weight="700" style={styles.headerTitle}>
+                Health Wellness
+              </Text>
+              <Text weight="400" style={styles.headerSubtitle}>
+                Build healthy habits, one day at a time.
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       <View style={styles.screenTransitionWrap}>
         {renderScreen(currentScreen)}
