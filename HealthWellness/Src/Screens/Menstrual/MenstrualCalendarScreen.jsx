@@ -280,19 +280,6 @@ const DayCell = ({ cell, isToday, isSelected, onPress }) => {
         </View>
       )}
 
-      {/* Cycle-day micro badge (top right of cell) */}
-      <View style={cellStyles.cycleBadge}>
-        <Text
-          weight="700"
-          style={[
-            cellStyles.cycleBadgeText,
-            { color: isSolid ? "#FFFFFF" : "#888888" },
-          ]}
-        >
-          {cell.cycleDay}
-        </Text>
-      </View>
-
       {/* Today dot indicator */}
       {isToday && (
         <View style={cellStyles.todayDot}>
@@ -340,12 +327,6 @@ const cellStyles = StyleSheet.create({
   day: { fontSize: 15, lineHeight: 18 },
   daySolid: { fontSize: 15, lineHeight: 18, color: "#FFFFFF" },
   dimDay: { fontSize: 13, color: "#CCCCCC" },
-  cycleBadge: {
-    position: "absolute",
-    top: 0,
-    right: 4,
-  },
-  cycleBadgeText: { fontSize: 9, lineHeight: 11 },
   todayDot: {
     position: "absolute",
     bottom: 2,
@@ -626,7 +607,7 @@ const InfoPanel = ({ cell, cycleLength, periodDuration, onEdit }) => {
 const panelStyles = StyleSheet.create({
   panel: {
     marginHorizontal: 14,
-    marginTop: 14,
+    marginType: 14,
     borderRadius: 18,
     backgroundColor: "#FFFFFF",
     padding: 14,
@@ -1089,8 +1070,6 @@ const styles = StyleSheet.create({
   sheetMonthWrap: {
     flexDirection: "row",
     alignItems: "center",
-
-    
     gap: 7,
     backgroundColor: "rgba(255,255,255,0.85)",
     paddingHorizontal: 14,

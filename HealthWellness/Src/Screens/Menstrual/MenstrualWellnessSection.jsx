@@ -312,47 +312,10 @@ const ActionCard = ({
   </TouchableOpacity>
 );
 
-const LegendChip = ({ phase }) => {
-  const meta = PHASE_META[phase];
-  const isSolid = phase === "period" || phase === "ovulation";
-  const isDashed = phase === "fertile" || phase === "pms";
-  return (
-    <View style={chipStyles.chip}>
-      {isSolid ? (
-        <LinearGradient
-          colors={meta.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={chipStyles.swatch}
-        />
-      ) : isDashed ? (
-        <View
-          style={[
-            chipStyles.swatch,
-            chipStyles.swatchDashed,
-            { borderColor: meta.color, backgroundColor: meta.softColor },
-          ]}
-        />
-      ) : (
-        <View
-          style={[
-            chipStyles.swatch,
-            {
-              backgroundColor: meta.softColor,
-              borderWidth: 1,
-              borderColor: meta.color,
-            },
-          ]}
-        />
-      )}
-      <Text weight="600" style={chipStyles.label}>
-        {meta.label}
-      </Text>
-    </View>
-  );
-};
-
-const DayCell = ({ cell, isToday, isSelected, onPress }) => {
+// ─── Simplified Edit Modal Day Cell ───
+// Only highlights period (pink) days with an animated entrance.
+// All other days render as plain neutral cells.
+const EditDayCell = ({ cell, isToday, isSelected, onPress, animValue }) => {
   if (!cell.isCurrentMonth) {
     return (
       <View style={cellStyles.cell}>
@@ -362,9 +325,8 @@ const DayCell = ({ cell, isToday, isSelected, onPress }) => {
       </View>
     );
   }
-  const meta = PHASE_META[cell.phase];
-  const isSolid = cell.phase === "period" || cell.phase === "ovulation";
-  const isDashed = cell.phase === "fertile" || cell.phase === "pms";
+
+  const isPeriod = cell.phase === "period";
 
   return (
     <TouchableOpacity
@@ -373,36 +335,38 @@ const DayCell = ({ cell, isToday, isSelected, onPress }) => {
       style={cellStyles.cell}
     >
       {isSelected && (
-        <View style={[cellStyles.selectionHalo, { borderColor: meta.color }]} />
+        <View style={[cellStyles.selectionHalo, { borderColor: "#FF4D8D" }]} />
       )}
 
-      {isSolid ? (
-        <LinearGradient
-          colors={meta.gradient}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={[cellStyles.circle, isToday && cellStyles.todayBorder]}
+      {isPeriod ? (
+        <Animated.View
+          style={
+            animValue
+              ? {
+                  opacity: animValue,
+                  transform: [
+                    {
+                      scale: animValue.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.3, 1],
+                      }),
+                    },
+                  ],
+                }
+              : null
+          }
         >
-          <Text weight="700" style={cellStyles.daySolid}>
-            {cell.day}
-          </Text>
-        </LinearGradient>
-      ) : isDashed ? (
-        <View
-          style={[
-            cellStyles.circle,
-            cellStyles.dashedCircle,
-            { borderColor: meta.color, backgroundColor: meta.softColor },
-            isToday && cellStyles.todayBorderThick,
-          ]}
-        >
-          <Text
-            weight={isToday ? "700" : "600"}
-            style={[cellStyles.day, { color: meta.color }]}
+          <LinearGradient
+            colors={["#FF8FB1", "#FF4D8D"]}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            style={[cellStyles.circle, isToday && cellStyles.todayBorder]}
           >
-            {cell.day}
-          </Text>
-        </View>
+            <Text weight="700" style={cellStyles.daySolid}>
+              {cell.day}
+            </Text>
+          </LinearGradient>
+        </Animated.View>
       ) : (
         <View
           style={[
@@ -504,15 +468,25 @@ export default function MenstrualWellnessSection({
     periodDuration,
   );
 
-  // ─── Dynamic Cycle Bars History Generation ───
+  // ─── Cycle Bars: builds from history array + current entered date ───
   const cycleBars = useMemo(() => {
     if (!hasSavedDetails) return [];
-    const history = [];
-    for (let i = 5; i >= 0; i--) {
-      const start = addDays(
-        periodState.currentCycleStart,
-        -(i * periodState.cycleLength),
-      );
+
+    const currentStart = getSafeStartDate(localDetails);
+    const history = Array.isArray(localDetails?.history)
+      ? localDetails.history
+      : [];
+
+    const allStarts = [
+      ...history.map((h) => new Date(h.year, h.month - 1, h.day)),
+      currentStart,
+    ];
+
+    const uniqueStarts = Array.from(
+      new Map(allStarts.map((d) => [d.getTime(), d])).values(),
+    ).sort((a, b) => a.getTime() - b.getTime());
+
+    return uniqueStarts.map((start, idx) => {
       const end = addDays(start, periodState.cycleLength - 1);
       const startStr = start.toLocaleDateString("en-GB", {
         day: "numeric",
@@ -524,18 +498,30 @@ export default function MenstrualWellnessSection({
       });
 
       const totalDays = periodState.cycleLength;
-      const elapsedDays = i === 0 ? Math.max(1, diffInDays(today, start) + 1) : totalDays;
+      const startDiff = diffInDays(today, start);
+      const endDiff = diffInDays(today, end);
 
-      history.push({
-        id: `cycle-${i}`,
-        label: i === 0 ? `${startStr} - Now` : `${startStr} - ${endStr}`,
+      const isActive = startDiff >= 0 && endDiff <= 0;
+      const isPast = endDiff > 0;
+
+      let elapsedDays;
+      if (isPast) {
+        elapsedDays = totalDays;
+      } else if (isActive) {
+        elapsedDays = Math.max(1, startDiff + 1);
+      } else {
+        elapsedDays = 0;
+      }
+
+      return {
+        id: `cycle-${start.getTime()}-${idx}`,
+        label: isActive ? `${startStr} - Now` : `${startStr} - ${endStr}`,
         days: totalDays,
         elapsedDays: Math.min(elapsedDays, totalDays),
-        active: i === 0,
-      });
-    }
-    return history;
-  }, [hasSavedDetails, periodState.currentCycleStart, periodState.cycleLength]);
+        active: isActive,
+      };
+    });
+  }, [hasSavedDetails, localDetails, periodState.cycleLength, today]);
 
   // ─── Interactive Draggable Modal State ───
   const [showEditModal, setShowEditModal] = useState(false);
@@ -610,12 +596,34 @@ export default function MenstrualWellnessSection({
   };
 
   const handleSaveDraft = () => {
+    const previousHistory = Array.isArray(localDetails?.history)
+      ? localDetails.history
+      : [];
+
+    const oldDay = Number(localDetails?.day);
+    const oldMonth = Number(localDetails?.month);
+    const oldYear = Number(localDetails?.year);
+
+    const newDay = draftStartDate.getDate();
+    const newMonth = draftStartDate.getMonth() + 1;
+    const newYear = draftStartDate.getFullYear();
+
+    const isSameDate =
+      oldDay === newDay && oldMonth === newMonth && oldYear === newYear;
+
+    const updatedHistory =
+      !isSameDate && oldDay && oldMonth && oldYear
+        ? [...previousHistory, { day: oldDay, month: oldMonth, year: oldYear }]
+        : previousHistory;
+
     const updatedDetails = {
       ...localDetails,
-      day: draftStartDate.getDate(),
-      month: draftStartDate.getMonth() + 1,
-      year: draftStartDate.getFullYear(),
+      day: newDay,
+      month: newMonth,
+      year: newYear,
+      history: updatedHistory,
     };
+
     setLocalDetails(updatedDetails);
     setShowEditModal(false);
     if (typeof onSaveDetails === "function") onSaveDetails(updatedDetails);
@@ -637,6 +645,39 @@ export default function MenstrualWellnessSection({
       periodDuration,
     ],
   );
+
+  // ─── Period-day staggered entrance animation ───
+  // Single driving value; each period cell interpolates its own slice with delay.
+  const calendarAnim = useRef(new Animated.Value(0)).current;
+
+  // Map of "rowIdx-cellIdx" -> sequential period index, plus total period count.
+  const periodIndexMap = useMemo(() => {
+    const map = {};
+    let idx = 0;
+    editCalendarRows.forEach((row, rowIdx) => {
+      row.forEach((cell, cellIdx) => {
+        if (cell.isCurrentMonth && cell.phase === "period") {
+          map[`${rowIdx}-${cellIdx}`] = idx++;
+        }
+      });
+    });
+    return { map, count: idx };
+  }, [editCalendarRows]);
+
+  // Re-run the staggered animation whenever the modal opens, the user changes
+  // the visible month, or picks a different start date (which shifts pink days).
+  useEffect(() => {
+    if (!isModalRendered) {
+      calendarAnim.setValue(0);
+      return;
+    }
+    calendarAnim.setValue(0);
+    Animated.timing(calendarAnim, {
+      toValue: 1,
+      duration: 900,
+      useNativeDriver: true,
+    }).start();
+  }, [isModalRendered, editCalendarMonth, draftStartDate]);
 
   const handleChipPress = (label, index) => {
     flatListRef.current?.scrollToIndex({
@@ -1179,8 +1220,26 @@ export default function MenstrualWellnessSection({
                           editCalendarMonth.getMonth() &&
                         cell.day === draftStartDate.getDate();
 
+                      // Build a per-period-cell interpolated value so they pop
+                      // in one after another in a stagger.
+                      const pIdx = periodIndexMap.map[`${rowIdx}-${cellIdx}`];
+                      let cellAnim;
+                      if (pIdx !== undefined && periodIndexMap.count > 0) {
+                        const startProgress =
+                          (pIdx / periodIndexMap.count) * 0.5;
+                        const endProgress = Math.min(startProgress + 0.5, 1);
+                        cellAnim = calendarAnim.interpolate({
+                          inputRange:
+                            endProgress > startProgress
+                              ? [startProgress, endProgress]
+                              : [startProgress, startProgress + 0.0001],
+                          outputRange: [0, 1],
+                          extrapolate: "clamp",
+                        });
+                      }
+
                       return (
-                        <DayCell
+                        <EditDayCell
                           key={cellIdx}
                           cell={cell}
                           isToday={isCellToday}
@@ -1188,21 +1247,12 @@ export default function MenstrualWellnessSection({
                           onPress={(pressedCell) =>
                             setDraftStartDate(pressedCell.date)
                           }
+                          animValue={cellAnim}
                         />
                       );
                     })}
                   </View>
                 ))}
-              </View>
-
-              <View style={styles.legendSection}>
-                <View style={styles.legendChips}>
-                  {["period", "fertile", "ovulation", "pms", "safe"].map(
-                    (phase) => (
-                      <LegendChip key={phase} phase={phase} />
-                    ),
-                  )}
-                </View>
               </View>
 
               <View style={styles.sheetFooter}>
@@ -1234,27 +1284,6 @@ export default function MenstrualWellnessSection({
 // ─── Modal Calendar Specific Styles ───
 const CELL_W = Math.floor((SCREEN_WIDTH - 40) / 7);
 const CIRCLE_SIZE = Math.min(CELL_W - 8, 38);
-
-const chipStyles = StyleSheet.create({
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 20,
-    marginRight: 8,
-    marginBottom: 8,
-    shadowColor: "#C4AFEE",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  swatch: { width: 14, height: 14, borderRadius: 7, marginRight: 7 },
-  swatchDashed: { borderWidth: 1.5, borderStyle: "dashed" },
-  label: { fontSize: 11, color: "#3A3A3A" },
-});
 
 const cellStyles = StyleSheet.create({
   cell: {
@@ -1780,12 +1809,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
-  },
-  legendSection: { marginTop: 10, paddingHorizontal: 24 },
-  legendChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
   },
   sheetFooter: { marginTop: 22, paddingTop: 12, paddingHorizontal: 20 },
   confirmBtn: {

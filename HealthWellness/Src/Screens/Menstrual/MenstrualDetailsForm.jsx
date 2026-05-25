@@ -564,19 +564,15 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
   const [monthInput, setMonthInput] = useState("");
   const [yearInput, setYearInput] = useState("");
 
+  // Independent states for the two sliders
   const [cycleLengthValue, setCycleLengthValue] = useState(28);
-  const [nonPeriodDays, setNonPeriodDays] = useState(23);
+  const [menstrualDays, setMenstrualDays] = useState(5);
+
   const [calendarVisible, setCalendarVisible] = useState(false);
 
   const dayInputRef = useRef(null);
   const monthInputRef = useRef(null);
   const yearInputRef = useRef(null);
-
-  const safeCycle = Math.max(1, cycleLengthValue);
-  const periodDuration = Math.max(
-    1,
-    Math.min(safeCycle, safeCycle - Math.max(0, nonPeriodDays)),
-  );
 
   const handleDayInput = (text) => {
     const n = text.replace(/[^0-9]/g, "");
@@ -606,24 +602,11 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
   };
 
   const handleCycleLengthChange = (val) => {
-    const newCycle = val;
-    setCycleLengthValue(newCycle);
-    const targetCycle = Math.max(1, newCycle);
-    const newNonPeriod = Math.max(
-      0,
-      Math.min(targetCycle - 1, targetCycle - periodDuration),
-    );
-    setNonPeriodDays(newNonPeriod);
+    setCycleLengthValue(val);
   };
 
-  const handleNonPeriodDaysChange = (val) => {
-    const upper = Math.max(0, safeCycle - 1);
-    setNonPeriodDays(Math.max(0, Math.min(upper, val)));
-  };
-
-  const handlePeriodDurationChange = (val) => {
-    const clamped = Math.max(1, Math.min(safeCycle, val));
-    setNonPeriodDays(Math.max(0, safeCycle - clamped));
+  const handleMenstrualDaysChange = (val) => {
+    setMenstrualDays(val);
   };
 
   const handleSaveDetails = async () => {
@@ -632,15 +615,11 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
       month: Number(monthInput),
       year: Number(yearInput),
       cycleLength: cycleLengthValue,
-      nonPeriodDays,
-      periodDuration,
+      periodDuration: menstrualDays,
     };
 
     try {
-      // 1. Save core details to Async Database
       await AsyncStorage.setItem("@menstrual_details", JSON.stringify(payload));
-
-      // 2. Clear out any previously stored cycle history so the stats page generates fresh logic
       await AsyncStorage.removeItem("@cycle_history");
     } catch (e) {
       console.error("Error saving menstrual details to AsyncStorage", e);
@@ -661,10 +640,6 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
           year: Number(yearInput),
         }
       : null;
-
-  const nonPeriodMax = Math.max(0, safeCycle - 1);
-  const periodMin = 1;
-  const periodMax = Math.max(periodMin, safeCycle);
 
   return (
     <View style={styles.screen}>
@@ -697,6 +672,7 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* ── Last Period Date Card ── */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.iconContainer}>
@@ -765,6 +741,7 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
             </View>
           </View>
 
+          {/* ── Average Cycle Length Card ── */}
           <View style={styles.card}>
             <View style={styles.cardHeaderAlt}>
               <View style={styles.iconContainer}>
@@ -789,6 +766,7 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
                 <RNText style={styles.valueText}>{cycleLengthValue}</RNText>
               </View>
             </View>
+            {/* Fixed range: 0–60, completely independent */}
             <CustomSlider
               min={0}
               max={60}
@@ -799,33 +777,7 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
             />
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.cardHeaderAlt}>
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons
-                  name="calendar-remove"
-                  size={22}
-                  color="#5B46C5"
-                />
-              </View>
-              <View style={styles.cycleLengthHeader}>
-                <RNText style={styles.cardTitle}>Days without period</RNText>
-                <View style={styles.valueContainer}>
-                  <RNText style={styles.valueText}>{nonPeriodDays}</RNText>
-                </View>
-              </View>
-            </View>
-            <RNText style={styles.sliderLabel}>Days</RNText>
-            <CustomSlider
-              min={0}
-              max={nonPeriodMax}
-              value={nonPeriodDays}
-              onValueChange={handleNonPeriodDaysChange}
-              minLabel="0"
-              maxLabel={String(nonPeriodMax)}
-            />
-          </View>
-
+          {/* ── Total Menstrual Days Card ── */}
           <View style={styles.card}>
             <View style={styles.cardHeaderAlt}>
               <View style={styles.iconContainer}>
@@ -836,22 +788,21 @@ export default function MenstrualDetailsForm({ onBack, onSaveDetails }) {
                 />
               </View>
               <View style={styles.cycleLengthHeader}>
-                <RNText style={styles.cardTitle}>
-                  How many days your periods come?
-                </RNText>
+                <RNText style={styles.cardTitle}>Total menstrual days</RNText>
                 <View style={styles.valueContainer}>
-                  <RNText style={styles.valueText}>{periodDuration}</RNText>
+                  <RNText style={styles.valueText}>{menstrualDays}</RNText>
                 </View>
               </View>
             </View>
             <RNText style={styles.sliderLabel}>Days</RNText>
+            {/* Fixed range: 1–31, completely independent of cycle length */}
             <CustomSlider
-              min={periodMin}
-              max={periodMax}
-              value={periodDuration}
-              onValueChange={handlePeriodDurationChange}
-              minLabel={String(periodMin)}
-              maxLabel={String(periodMax)}
+              min={1}
+              max={31}
+              value={menstrualDays}
+              onValueChange={handleMenstrualDaysChange}
+              minLabel="1"
+              maxLabel="31"
             />
           </View>
 
@@ -1032,4 +983,4 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     letterSpacing: 0.3,
   },
-});
+}); 
