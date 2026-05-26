@@ -167,6 +167,7 @@ function FitnessWellnessSection({
   onNavigateMedicine,
   onNavigateMenstrual,
   onNavigateLogActivity,
+  onNavigateSetGoal,
   hideHeader = false,
 }) {
   const CURRENT_CATEGORY = "Fitness";
@@ -175,16 +176,12 @@ function FitnessWellnessSection({
   const [active, setActive] = useState("Fitness");
   const [hasLoggedActivity, setHasLoggedActivity] = useState(false);
 
-  // ── NEW: tracks whether a live activity session is running ──
   const [isActivityActive, setIsActivityActive] = useState(false);
-
-  // ── NEW: elapsed seconds for live timer ──
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const flatListRef = useRef(null);
   const { scrollHandler } = useParallaxHeader();
 
-  // ── NEW: format seconds → HH:MM:SS ──
   const formatTime = (s) => {
     const h = String(Math.floor(s / 3600)).padStart(2, "0");
     const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
@@ -192,7 +189,6 @@ function FitnessWellnessSection({
     return `${h}:${m}:${sec}`;
   };
 
-  // ── NEW: live timer effect ──
   useEffect(() => {
     if (!isActivityActive) {
       setElapsedSeconds(0);
@@ -202,19 +198,16 @@ function FitnessWellnessSection({
     return () => clearInterval(interval);
   }, [isActivityActive]);
 
-  // ── Handlers ──
   const handleLogActivity = () => {
     setHasLoggedActivity(true);
     setIsActivityActive(false);
   };
 
-  // ── NEW: start a live activity session ──
   const handleStartActivity = () => {
     setHasLoggedActivity(true);
     setIsActivityActive(true);
   };
 
-  // ── NEW: stop the live activity session ──
   const handleStopActivity = () => {
     setIsActivityActive(false);
   };
@@ -362,8 +355,8 @@ function FitnessWellnessSection({
         <View style={styles.topSection}>
           <View>
             <LinearGradient
-              colors={["#FFD890", "#FFF5FF"]}
-              locations={[0.0207, 0.9793]}
+              colors={["#FFD890", "rgba(243, 239, 235, 0)"]} // Changed to fade into the background color smoothly
+              locations={[0.02, 0.9]} // Stops perfectly before the very edge
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 1 }}
               style={styles.topSectionBackdrop}
@@ -418,6 +411,11 @@ function FitnessWellnessSection({
                       <TouchableOpacity
                         activeOpacity={0.85}
                         style={styles.heroBtnWrap}
+                        onPress={() => {
+                          if (typeof onNavigateSetGoal === "function") {
+                            onNavigateSetGoal();
+                          }
+                        }}
                       >
                         <LinearGradient
                           colors={["#E99331", "#FFAF59", "#D47709"]}
@@ -494,7 +492,7 @@ function FitnessWellnessSection({
                   onPress={handleLogActivity}
                 />
 
-                {/* ── Start Activity — now wired to handleStartActivity ── */}
+                {/* ── Start Activity ── */}
                 <FitnessAction
                   icon={
                     <MaterialCommunityIcons
@@ -532,11 +530,6 @@ function FitnessWellnessSection({
           }}
         >
           {/* ── Today's Activities ── */}
-          {/*
-            When isActivityActive === true  → blue border highlight (Image 2 right)
-            When hasLoggedActivity === true → show pills + View Details (Image 2 left)
-            Otherwise                       → "No Activity Logged" + Log button (Image 1)
-          */}
           <View
             style={[
               styles.activitySection,
@@ -548,7 +541,6 @@ function FitnessWellnessSection({
             </Text>
 
             {!hasLoggedActivity ? (
-              /* ── State 1: nothing logged ── */
               <>
                 <Text weight="500" style={styles.activityEmpty}>
                   No Activity Logged
@@ -570,9 +562,7 @@ function FitnessWellnessSection({
                 </PressableCard>
               </>
             ) : (
-              /* ── State 2 & 3: activity logged (with or without live session) ── */
               <>
-                {/* Activity pills with large icon circles */}
                 <View style={styles.activityPillsRow}>
                   {ACTIVITY_PILLS.map(({ name, label }) => (
                     <View key={label} style={styles.activityPillItem}>
@@ -625,14 +615,12 @@ function FitnessWellnessSection({
                 style={styles.deviceCard}
               >
                 <View style={styles.deviceTextWrap}>
-                  {/* Title */}
                   <Text weight="700" style={styles.deviceTitle}>
                     {hasLoggedActivity
                       ? "Boat Abc1 Device Connected!"
                       : "Connect Device"}
                   </Text>
 
-                  {/* Subtitle — changes when live session is active */}
                   <Text weight="400" style={styles.deviceSub}>
                     {hasLoggedActivity
                       ? isActivityActive
@@ -641,15 +629,8 @@ function FitnessWellnessSection({
                       : "Log activities through devices"}
                   </Text>
 
-                  {/*
-                    Meta section:
-                    - isActivityActive  → green dot + live timer + distance
-                    - hasLoggedActivity → static walking stats
-                    - otherwise         → nothing
-                  */}
-                  {hasLoggedActivity && (
-                    isActivityActive ? (
-                      /* ── Live timer row (Image 2 right) ── */
+                  {hasLoggedActivity &&
+                    (isActivityActive ? (
                       <View style={styles.deviceMetaWrap}>
                         <View style={styles.deviceLiveRow}>
                           <View style={styles.deviceLiveDot} />
@@ -662,7 +643,6 @@ function FitnessWellnessSection({
                         </Text>
                       </View>
                     ) : (
-                      /* ── Static stats (Image 2 left) ── */
                       <View style={styles.deviceMetaWrap}>
                         <Text weight="500" style={styles.deviceMetaText}>
                           Walking · Distance: 2.9 km
@@ -674,13 +654,13 @@ function FitnessWellnessSection({
                           Estimated Calories Burnt: 120 kcal
                         </Text>
                       </View>
-                    )
-                  )}
+                    ))}
 
-                  {/* Button: "Stop Activity" when live, else "Log Activity" */}
                   <PressableCard
                     style={styles.deviceLogBtnWrap}
-                    onPress={isActivityActive ? handleStopActivity : handleLogActivity}
+                    onPress={
+                      isActivityActive ? handleStopActivity : handleLogActivity
+                    }
                   >
                     <LinearGradient
                       colors={
@@ -699,7 +679,6 @@ function FitnessWellnessSection({
                   </PressableCard>
                 </View>
 
-                {/* Watch image absolutely positioned */}
                 <View style={styles.watchWrap} pointerEvents="none">
                   <Image
                     source={require("../../../assets/watch.webp")}
@@ -736,7 +715,6 @@ function FitnessWellnessSection({
               </View>
 
               <View style={styles.weeklyCard}>
-                {/* Floating Peach Block */}
                 <View style={styles.weeklyCalorieBlock}>
                   <Text weight="600" style={styles.weeklyCalorieLabel}>
                     Calories Burned
@@ -749,7 +727,6 @@ function FitnessWellnessSection({
                   </View>
                 </View>
 
-                {/* Bar Chart Row */}
                 <View style={styles.weeklyBarsRow}>
                   {WEEKLY_DATA.map((item) => (
                     <View key={item.d} style={styles.weeklyBarCol}>
@@ -925,7 +902,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     backgroundColor: "transparent",
     position: "relative",
-    overflow: "hidden",
+    // REMOVED: overflow: "hidden" to stop cutting off the gradient
   },
   topSectionBackdrop: {
     position: "absolute",
@@ -1084,13 +1061,12 @@ const styles = StyleSheet.create({
   actionTitle: { fontSize: 13, lineHeight: 17 },
   actionSub: { fontSize: 9, lineHeight: 12, color: "#6B7280" },
 
-  /* ── Today's Activities ── */
+  /* Today's Activities */
   activitySection: {
     marginTop: 14,
     paddingHorizontal: 16,
     alignItems: "center",
   },
-  // ── NEW: blue border when live session is active (Image 2 right) ──
   activitySectionActive: {
     borderWidth: 2,
     borderColor: "#3B82F6",
@@ -1164,7 +1140,7 @@ const styles = StyleSheet.create({
   },
   logBtnText: { fontSize: 13, color: "#FFFFFF" },
 
-  /* ── Device card ── */
+  /* Device card */
   deviceCardOuter: {
     marginTop: 16,
     paddingVertical: 4,
@@ -1216,7 +1192,6 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     color: "#111827",
   },
-  // ── NEW: live timer row styles ──
   deviceLiveRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1268,7 +1243,7 @@ const styles = StyleSheet.create({
     height: WATCH_HEIGHT,
   },
 
-  /* ── Weekly Trend ── */
+  /* Weekly Trend */
   weeklyWrap: {
     marginTop: 12,
     paddingHorizontal: 16,
@@ -1370,7 +1345,7 @@ const styles = StyleSheet.create({
   },
   weeklyDayLabelActive: { color: "#1F2937", fontWeight: "700" },
 
-  /* ── Insights ── */
+  /* Insights */
   insightsCardWrap: {
     width: SCREEN_WIDTH - 32,
     alignSelf: "center",

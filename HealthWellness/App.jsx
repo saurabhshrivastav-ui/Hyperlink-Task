@@ -13,6 +13,7 @@ import SleepWellnessSection from "./Src/Screens/Sleep/SleepWellnessSection";
 import NutritionWellnessSection from "./Src/Screens/Nutrition/NutritionWellnessSection";
 import FitnessWellnessSection from "./Src/Screens/Fitness/FitnessWellnessSection";
 import LogActivityScreen from "./Src/Screens/Fitness/LogActivityScreen";
+import SetFitnessGoalScreen from "./Src/Screens/Fitness/SetFitnessGoalScreen"; // ── ADDED IMPORT ──
 import MedicineWellnessSection from "./Src/Screens/Medicine/MedicineWellnessSection";
 import MenstrualWellnessSection from "./Src/Screens/Menstrual/MenstrualWellnessSection";
 import MenstrualDetailsForm from "./Src/Screens/Menstrual/MenstrualDetailsForm";
@@ -30,6 +31,7 @@ const SCREEN_ORDER = [
   "statistics",
   "menstrualDetails",
   "menstrualCalendar",
+  "setFitnessGoal", // ── ADDED TO ORDER ──
 ];
 
 export default function App() {
@@ -98,6 +100,7 @@ export default function App() {
           onNavigateMedicine={() => navigateTo("medicine")}
           onNavigateMenstrual={() => navigateTo("menstrual")}
           onNavigateLogActivity={() => navigateTo("logActivity")}
+          onNavigateSetGoal={() => navigateTo("setFitnessGoal")} // ── ADDED PROP ──
         />
       );
     }
@@ -107,6 +110,15 @@ export default function App() {
         <LogActivityScreen
           onBack={() => navigateTo("fitness")}
           onActivityAdded={() => navigateTo("fitness")}
+        />
+      );
+    }
+
+    // ── ADDED NEW SCREEN ROUTE ──
+    if (screen === "setFitnessGoal") {
+      return (
+        <SetFitnessGoalScreen 
+          onBack={() => navigateTo("fitness")} 
         />
       );
     }
@@ -170,10 +182,12 @@ export default function App() {
   return (
     <>
       <StatusBar style="dark" translucent={false} backgroundColor="#F3EFEB" />
+      {/* ── UPDATED: Hide global header for setFitnessGoal ── */}
       {currentScreen !== "menstrualDetails" &&
         currentScreen !== "statistics" &&
         currentScreen !== "menstrualCalendar" &&
-        currentScreen !== "logActivity" && (
+        currentScreen !== "logActivity" &&
+        currentScreen !== "setFitnessGoal" && ( 
         <View style={[styles.headerBlock, { paddingTop: topOffset }]}>
           <View style={styles.headerRow}>
             <TouchableOpacity

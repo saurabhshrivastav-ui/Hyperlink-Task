@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -11,10 +11,13 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "../../../components/TextWrapper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const WEEK_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+
+const STORAGE_KEY = "@menstrual_details";
 
 // Layout — airy grid (image 2 style) with circular date markers
 const GRID_H_PADDING = 14;
@@ -771,23 +774,46 @@ export default function MenstrualCalendarScreen({
   const topOffset =
     Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
 
+  // Source of truth: seed from the prop, then hydrate from AsyncStorage so any
+  // start-date / cycle edits saved on the Wellness screen show up here too.
+  const [details, setDetails] = useState(menstrualDetails);
+
+  const reload = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        setDetails(JSON.parse(raw));
+        return;
+      }
+    } catch (e) {
+      console.warn("MenstrualCalendar: failed to read menstrual details", e);
+    }
+    if (menstrualDetails) setDetails(menstrualDetails);
+  }, [menstrualDetails]);
+
+  // Runs on mount and whenever the parent pushes a new prop. The screen
+  // remounts on navigation, so it always reflects the latest saved data.
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
   const periodState = useMemo(
-    () => getPeriodState(menstrualDetails),
+    () => getPeriodState(details),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      menstrualDetails?.day,
-      menstrualDetails?.month,
-      menstrualDetails?.year,
-      menstrualDetails?.cycleLength,
-      menstrualDetails?.nonPeriodDays,
-      menstrualDetails?.periodDuration,
+      details?.day,
+      details?.month,
+      details?.year,
+      details?.cycleLength,
+      details?.nonPeriodDays,
+      details?.periodDuration,
     ],
   );
 
   const periodDuration = useMemo(
-    () => derivePeriodDuration(menstrualDetails),
+    () => derivePeriodDuration(details),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [menstrualDetails],
+    [details],
   );
 
   const today = normalizeDate(new Date());

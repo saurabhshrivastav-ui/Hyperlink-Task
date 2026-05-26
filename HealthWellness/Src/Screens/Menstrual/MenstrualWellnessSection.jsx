@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, {
   Path,
   Circle,
@@ -34,6 +35,8 @@ const AVAILABLE_WIDTH =
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
 const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
+
+const STORAGE_KEY = "@menstrual_details";
 
 const CATEGORIES = [
   { label: "All", color: "#CD8CFF" },
@@ -595,7 +598,7 @@ export default function MenstrualWellnessSection({
     setShowEditModal(true);
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     const previousHistory = Array.isArray(localDetails?.history)
       ? localDetails.history
       : [];
@@ -626,6 +629,15 @@ export default function MenstrualWellnessSection({
 
     setLocalDetails(updatedDetails);
     setShowEditModal(false);
+
+    // Persist to the shared key so MenstrualCalendarScreen and
+    // PeriodStatistics pick up the new start date when they next mount.
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDetails));
+    } catch (e) {
+      console.warn("Failed to persist edited menstrual details", e);
+    }
+
     if (typeof onSaveDetails === "function") onSaveDetails(updatedDetails);
   };
 

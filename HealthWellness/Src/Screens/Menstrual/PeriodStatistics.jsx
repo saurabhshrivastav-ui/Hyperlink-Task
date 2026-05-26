@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -10,11 +10,14 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "../../../components/TextWrapper";
 
 const { width } = Dimensions.get("window");
 const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
 const CARD_WIDTH = clamp(width - 32, 300, 360);
+
+const STORAGE_KEY = "@menstrual_details";
 
 // ─── Date Helpers & Logic ───
 const normalizeDate = (date) =>
@@ -130,46 +133,58 @@ export default function PeriodStatistics({ onBack, menstrualDetails }) {
   const topOffset =
     Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
 
-  const periodState = useMemo(
-    () => getPeriodState(menstrualDetails),
-    [menstrualDetails],
-  );
+  // Source of truth: seed from the prop, then hydrate from AsyncStorage so any
+  // edits saved on the Wellness / Edit-Details screen are reflected here.
+  const [details, setDetails] = useState(menstrualDetails);
+
+  const reload = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        setDetails(JSON.parse(raw));
+        return;
+      }
+    } catch (e) {
+      console.warn("PeriodStatistics: failed to read menstrual details", e);
+    }
+    if (menstrualDetails) setDetails(menstrualDetails);
+  }, [menstrualDetails]);
+
+  // Runs on mount and whenever the parent pushes a new prop. Because this
+  // screen remounts on navigation, it always picks up the latest saved data.
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const periodState = useMemo(() => getPeriodState(details), [details]);
   const periodDuration = Math.max(
     1,
-    Math.round(Number(menstrualDetails?.periodDuration) || 5),
+    Math.round(Number(details?.periodDuration) || 5),
   );
 
   const hasSavedDetails = useMemo(() => {
-    const day = Number(menstrualDetails?.day),
-      month = Number(menstrualDetails?.month),
-      year = Number(menstrualDetails?.year);
+    const day = Number(details?.day),
+      month = Number(details?.month),
+      year = Number(details?.year);
     if (!day || !month || !year) return false;
     const candidate = new Date(year, month - 1, day);
     return (
       !Number.isNaN(candidate.getTime()) && candidate.getDate() === day
     );
-  }, [menstrualDetails]);
+  }, [details]);
 
-  // ─── Cycle Bars Logic ───
+  // ─── Cycle Bars Logic (Matched with MenstrualWellnessSection) ───
   const cycleBars = useMemo(() => {
+    if (!hasSavedDetails) return [];
+
     const todayDate = normalizeDate(new Date());
-    
-    const history = Array.isArray(menstrualDetails?.history)
-      ? menstrualDetails.history
-      : [];
+    const currentStart = getSafeStartDate(details);
+    const history = Array.isArray(details?.history) ? details.history : [];
 
-    // 1. Gather all logged history dates
-    const allStarts = history.map((h) => new Date(h.year, h.month - 1, h.day));
-
-    // 2. Add the most recent explicit saved date
-    if (hasSavedDetails) {
-      allStarts.push(getSafeStartDate(menstrualDetails));
-    }
-
-    // 3. EXPLICITLY push the mathematically extrapolated current cycle.
-    // This guarantees that AT LEAST ONE cycle will always evaluate as 'active', 
-    // solving the issue of the empty/missing active bar.
-    allStarts.push(periodState.currentCycleStart);
+    const allStarts = [
+      ...history.map((h) => new Date(h.year, h.month - 1, h.day)),
+      currentStart,
+    ];
 
     // Deduplicate and sort oldest → newest
     const uniqueStarts = Array.from(
@@ -212,12 +227,7 @@ export default function PeriodStatistics({ onBack, menstrualDetails }) {
         active: isActive,
       };
     });
-  }, [
-    hasSavedDetails, 
-    menstrualDetails, 
-    periodState.cycleLength, 
-    periodState.currentCycleStart
-  ]);
+  }, [hasSavedDetails, details, periodState.cycleLength]);
 
   const todayDisplay = normalizeDate(new Date());
 
