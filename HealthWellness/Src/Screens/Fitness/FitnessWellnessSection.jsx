@@ -22,24 +22,20 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HORIZONTAL_PADDING = 10;
 const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
-const AVAILABLE_WIDTH =
-  SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - TOTAL_GAPS_WIDTH;
+const AVAILABLE_WIDTH = SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
 const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
 const FITNESS_LAYER_TOP = "#FFD890";
 const SUN_RAY_COUNT = 30;
 
-// Device card exact dimensions
 const DEVICE_CARD_WIDTH = 323;
 const DEVICE_CARD_HEIGHT = 105;
 const DEVICE_CARD_BORDER_RADIUS = 10;
 
-// Watch exact dimensions
 const WATCH_WIDTH = 60.77;
 const WATCH_HEIGHT = 108;
 
-// Weekly Trend exact dimensions from spec
 const WEEKLY_CARD_WIDTH = 279;
 const WEEKLY_CARD_HEIGHT = 137;
 
@@ -69,7 +65,6 @@ const ACTIVITY_PILLS = [
   { name: "swim", label: "Swimming" },
 ];
 
-// ─── Active chip ────────────────────────────────────────────────────────────
 const ActiveChip = ({ label, color }) => {
   const isFitness = label === "Fitness";
   return (
@@ -92,7 +87,6 @@ const ActiveChip = ({ label, color }) => {
   );
 };
 
-// ─── Action card ─────────────────────────────────────────────────────────────
 const FitnessAction = ({
   icon,
   title,
@@ -158,8 +152,7 @@ const FitnessAction = ({
   );
 };
 
-// ─── Main component ───────────────────────────────────────────────────────────
-function FitnessWellnessSection({
+const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
   onBack,
   onNavigateAll,
   onNavigateSleep,
@@ -168,13 +161,32 @@ function FitnessWellnessSection({
   onNavigateMenstrual,
   onNavigateLogActivity,
   onNavigateSetGoal,
+  onNavigateHistory, // <--- ADDED NAVIGATION PROP
+  goal,
+  burned,
   hideHeader = false,
+  route,
+  navigation,
 }) {
   const CURRENT_CATEGORY = "Fitness";
-  const topOffset =
-    Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
+  const topOffset = Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState("Fitness");
+
   const [hasLoggedActivity, setHasLoggedActivity] = useState(false);
+  
+  const [currentGoal, setCurrentGoal] = useState(800);
+  const [currentBurned, setCurrentBurned] = useState(240);
+
+  useEffect(() => {
+    const incomingGoal = route?.params?.goal ?? goal;
+    const incomingBurned = route?.params?.burned ?? burned;
+
+    if (incomingGoal !== undefined || incomingBurned !== undefined) {
+      setHasLoggedActivity(true);
+      if (incomingGoal !== undefined) setCurrentGoal(incomingGoal);
+      if (incomingBurned !== undefined) setCurrentBurned(incomingBurned);
+    }
+  }, [route?.params?.goal, route?.params?.burned, goal, burned]);
 
   const [isActivityActive, setIsActivityActive] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -199,8 +211,14 @@ function FitnessWellnessSection({
   }, [isActivityActive]);
 
   const handleLogActivity = () => {
-    setHasLoggedActivity(true);
     setIsActivityActive(false);
+    
+    // Trigger the navigation up to App.jsx
+    if (typeof onNavigateLogActivity === "function") {
+      onNavigateLogActivity();
+    } else if (navigation) {
+      navigation.navigate("LogActivity");
+    }
   };
 
   const handleStartActivity = () => {
@@ -242,16 +260,11 @@ function FitnessWellnessSection({
       viewPosition: 0.5,
     });
     if (label !== CURRENT_CATEGORY) {
-      if (label === "All" && typeof onNavigateAll === "function")
-        onNavigateAll();
-      if (label === "Sleep" && typeof onNavigateSleep === "function")
-        onNavigateSleep();
-      if (label === "Nutrition" && typeof onNavigateNutrition === "function")
-        onNavigateNutrition();
-      if (label === "Medicine" && typeof onNavigateMedicine === "function")
-        onNavigateMedicine();
-      if (label === "Menstrual" && typeof onNavigateMenstrual === "function")
-        onNavigateMenstrual();
+      if (label === "All" && typeof onNavigateAll === "function") onNavigateAll();
+      if (label === "Sleep" && typeof onNavigateSleep === "function") onNavigateSleep();
+      if (label === "Nutrition" && typeof onNavigateNutrition === "function") onNavigateNutrition();
+      if (label === "Medicine" && typeof onNavigateMedicine === "function") onNavigateMedicine();
+      if (label === "Menstrual" && typeof onNavigateMenstrual === "function") onNavigateMenstrual();
       return;
     }
     setActive(CURRENT_CATEGORY);
@@ -309,7 +322,13 @@ function FitnessWellnessSection({
               <TouchableOpacity
                 activeOpacity={0.8}
                 style={styles.backBtn}
-                onPress={onBack}
+                onPress={() => {
+                  if (typeof onBack === "function") {
+                    onBack();
+                  } else if (navigation) {
+                    navigation.goBack();
+                  }
+                }}
               >
                 <Ionicons name="arrow-back" size={25} color="#5A3FB8" />
               </TouchableOpacity>
@@ -355,8 +374,8 @@ function FitnessWellnessSection({
         <View style={styles.topSection}>
           <View>
             <LinearGradient
-              colors={["#FFD890", "rgba(243, 239, 235, 0)"]} // Changed to fade into the background color smoothly
-              locations={[0.02, 0.9]} // Stops perfectly before the very edge
+              colors={["#FFD890", "rgba(243, 239, 235, 0)"]}
+              locations={[0.02, 0.9]}
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 1 }}
               style={styles.topSectionBackdrop}
@@ -393,11 +412,11 @@ function FitnessWellnessSection({
                         </Text>
                         <View style={styles.heroStatsRow}>
                           <Text weight="800" style={styles.heroStatsValue}>
-                            240
+                            {currentBurned}
                           </Text>
                           <Text weight="600" style={styles.heroStatsOf}>
                             {" "}
-                            / 800
+                            / {currentGoal}
                           </Text>
                           <Text weight="600" style={styles.heroStatsUnit}>
                             {" "}
@@ -414,6 +433,8 @@ function FitnessWellnessSection({
                         onPress={() => {
                           if (typeof onNavigateSetGoal === "function") {
                             onNavigateSetGoal();
+                          } else if (navigation) {
+                            navigation.navigate("SetFitnessGoal");
                           }
                         }}
                       >
@@ -475,15 +496,8 @@ function FitnessWellnessSection({
               }}
             >
               <View style={styles.actionsRow}>
-                {/* ── Log Activity ── */}
                 <FitnessAction
-                  icon={
-                    <MaterialCommunityIcons
-                      name="run"
-                      size={14}
-                      color="#E67E22"
-                    />
-                  }
+                  icon={<MaterialCommunityIcons name="run" size={14} color="#E67E22" />}
                   title="Log Activity"
                   subtitle="Last :45min walk"
                   titleColor="#E67E22"
@@ -491,16 +505,8 @@ function FitnessWellnessSection({
                   containerStyle={styles.actionItemSpacing}
                   onPress={handleLogActivity}
                 />
-
-                {/* ── Start Activity ── */}
                 <FitnessAction
-                  icon={
-                    <MaterialCommunityIcons
-                      name="timer-refresh"
-                      size={14}
-                      color="#EF4444"
-                    />
-                  }
+                  icon={<MaterialCommunityIcons name="timer-refresh" size={14} color="#EF4444" />}
                   title="Start Activity"
                   subtitle="Last :45min walk"
                   titleColor="#EF4444"
@@ -508,8 +514,6 @@ function FitnessWellnessSection({
                   containerStyle={styles.actionItemSpacing}
                   onPress={handleStartActivity}
                 />
-
-                {/* ── Devices ── */}
                 <FitnessAction
                   icon={<Feather name="link" size={14} color="#2563EB" />}
                   title="Devices"
@@ -580,7 +584,6 @@ function FitnessWellnessSection({
                   ))}
                 </View>
 
-                {/* View Details Button */}
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => {
@@ -697,9 +700,16 @@ function FitnessWellnessSection({
                 <Text weight="700" style={styles.weeklyTitle}>
                   Weekly Trend
                 </Text>
+                {/* ── UPDATED NAVIGATION ONPRESS ── */}
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => {}}
+                  onPress={() => {
+                    if (typeof onNavigateHistory === "function") {
+                      onNavigateHistory({ initialTab: "Week" });
+                    } else if (navigation) {
+                      navigation.navigate("FitnessHistory", { initialTab: "Week" });
+                    }
+                  }}
                   style={{ flexDirection: "row", alignItems: "center" }}
                 >
                   <Text weight="600" style={styles.weeklyLink}>
@@ -722,7 +732,7 @@ function FitnessWellnessSection({
                   <View style={styles.weeklyCalorieValueRow}>
                     <Text style={styles.weeklyCalorieEmoji}>🔥</Text>
                     <Text weight="700" style={styles.weeklyCalorieValue}>
-                      250 cal
+                      {currentBurned} cal
                     </Text>
                   </View>
                 </View>
@@ -805,15 +815,13 @@ function FitnessWellnessSection({
       </ScrollView>
     </View>
   );
-}
+});
 
-export default React.memo(FitnessWellnessSection);
+export default FitnessWellnessSection;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F3EFEB" },
   scrollContent: { paddingBottom: 16 },
-
-  /* Header */
   headerBlock: {
     paddingHorizontal: 16,
     paddingBottom: 4,
@@ -835,8 +843,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     color: "#1A1A1A",
   },
-
-  /* Chips */
   chipRowContainer: {
     paddingHorizontal: HORIZONTAL_PADDING,
     paddingTop: 2,
@@ -895,14 +901,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   inactiveChipText: { fontSize: 11, textAlign: "center" },
-
-  /* Hero */
   topSection: {
     marginTop: 0,
     paddingBottom: 12,
     backgroundColor: "transparent",
     position: "relative",
-    // REMOVED: overflow: "hidden" to stop cutting off the gradient
   },
   topSectionBackdrop: {
     position: "absolute",
@@ -1005,8 +1008,6 @@ const styles = StyleSheet.create({
     borderColor: "#F9E3BA",
     borderStyle: "dashed",
   },
-
-  /* Action cards */
   actionsRow: {
     marginTop: 12,
     paddingHorizontal: 16,
@@ -1060,8 +1061,6 @@ const styles = StyleSheet.create({
   actionIcon: { marginBottom: 2 },
   actionTitle: { fontSize: 13, lineHeight: 17 },
   actionSub: { fontSize: 9, lineHeight: 12, color: "#6B7280" },
-
-  /* Today's Activities */
   activitySection: {
     marginTop: 14,
     paddingHorizontal: 16,
@@ -1104,8 +1103,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: "#1F2937",
   },
-
-  /* View Details button */
   viewDetailsBtnWrap: {
     marginTop: 20,
     borderRadius: 20,
@@ -1126,8 +1123,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   viewDetailsBtnText: { fontSize: 13, color: "#FFFFFF" },
-
-  /* Log activity button (empty state) */
   logBtnWrap: { marginTop: 20, borderRadius: 20, overflow: "hidden" },
   activityLogBtnWrap: { alignSelf: "center" },
   logBtn: {
@@ -1139,8 +1134,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   logBtnText: { fontSize: 13, color: "#FFFFFF" },
-
-  /* Device card */
   deviceCardOuter: {
     marginTop: 16,
     paddingVertical: 4,
@@ -1242,8 +1235,6 @@ const styles = StyleSheet.create({
     width: WATCH_WIDTH,
     height: WATCH_HEIGHT,
   },
-
-  /* Weekly Trend */
   weeklyWrap: {
     marginTop: 12,
     paddingHorizontal: 16,
@@ -1344,8 +1335,6 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   weeklyDayLabelActive: { color: "#1F2937", fontWeight: "700" },
-
-  /* Insights */
   insightsCardWrap: {
     width: SCREEN_WIDTH - 32,
     alignSelf: "center",

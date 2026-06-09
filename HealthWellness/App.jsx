@@ -13,37 +13,27 @@ import SleepWellnessSection from "./Src/Screens/Sleep/SleepWellnessSection";
 import NutritionWellnessSection from "./Src/Screens/Nutrition/NutritionWellnessSection";
 import FitnessWellnessSection from "./Src/Screens/Fitness/FitnessWellnessSection";
 import LogActivityScreen from "./Src/Screens/Fitness/LogActivityScreen";
-import SetFitnessGoalScreen from "./Src/Screens/Fitness/SetFitnessGoalScreen"; // ── ADDED IMPORT ──
+import SetFitnessGoalScreen from "./Src/Screens/Fitness/SetFitnessGoalScreen";
 import MedicineWellnessSection from "./Src/Screens/Medicine/MedicineWellnessSection";
 import MenstrualWellnessSection from "./Src/Screens/Menstrual/MenstrualWellnessSection";
 import MenstrualDetailsForm from "./Src/Screens/Menstrual/MenstrualDetailsForm";
 import PeriodStatistics from "./Src/Screens/Menstrual/PeriodStatistics";
 import MenstrualCalendarScreen from "./Src/Screens/Menstrual/MenstrualCalendarScreen";
+// Import the History Component
+import FitnessHistory from "./Src/Screens/Fitness/Fitnesshistory"; 
 import { Text } from "./components/TextWrapper";
-
-const SCREEN_ORDER = [
-  "wellness",
-  "sleep",
-  "nutrition",
-  "fitness",
-  "medicine",
-  "menstrual",
-  "statistics",
-  "menstrualDetails",
-  "menstrualCalendar",
-  "setFitnessGoal", // ── ADDED TO ORDER ──
-];
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState("wellness");
+  const [routeParams, setRouteParams] = useState({});
   const [menstrualDetails, setMenstrualDetails] = useState(null);
-  const topOffset =
-    Platform.OS === "android" ? (RNStatusBar.currentHeight || 0) + 10 : 18;
+  const [fitnessData, setFitnessData] = useState({ goal: undefined, burned: undefined });
 
-  const navigateTo = (screen) => {
-    if (screen === currentScreen) {
-      return;
-    }
+  const topOffset = Platform.OS === "android" ? (RNStatusBar.currentHeight || 0) + 10 : 18;
+
+  const navigateTo = (screen, params = {}) => {
+    if (screen === currentScreen) return;
+    setRouteParams(params);
     setCurrentScreen(screen);
   };
 
@@ -93,6 +83,8 @@ export default function App() {
       return (
         <FitnessWellnessSection
           hideHeader
+          // goal={fitnessData.goal}
+          burned={fitnessData.burned}
           onBack={() => navigateTo("wellness")}
           onNavigateAll={() => navigateTo("wellness")}
           onNavigateSleep={() => navigateTo("sleep")}
@@ -100,7 +92,19 @@ export default function App() {
           onNavigateMedicine={() => navigateTo("medicine")}
           onNavigateMenstrual={() => navigateTo("menstrual")}
           onNavigateLogActivity={() => navigateTo("logActivity")}
-          onNavigateSetGoal={() => navigateTo("setFitnessGoal")} // ── ADDED PROP ──
+          onNavigateSetGoal={() => navigateTo("setFitnessGoal")}
+          // Handle navigation sent by the View Stats button
+          onNavigateHistory={(params) => navigateTo("fitnessHistory", params)} 
+        />
+      );
+    }
+
+    // New render block handling History routing logic
+    if (screen === "fitnessHistory") {
+      return (
+        <FitnessHistory 
+          onBack={() => navigateTo("fitness")} 
+          initialTab={routeParams?.initialTab || "Day"}
         />
       );
     }
@@ -109,16 +113,26 @@ export default function App() {
       return (
         <LogActivityScreen
           onBack={() => navigateTo("fitness")}
-          onActivityAdded={() => navigateTo("fitness")}
+          onActivityAdded={(activityData) => {
+            setFitnessData((prev) => ({
+              goal: prev.goal, 
+              burned: (prev.burned || 240) + (activityData?.kcal || 0), 
+            }));
+            navigateTo("fitness");
+          }}
         />
       );
     }
 
-    // ── ADDED NEW SCREEN ROUTE ──
     if (screen === "setFitnessGoal") {
       return (
         <SetFitnessGoalScreen 
-          onBack={() => navigateTo("fitness")} 
+          onBack={(data) => {
+            if (data && typeof data.goal !== 'undefined') {
+              setFitnessData(prev => ({ ...prev, goal: data.goal, burned: data.burned ?? prev.burned }));
+            }
+            navigateTo("fitness");
+          }} 
         />
       );
     }
@@ -182,12 +196,12 @@ export default function App() {
   return (
     <>
       <StatusBar style="dark" translucent={false} backgroundColor="#F3EFEB" />
-      {/* ── UPDATED: Hide global header for setFitnessGoal ── */}
       {currentScreen !== "menstrualDetails" &&
         currentScreen !== "statistics" &&
         currentScreen !== "menstrualCalendar" &&
         currentScreen !== "logActivity" &&
-        currentScreen !== "setFitnessGoal" && ( 
+        currentScreen !== "setFitnessGoal" &&
+        currentScreen !== "fitnessHistory" && ( // Ensure wrapper header hides when History is open
         <View style={[styles.headerBlock, { paddingTop: topOffset }]}>
           <View style={styles.headerRow}>
             <TouchableOpacity

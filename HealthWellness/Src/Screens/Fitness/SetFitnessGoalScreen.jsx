@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -7,147 +7,126 @@ import {
   StatusBar,
   ScrollView,
   Dimensions,
-  ImageBackground,
   Image,
+  PanResponder,
+  Modal,
+  TextInput,
 } from "react-native";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  Feather,
-  FontAwesome5,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "../../../components/TextWrapper";
-import PressableCard from "../../components/PressableCard";
+import LogActivityScreen from "./LogActivityScreen";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// ─── Dummy Data ─────────────────────────────────────────────────────────────
+export default function SetFitnessGoalScreen({ navigation, onBack }) {
+  const topOffset = Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
 
-const COMPLETED_ACTIVITIES = [
-  {
-    id: 1,
-    title: "Morning Run",
-    time: "Today",
-    details: "5.1 km | 30 min | 350 kcal",
-    icon: "run",
-    color: "#10B981",
-    bg: "#D1FAE5",
-  },
-  {
-    id: 2,
-    title: "Cycling to Work",
-    time: "Yesterday",
-    details: "12.3 km | 45 min | 490 kcal",
-    icon: "bike",
-    color: "#8B5CF6",
-    bg: "#EDE9FE",
-  },
-  {
-    id: 3,
-    title: "Evening Swim",
-    time: "2 days ago",
-    details: "1000 m | 25 min | 210 kcal",
-    icon: "swim",
-    color: "#3B82F6",
-    bg: "#DBEAFE",
-  },
-  {
-    id: 4,
-    title: "Hatha Yoga Session",
-    time: "3 days ago",
-    details: "40 min | -- | 110 kcal",
-    icon: "yoga",
-    color: "#F59E0B",
-    bg: "#FEF3C7",
-  },
-  {
-    id: 5,
-    title: "Walking (Afternoon)",
-    time: "4 days ago",
-    details: "3.2 km | 40 min | 150 kcal",
-    icon: "walk",
-    color: "#10B981",
-    bg: "#D1FAE5",
-  },
-];
+  const MAX_CALORIES = 2000;
+  const [calories, setCalories] = useState(1800);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
 
-const GOAL_CHIPS = [
-  {
-    id: 1,
-    label: "Target steps per day",
-    icon: "shoe-print",
-    family: "MaterialCommunityIcons",
-    color: "#F59E0B",
-  },
-  {
-    id: 2,
-    label: "Total active minutes",
-    icon: "clock-outline",
-    family: "MaterialCommunityIcons",
-    color: "#3B82F6",
-  },
-  {
-    id: 3,
-    label: "Running distance",
-    icon: "run",
-    family: "MaterialCommunityIcons",
-    color: "#10B981",
-  },
-  {
-    id: 4,
-    label: "Gym sessions",
-    icon: "dumbbell",
-    family: "MaterialCommunityIcons",
-    color: "#EF4444",
-  },
-  {
-    id: 5,
-    label: "Swim distance",
-    icon: "swim",
-    family: "MaterialCommunityIcons",
-    color: "#3B82F6",
-  },
-  {
-    id: 6,
-    label: "Cycling distance",
-    icon: "bike",
-    family: "MaterialCommunityIcons",
-    color: "#EC4899",
-  },
-];
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState(String(calories));
 
-// ─── Main Component ─────────────────────────────────────────────────────────
+  const [showTray, setShowTray] = useState(false);
+  const [showLogActivity, setShowLogActivity] = useState(false);
+  const [addedActivities, setAddedActivities] = useState([]);
 
-export default function SetFitnessGoalPage({ onBack }) {
-  const topOffset =
-    Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
+  const [editingActivity, setEditingActivity] = useState(null);
 
-  const renderIcon = (chip) => {
-    if (chip.family === "MaterialCommunityIcons") {
-      return (
-        <MaterialCommunityIcons name={chip.icon} size={16} color={chip.color} />
-      );
-    }
-    return <FontAwesome5 name={chip.icon} size={14} color={chip.color} />;
+  const caloriesRef = useRef(calories);
+  caloriesRef.current = calories;
+  const startCalories = useRef(1800);
+  const trackWidth = useRef(1);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        setScrollEnabled(false);
+        startCalories.current = caloriesRef.current;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (trackWidth.current > 0) {
+          const percentageMoved = gestureState.dx / trackWidth.current;
+          const caloriesMoved = percentageMoved * MAX_CALORIES;
+          let newCalories = startCalories.current + caloriesMoved;
+          if (newCalories > MAX_CALORIES) newCalories = MAX_CALORIES;
+          if (newCalories < 0) newCalories = 0;
+          setCalories(Math.round(newCalories));
+        }
+      },
+      onPanResponderRelease: () => setScrollEnabled(true),
+      onPanResponderTerminate: () => setScrollEnabled(true),
+    }),
+  ).current;
+
+  const handleSaveGoal = () => {
+    let parsed = parseInt(goalInput, 10);
+    if (isNaN(parsed)) parsed = 1800;
+    if (parsed > MAX_CALORIES) parsed = MAX_CALORIES;
+    if (parsed < 0) parsed = 0;
+
+    setCalories(parsed);
+    setGoalInput(String(parsed));
+    setIsEditingGoal(false);
   };
+
+  const fillPercentage = (calories / MAX_CALORIES) * 100;
+  const totalBurned = addedActivities.reduce(
+    (sum, item) => sum + (item.kcal || 0),
+    0,
+  );
+
+  if (showLogActivity) {
+    return (
+      <LogActivityScreen
+        initialActivity={editingActivity}
+        onBack={() => {
+          setEditingActivity(null);
+          setShowLogActivity(false);
+          setShowTray(true);
+        }}
+        onActivityAdded={(newActivity) => {
+          if (newActivity) {
+            if (editingActivity) {
+              setAddedActivities((prev) =>
+                prev.map((a) =>
+                  a.id === editingActivity.id
+                    ? { ...newActivity, id: editingActivity.id }
+                    : a,
+                ),
+              );
+            } else {
+              setAddedActivities((prev) => [...prev, newActivity]);
+            }
+          }
+          setEditingActivity(null);
+          setShowLogActivity(false);
+          setShowTray(true);
+        }}
+      />
+    );
+  }
 
   return (
     <View style={styles.screen}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        scrollEnabled={scrollEnabled}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingTop: topOffset },
         ]}
       >
-        {/* ── Header ── */}
         <View style={styles.headerBlock}>
           <View style={styles.headerRow}>
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.backBtn}
-              onPress={onBack}
+              onPress={onBack || (() => navigation?.goBack())}
             >
               <Ionicons name="arrow-back" size={25} color="#5A3FB8" />
             </TouchableOpacity>
@@ -162,202 +141,305 @@ export default function SetFitnessGoalPage({ onBack }) {
           </View>
         </View>
 
-        {/* ── Hero Card: Today's Activity ── */}
-        <View style={styles.sectionWrap}>
-          <LinearGradient
-            colors={["#FFC470", "#FF9D3A"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroCard}
-          >
-            <Text weight="700" style={styles.heroTitle}>
-              Today's Activity
+        <LinearGradient
+          colors={["rgba(255,255,255,0.8)", "rgba(255,249,238,0.8)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.manualCard}
+        >
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.fireEmoji}>🔥</Text>
+            <Text weight="700" style={styles.cardTitle}>
+              Set Goal Manually
             </Text>
-            <Text weight="500" style={styles.heroSubtitle}>
-              Hi, Sakshi!
-            </Text>
+          </View>
 
-            <View style={styles.heroStatsRow}>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons
-                  name="shoe-print"
-                  size={20}
-                  color="#141414"
-                />
-                <Text weight="800" style={styles.statValue}>
-                  8500
-                </Text>
-                <Text weight="500" style={styles.statLabel}>
-                  steps
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <Ionicons name="location-outline" size={20} color="#141414" />
-                <Text weight="700" style={styles.statValueSmall}>
-                  6.2 km
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons name="fire" size={20} color="#141414" />
-                <Text weight="700" style={styles.statValueSmall}>
-                  410 kcal
-                </Text>
-              </View>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={20}
-                  color="#141414"
-                />
-                <Text weight="700" style={styles.statValueSmall}>
-                  45 min
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.heroMessageWrap}>
-              <Text style={styles.heroMessageEmoji}>👏</Text>
-              <Text weight="500" style={styles.heroMessageText}>
-                Great start today! Focusing on new goals helps build habits.
-              </Text>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* ── Your Completed Activities ── */}
-        <View style={styles.sectionWrap}>
-          <View style={styles.sectionHeaderRow}>
-            <Text weight="700" style={styles.sectionTitle}>
-              Your Completed Activities
-            </Text>
-            <TouchableOpacity style={styles.dropdownBtn}>
-              <Text weight="600" style={styles.dropdownText}>
-                Past 7 Days
-              </Text>
-              <MaterialCommunityIcons
-                name="menu-down"
-                size={18}
-                color="#141414"
+          <View style={styles.sliderContainer}>
+            <View
+              style={styles.sliderTrack}
+              onLayout={(e) => {
+                trackWidth.current = e.nativeEvent.layout.width;
+              }}
+            >
+              <View
+                style={[styles.sliderFill, { width: `${fillPercentage}%` }]}
               />
+            </View>
+            <View
+              style={[styles.sliderThumb, { left: `${fillPercentage}%` }]}
+              {...panResponder.panHandlers}
+            >
+              <MaterialCommunityIcons name="fire" size={14} color="#FFFFFF" />
+            </View>
+          </View>
+
+          <View style={styles.caloriesWrap}>
+            <View style={styles.caloriesValueRow}>
+              {isEditingGoal ? (
+                <TextInput
+                  style={styles.caloriesInput}
+                  value={goalInput}
+                  onChangeText={setGoalInput}
+                  keyboardType="numeric"
+                  autoFocus={true}
+                  onBlur={handleSaveGoal}
+                  onSubmitEditing={handleSaveGoal}
+                  maxLength={4}
+                />
+              ) : (
+                <Text weight="800" style={styles.caloriesNumber}>
+                  {calories}
+                </Text>
+              )}
+
+              <Text style={styles.kcalText}> Kcal</Text>
+
+              {!isEditingGoal && (
+                <TouchableOpacity
+                  style={{ marginLeft: 8 }}
+                  onPress={() => {
+                    setGoalInput(String(calories));
+                    setIsEditingGoal(true);
+                  }}
+                >
+                  <Ionicons name="pencil" size={18} color="#9CA3AF" />
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text weight="400" style={styles.caloriesSubtext}>
+              No. of calories burned per day
+            </Text>
+          </View>
+        </LinearGradient>
+
+        <LinearGradient
+          colors={["#EEF9FF", "#C3EAFF", "#DBF3FF"]}
+          locations={[0.0016, 0.5, 0.9984]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.routineCard}
+        >
+          <View style={styles.routineImageWrap}>
+            <Image
+              source={require("../../../assets/goalpage.webp")}
+              style={styles.routineImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.routineContent}>
+            <View style={styles.routineHeaderRow}>
+              <Text style={styles.fireEmojiSmall}>🔥</Text>
+              <Text weight="700" style={styles.routineTitle}>
+                Set Your Daily Routine
+              </Text>
+            </View>
+            <Text weight="500" style={styles.routineSubtitle}>
+              + Add activities you do regularly
+            </Text>
+            <View style={styles.tagsContainer}>
+              <View style={styles.tag}>
+                <Text weight="500" style={styles.tagText}>
+                  Maintain weight
+                </Text>
+              </View>
+              <View style={styles.tag}>
+                <Text weight="500" style={styles.tagText}>
+                  Lose fat
+                </Text>
+              </View>
+              <View style={styles.tag}>
+                <Text weight="500" style={styles.tagText}>
+                  Build muscle
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.btnShadow}
+              onPress={() => setShowTray(true)}
+            >
+              <LinearGradient
+                colors={["#FAA333", "#F27815"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.addBtn}
+              >
+                <Text weight="600" style={styles.addBtnText}>
+                  Add Activities
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
-
-          <View style={styles.activityList}>
-            {COMPLETED_ACTIVITIES.map((activity, index) => (
-              <View
-                key={activity.id}
-                style={[
-                  styles.activityItem,
-                  index === COMPLETED_ACTIVITIES.length - 1 && {
-                    borderBottomWidth: 0,
-                  },
-                ]}
-              >
-                <View style={styles.activityLeft}>
-                  <View
-                    style={[
-                      styles.activityIconWrap,
-                      { backgroundColor: activity.bg },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={activity.icon}
-                      size={20}
-                      color={activity.color}
-                    />
-                  </View>
-                  <View style={styles.activityTextWrap}>
-                    <Text weight="700" style={styles.activityName}>
-                      {activity.title}
-                    </Text>
-                    <Text weight="500" style={styles.activityDetails}>
-                      {activity.details}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.activityRight}>
-                  <Text
-                    weight="500"
-                    style={[
-                      styles.activityTime,
-                      activity.time === "Today" && {
-                        color: "#10B981",
-                        fontWeight: "700",
-                      },
-                    ]}
-                  >
-                    {activity.time}
-                  </Text>
-                  {activity.time === "Today" && (
-                    <MaterialCommunityIcons
-                      name="check-circle"
-                      size={14}
-                      color="#10B981"
-                      style={{ marginTop: 4 }}
-                    />
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* ── Set a New Weekly Goal ── */}
-        <View style={styles.sectionWrap}>
-          <Text weight="700" style={styles.sectionTitle}>
-            Set a New Weekly Goal
-          </Text>
-
-          <View style={styles.goalGrid}>
-            {GOAL_CHIPS.map((chip) => (
-              <TouchableOpacity
-                key={chip.id}
-                activeOpacity={0.7}
-                style={styles.goalChip}
-              >
-                <View style={styles.goalChipIcon}>{renderIcon(chip)}</View>
-                <Text weight="600" style={styles.goalChipText}>
-                  {chip.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <TouchableOpacity activeOpacity={0.8} style={styles.customGoalBtn}>
-            <Text weight="700" style={styles.customGoalBtnText}>
-              Create Custom Goal
-            </Text>
-          </TouchableOpacity>
-        </View>
+        </LinearGradient>
       </ScrollView>
+
+      <Modal
+        visible={showTray}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowTray(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowTray(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.trayContainer}
+            onPress={() => {}}
+          >
+            <LinearGradient
+              colors={["#E6D5F2", "#FCE0D4"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.trayGradientBox}
+            >
+              <Text weight="700" style={styles.trayHeaderTitle}>
+                Your Daily Activities Target
+              </Text>
+
+              <View style={styles.traySummaryRow}>
+                <View style={styles.summaryLeft}>
+                  <Text style={styles.trayFireEmoji}>🔥</Text>
+
+                  <Text weight="800" style={styles.summaryCalories}>
+                    {totalBurned}
+                    <Text
+                      weight="500"
+                      style={{ fontSize: 18, color: "#6B7280" }}
+                    >
+                      {" "}
+                      / {calories}
+                    </Text>
+                  </Text>
+
+                  <Text weight="500" style={styles.summaryKcalText}>
+                    kcal
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.smallAddBtn}
+                  onPress={() => {
+                    setEditingActivity(null);
+                    setShowTray(false);
+                    setShowLogActivity(true);
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#FAA333", "#F27815"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.smallAddBtnGrad}
+                  >
+                    <Text weight="600" style={styles.smallAddBtnText}>
+                      Add Activities
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                style={{ flex: 1 }}
+              >
+                {addedActivities.length > 0 ? (
+                  addedActivities.map((item, index) => (
+                    <TouchableOpacity
+                      key={item.id || index}
+                      style={styles.activityListItem}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setEditingActivity(item);
+                        setShowTray(false);
+                        setShowLogActivity(true);
+                      }}
+                    >
+                      <View style={styles.activityIconWrap}>
+                        <MaterialCommunityIcons
+                          name={item.icon || "run"}
+                          size={24}
+                          color="#F27815"
+                        />
+                      </View>
+                      <View style={styles.activityMiddle}>
+                        <Text weight="700" style={styles.activityName}>
+                          {item.name}
+                        </Text>
+                        <Text weight="400" style={styles.activitySub}>
+                          {item.time}
+                        </Text>
+                      </View>
+                      <View style={styles.activityRight}>
+                        <Text weight="700" style={styles.activityKcal}>
+                          {item.kcal} kcal
+                        </Text>
+                        <Text weight="400" style={styles.activitySub}>
+                          {item.distance}
+                        </Text>
+                      </View>
+
+                      <View style={{ marginLeft: 12 }}>
+                        <Ionicons name="pencil" size={18} color="#9CA3AF" />
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      color: "#6B7280",
+                      marginTop: 20,
+                    }}
+                  >
+                    No activities added yet.
+                  </Text>
+                )}
+              </ScrollView>
+
+              {/* ── Fixed Submit Button ── */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setShowTray(false);
+                  if (navigation) {
+                    // Navigate back using merge to safely pass parameters to the active screen
+                    navigation.navigate({
+                      name: "FitnessWellnessSection", // Ensure this matches your route name exactly
+                      params: { goal: calories, burned: totalBurned },
+                      merge: true,
+                    });
+                  } else if (typeof onBack === "function") {
+                    onBack({ goal: calories, burned: totalBurned });
+                  }
+                }}
+              >
+                <LinearGradient
+                  colors={["#FAA333", "#D96C12"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.editBtnBox}
+                >
+                  <Text weight="600" style={styles.editBtnText}>
+                    Submit Goal
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#F9F9FB",
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  sectionWrap: {
-    paddingHorizontal: 16,
-    marginTop: 20,
-  },
-
-  /* Header */
-  headerBlock: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  screen: { flex: 1, backgroundColor: "#F7FCF8" },
+  scrollContent: { paddingBottom: 40 },
+  headerBlock: { paddingHorizontal: 16, paddingBottom: 10, marginTop: 10 },
+  headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: {
     width: 28,
     height: 28,
@@ -365,204 +447,219 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 8,
   },
-  titleWrap: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 19,
-    lineHeight: 23,
-    color: "#5C43BF",
-  },
+  titleWrap: { flex: 1 },
+  headerTitle: { fontSize: 19, lineHeight: 23, color: "#5C43BF" },
   headerSubtitle: {
-    marginTop: 1,
+    marginTop: 2,
     fontSize: 12,
     lineHeight: 15,
     color: "#4B5563",
   },
-
-  /* Hero Card */
-  heroCard: {
-    borderRadius: 20,
+  manualCard: {
+    borderRadius: 16,
     padding: 20,
-    shadowColor: "#FF9D3A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  heroTitle: {
-    fontSize: 16,
-    color: "#141414",
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    color: "#141414",
-    marginTop: 2,
-    opacity: 0.8,
-  },
-  heroStatsRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
+    marginHorizontal: 16,
     marginTop: 20,
+    shadowColor: "#BF7BB9",
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 0,
+  },
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
-  statItem: {
-    alignItems: "center",
+  fireEmoji: { fontSize: 20, marginRight: 6 },
+  cardTitle: { fontSize: 16, color: "#141414" },
+  sliderContainer: {
+    height: 40,
+    justifyContent: "center",
+    position: "relative",
   },
-  statValue: {
-    fontSize: 22,
-    color: "#141414",
-    marginTop: 4,
-  },
-  statValueSmall: {
-    fontSize: 14,
-    color: "#141414",
-    marginTop: 8,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#141414",
-    opacity: 0.8,
-  },
-  heroMessageWrap: {
+  sliderTrack: {
+    height: 10,
+    backgroundColor: "#F4EAF7",
+    borderRadius: 5,
+    width: "100%",
     flexDirection: "row",
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 12,
-    padding: 12,
+  },
+  sliderFill: { height: "100%", backgroundColor: "#FBAF41", borderRadius: 5 },
+  sliderThumb: {
+    position: "absolute",
+    marginLeft: -13,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FBAF41",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  caloriesWrap: { alignItems: "flex-end", marginTop: 10 },
+  caloriesValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  caloriesInput: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#141414",
+    padding: 0,
+    margin: 0,
+    minWidth: 50,
+    textAlign: "right",
+    borderBottomWidth: 1,
+    borderBottomColor: "#D1D5DB",
+  },
+  kcalText: { fontSize: 14, color: "#141414" },
+  caloriesNumber: { fontSize: 24, color: "#141414" },
+  caloriesSubtext: { fontSize: 10, color: "#6B7280", marginTop: 2 },
+  routineCard: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    borderRadius: 16,
+    flexDirection: "row",
+    padding: 16,
+    alignItems: "center",
+    shadowColor: "#F3E6F2",
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  routineImageWrap: {
+    width: "35%",
+    justifyContent: "center",
     alignItems: "center",
   },
-  heroMessageEmoji: {
-    fontSize: 18,
-    marginRight: 10,
+  routineImage: { width: 130, height: 110, marginLeft: -10 },
+  routineContent: { width: "65%", paddingLeft: 10 },
+  routineHeaderRow: { flexDirection: "row", alignItems: "center" },
+  fireEmojiSmall: { fontSize: 14, marginRight: 4 },
+  routineTitle: { fontSize: 14, color: "#141414" },
+  routineSubtitle: {
+    fontSize: 10,
+    color: "#4B5563",
+    marginTop: 4,
+    marginBottom: 10,
   },
-  heroMessageText: {
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 14,
+  },
+  tag: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  tagText: { fontSize: 8, color: "#E06B74" },
+  btnShadow: {
+    alignSelf: "flex-start",
+    shadowColor: "#F27815",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  addBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addBtnText: { color: "#FFFFFF", fontSize: 12 },
+  modalOverlay: {
     flex: 1,
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#141414",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
   },
-
-  /* Completed Activities */
-  sectionHeaderRow: {
+  trayContainer: {
+    height: SCREEN_HEIGHT * 0.72,
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
+    overflow: "hidden",
+  },
+  trayGradientBox: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 35,
+  },
+  trayHeaderTitle: {
+    fontSize: 18,
+    color: "#141414",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  traySummaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 16,
-    color: "#141414",
+  summaryLeft: { flexDirection: "row", alignItems: "baseline" },
+  trayFireEmoji: { fontSize: 26, marginRight: 6 },
+  summaryCalories: { fontSize: 36, color: "#141414" },
+  summaryKcalText: { fontSize: 14, color: "#141414", marginLeft: 6 },
+  smallAddBtn: {
+    shadowColor: "#F27815",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  dropdownBtn: {
+  smallAddBtnGrad: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  smallAddBtnText: { color: "#FFF", fontSize: 12 },
+  activityListItem: {
+    backgroundColor: "#FFF",
+    borderRadius: 25,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  dropdownText: {
-    fontSize: 12,
-    color: "#141414",
-    marginRight: 2,
-  },
-  activityList: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingHorizontal: 16,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  activityItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  activityLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   activityIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: "#F4ECFA",
     justifyContent: "center",
-    marginRight: 12,
-  },
-  activityTextWrap: {
-    justifyContent: "center",
-  },
-  activityName: {
-    fontSize: 14,
-    color: "#111827",
-    marginBottom: 2,
-  },
-  activityDetails: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  activityRight: {
-    alignItems: "flex-end",
-  },
-  activityTime: {
-    fontSize: 12,
-    color: "#9CA3AF",
-  },
-
-  /* New Weekly Goal Section */
-  goalGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 12,
-  },
-  goalChip: {
-    width: "48%",
-    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    marginRight: 16,
   },
-  goalChipIcon: {
-    marginRight: 8,
-    width: 20,
-    alignItems: "center",
-  },
-  goalChipText: {
-    flex: 1,
-    fontSize: 12,
-    color: "#374151",
-  },
-  customGoalBtn: {
+  activityMiddle: { flex: 1 },
+  activityName: { fontSize: 16, color: "#141414", marginBottom: 4 },
+  activitySub: { fontSize: 12, color: "#6B7280" },
+  activityRight: { alignItems: "flex-end" },
+  activityKcal: { fontSize: 16, color: "#141414", marginBottom: 4 },
+  editBtnBox: {
     marginTop: 10,
-    width: "100%",
-    paddingVertical: 14,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: "#5B32D9",
-    alignItems: "center",
+    height: 50,
+    borderRadius: 12,
     justifyContent: "center",
+    alignItems: "center",
   },
-  customGoalBtnText: {
-    color: "#5B32D9",
-    fontSize: 14,
-  },
+  editBtnText: { color: "#FFF", fontSize: 16 },
 });

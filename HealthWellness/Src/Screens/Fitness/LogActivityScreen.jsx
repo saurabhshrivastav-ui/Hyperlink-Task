@@ -71,9 +71,9 @@ const ALL_ACTIVITIES = [
     id: "yoga",
     name: "Yoga",
     icon: "yoga",
-    desc: "Yoga 1 hr burns almost 180kcal..",
+    // desc: "Yoga 1 hr burns almost 180kcal..",
     speeds: [
-      { label: "Light", value: "Low" },
+      // { label: "Light", value: "Low" },
       { label: "Moderate", value: "Med" },
       { label: "Intense", value: "High" },
     ],
@@ -118,7 +118,7 @@ const iconForActivity = (iconName, size = 26, color = "#E67E22") => {
 };
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
-export default function LogActivityScreen({ onBack, onActivityAdded }) {
+export default function LogActivityScreen({ onBack, onActivityAdded, initialActivity }) {
   const topOffset =
     Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
 
@@ -133,9 +133,45 @@ export default function LogActivityScreen({ onBack, onActivityAdded }) {
   const sheetAnim = useRef(new Animated.Value(0)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
 
+  // ── NEW: Auto-open animation when clicking "Edit" on an activity ──
+  useEffect(() => {
+    if (initialActivity) {
+      const act = ALL_ACTIVITIES.find(
+        (a) => a.name.toLowerCase() === initialActivity.name.toLowerCase()
+      );
+      
+      if (act) {
+        setSelectedActivity(act);
+        
+        // Strip out text to leave just the numbers
+        if (initialActivity.time) {
+          setTime(initialActivity.time.replace(/[^0-9.]/g, ""));
+        }
+        if (initialActivity.distance && initialActivity.distance !== "-") {
+          setDistance(initialActivity.distance.replace(/[^0-9.]/g, ""));
+        }
+
+        // Trigger the slide-up animation automatically
+        Animated.parallel([
+          Animated.spring(sheetAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 60,
+            friction: 12,
+          }),
+          Animated.timing(overlayAnim, {
+            toValue: 1,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    }
+  }, [initialActivity]);
+
   const filteredActivities = query.trim()
     ? ALL_ACTIVITIES.filter((a) =>
-        a.name.toLowerCase().includes(query.toLowerCase()),
+        a.name.toLowerCase().includes(query.toLowerCase())
       )
     : [];
 
@@ -182,7 +218,7 @@ export default function LogActivityScreen({ onBack, onActivityAdded }) {
 
   const sheetTranslateY = sheetAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [400, 0],
+    outputRange: [600, 0], 
   });
 
   return (
@@ -344,159 +380,190 @@ export default function LogActivityScreen({ onBack, onActivityAdded }) {
             />
           </Animated.View>
 
-          <Animated.View
-            style={[
-              styles.sheet,
-              { transform: [{ translateY: sheetTranslateY }] },
-            ]}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "padding"}
+            style={styles.keyboardAvoidWrap}
+            pointerEvents="box-none"
           >
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : undefined}
+            <Animated.View
+              style={[
+                styles.sheet,
+                { transform: [{ translateY: sheetTranslateY }] },
+              ]}
             >
               {/* Sheet handle */}
               <View style={styles.sheetHandle} />
 
-              {/* Activity title row */}
-              <View style={styles.sheetTitleRow}>
-                <View style={styles.sheetIconCircle}>
-                  {iconForActivity(selectedActivity.icon, 28, "#E67E22")}
-                </View>
-                <Text weight="700" style={styles.sheetTitle}>
-                  {selectedActivity.name}
-                </Text>
-              </View>
-
-              {/* Speed chips */}
-              <View style={styles.speedRow}>
-                {selectedActivity.speeds.map((s, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    activeOpacity={0.85}
-                    onPress={() => setSelectedSpeedIdx(idx)}
-                    style={[
-                      styles.speedChip,
-                      idx === selectedSpeedIdx && styles.speedChipActive,
-                    ]}
-                  >
-                    <Text
-                      weight="600"
-                      style={[
-                        styles.speedChipLabel,
-                        idx === selectedSpeedIdx && styles.speedChipLabelActive,
-                      ]}
-                    >
-                      {s.label}
-                    </Text>
-                    <Text
-                      weight="400"
-                      style={[
-                        styles.speedChipValue,
-                        idx === selectedSpeedIdx && styles.speedChipValueActive,
-                      ]}
-                    >
-                      {s.value}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Date / Time row */}
-              <View style={styles.fieldRow}>
-                <View style={styles.fieldGroup}>
-                  <Text weight="500" style={styles.fieldLabel}>
-                    Date
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.sheetScrollContent}
+                bounces={false}
+              >
+                {/* Activity title row */}
+                <View style={styles.sheetTitleRow}>
+                  <View style={styles.sheetIconCircle}>
+                    {iconForActivity(selectedActivity.icon, 28, "#E67E22")}
+                  </View>
+                  <Text weight="700" style={styles.sheetTitle}>
+                    {selectedActivity.name}
                   </Text>
-                  <View style={styles.fieldInputWrap}>
-                    <TextInput
-                      style={styles.fieldInput}
-                      value={date}
-                      onChangeText={setDate}
-                      placeholder="DD/MM/YYYY"
-                      placeholderTextColor="#9CA3AF"
-                    />
-                    <Ionicons
-                      name="calendar-outline"
-                      size={16}
-                      color="#9CA3AF"
-                      style={styles.fieldSuffix}
-                    />
+                </View>
+
+                {/* Speed chips */}
+                <View style={styles.speedRow}>
+                  {selectedActivity.speeds.map((s, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      activeOpacity={0.85}
+                      onPress={() => setSelectedSpeedIdx(idx)}
+                      style={[
+                        styles.speedChip,
+                        idx === selectedSpeedIdx && styles.speedChipActive,
+                      ]}
+                    >
+                      <Text
+                        weight="600"
+                        style={[
+                          styles.speedChipLabel,
+                          idx === selectedSpeedIdx && styles.speedChipLabelActive,
+                        ]}
+                      >
+                        {s.label}
+                      </Text>
+                      <Text
+                        weight="400"
+                        style={[
+                          styles.speedChipValue,
+                          idx === selectedSpeedIdx && styles.speedChipValueActive,
+                        ]}
+                      >
+                        {s.value}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Date / Time row */}
+                <View style={styles.fieldRow}>
+                  <View style={styles.fieldGroup}>
+                    <Text weight="500" style={styles.fieldLabel}>
+                      Date
+                    </Text>
+                    <View style={styles.fieldInputWrap}>
+                      <TextInput
+                        style={styles.fieldInput}
+                        value={date}
+                        onChangeText={setDate}
+                        placeholder="DD/MM/YYYY"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                      <Ionicons
+                        name="calendar-outline"
+                        size={16}
+                        color="#9CA3AF"
+                        style={styles.fieldSuffix}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={[styles.fieldGroup, { marginLeft: 12 }]}>
+                    <Text weight="500" style={styles.fieldLabel}>
+                      Time
+                    </Text>
+                    <View style={styles.fieldInputWrap}>
+                      <TextInput
+                        style={styles.fieldInput}
+                        value={time}
+                        onChangeText={setTime}
+                        placeholder="60"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric"
+                      />
+                      <Text weight="500" style={styles.fieldSuffixText}>
+                        min
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                <View style={[styles.fieldGroup, { marginLeft: 12 }]}>
+                {/* Distance / Laps */}
+                <View style={styles.fieldGroup}>
                   <Text weight="500" style={styles.fieldLabel}>
-                    Time
+                    {selectedActivity.id === "swimming" ? "Laps" : "Distance"}
                   </Text>
                   <View style={styles.fieldInputWrap}>
                     <TextInput
-                      style={styles.fieldInput}
-                      value={time}
-                      onChangeText={setTime}
-                      placeholder="60"
+                      style={[styles.fieldInput, { flex: 1 }]}
+                      value={distance}
+                      onChangeText={setDistance}
+                      placeholder={
+                        selectedActivity.id === "swimming"
+                          ? "Enter laps"
+                          : "Enter your distance"
+                      }
                       placeholderTextColor="#9CA3AF"
                       keyboardType="numeric"
                     />
                     <Text weight="500" style={styles.fieldSuffixText}>
-                      min
+                      {selectedActivity.id === "swimming" ? "laps" : "km"}
                     </Text>
                   </View>
                 </View>
-              </View>
 
-              {/* Distance */}
-              <View style={styles.fieldGroup}>
-                <Text weight="500" style={styles.fieldLabel}>
-                  Distance
-                </Text>
-                <View style={styles.fieldInputWrap}>
-                  <TextInput
-                    style={[styles.fieldInput, { flex: 1 }]}
-                    value={distance}
-                    onChangeText={setDistance}
-                    placeholder="Enter your distance"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="numeric"
-                  />
-                  <Text weight="500" style={styles.fieldSuffixText}>
-                    km
+                {/* Calories estimate */}
+                <View style={styles.calRow}>
+                  <Text style={styles.calEmoji}>🔥</Text>
+                  <Text weight="800" style={styles.calValue}>
+                    {estimatedCal()}
+                  </Text>
+                  <Text weight="500" style={styles.calUnit}>
+                    {" "}
+                    kcal Burned
                   </Text>
                 </View>
-              </View>
 
-              {/* Calories estimate */}
-              <View style={styles.calRow}>
-                <Text style={styles.calEmoji}>🔥</Text>
-                <Text weight="800" style={styles.calValue}>
-                  {estimatedCal()}
-                </Text>
-                <Text weight="500" style={styles.calUnit}>
-                  {" "}
-                  kcal Burned
-                </Text>
-              </View>
-
-              {/* Add Activity button */}
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.addActivityBtn}
-                onPress={() => {
-                  closeSheet();
-                  if (typeof onActivityAdded === "function") onActivityAdded();
-                }}
-              >
-                <LinearGradient
-                  colors={["#F3BA64", "#D87E18"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={styles.addActivityGradient}
+                {/* Add Activity button */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.addActivityBtn}
+                  onPress={() => {
+                    closeSheet();
+                    if (typeof onActivityAdded === "function") {
+                      onActivityAdded({
+                        // Keep the original ID if editing, otherwise generate a new one
+                        id: initialActivity ? initialActivity.id : Math.random().toString(),
+                        name: selectedActivity?.name || "Activity",
+                        icon: selectedActivity?.icon || "run",
+                        time: time ? `${time} mins` : "0 mins",
+                        distance: distance
+                          ? selectedActivity?.id === "swimming"
+                            ? `${distance} laps`
+                            : `${distance} km`
+                          : "-",
+                        kcal: estimatedCal(),
+                      });
+                    }
+                  }}
                 >
-                  <Text weight="700" style={styles.addActivityText}>
-                    + Add Activity
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </KeyboardAvoidingView>
-          </Animated.View>
+                  <LinearGradient
+                    colors={["#F3BA64", "#D87E18"]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.addActivityGradient}
+                  >
+                    <Text weight="700" style={styles.addActivityText}>
+                      {initialActivity ? "Update Activity" : "+ Add Activity"}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </ScrollView>
+
+              {/* ── THE SKIRT ── */}
+              <View style={styles.bottomSkirt} />
+
+            </Animated.View>
+          </KeyboardAvoidingView>
         </>
       )}
     </View>
@@ -650,25 +717,32 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
-  /* Bottom sheet */
+  /* ── KEYBOARD AVOIDING WRAPPER ── */
+  keyboardAvoidWrap: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 11,
+    justifyContent: "flex-end", 
+  },
+
+  /* ── BOTTOM SHEET CONTENT STYLES ── */
   sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 36 : 24,
     paddingTop: 12,
-    zIndex: 11,
+    maxHeight: SCREEN_HEIGHT * 0.85, 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 16,
   },
+  
+  sheetScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === "ios" ? 36 : 24,
+  },
+
   sheetHandle: {
     alignSelf: "center",
     width: 40,
@@ -725,7 +799,6 @@ const styles = StyleSheet.create({
   },
   speedChipValueActive: { color: "#E67E22" },
 
-  /* Fields */
   fieldRow: { flexDirection: "row", marginBottom: 14 },
   fieldGroup: { flex: 1, marginBottom: 14 },
   fieldLabel: {
@@ -769,4 +842,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   addActivityText: { fontSize: 15, color: "#FFFFFF" },
+
+  /* ── BOTTOM SKIRT ── */
+  bottomSkirt: {
+    position: "absolute",
+    top: "100%", 
+    left: 0,
+    right: 0,
+    height: 500, 
+    backgroundColor: "#FFFFFF",
+  },
 });
