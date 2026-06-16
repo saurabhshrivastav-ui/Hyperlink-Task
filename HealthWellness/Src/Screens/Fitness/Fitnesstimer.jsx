@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  FlatList,
   Dimensions,
   Platform,
   StatusBar,
@@ -33,6 +32,7 @@ const ARC_COLOR = "#3D3565"; // dark charcoal-purple for the arc
 const SCREENS = {
   SEARCH: "SEARCH",
   MAP_ROUTE: "MAP_ROUTE",
+  WORKOUT_PLAN: "WORKOUT_PLAN", // New Screen State
   TIMER_SETUP: "TIMER_SETUP",
   ACTIVE_TIMER: "ACTIVE_TIMER",
 };
@@ -51,7 +51,7 @@ const ALL_ACTIVITIES = [
     label: "Workout",
     icon: "dumbbell",
     hasMap: false,
-    desc: "Running 1hr burns almost 300kcal...",
+    desc: "Workout 1hr burns almost 300kcal...",
   },
   {
     id: "cycling",
@@ -92,6 +92,42 @@ const FAKE_STOPS = [
   { title: "Power Avon..." },
   { title: "Power plaza" },
 ];
+
+// ─── Workout Plan Data ────────────────────────────────────────────────────────
+const WORKOUT_CATEGORIES = [
+  { id: "chest", label: "Chest" },
+  { id: "back", label: "Back" },
+  { id: "legs", label: "Legs" },
+  { id: "arms", label: "Arms" },
+  { id: "cardio", label: "Cardio Eq." },
+];
+
+const WORKOUT_PLANS = {
+  chest: [
+    { id: "1", name: "Barbell Bench Press", sets: "4 sets x 8-10 reps" },
+    { id: "2", name: "Incline Dumbbell Press", sets: "3 sets x 10-12 reps" },
+    { id: "3", name: "Cable Crossovers", sets: "3 sets x 15 reps" },
+  ],
+  back: [
+    { id: "1", name: "Deadlifts", sets: "4 sets x 6-8 reps" },
+    { id: "2", name: "Pull-ups", sets: "3 sets x max reps" },
+    { id: "3", name: "Seated Cable Rows", sets: "3 sets x 12 reps" },
+  ],
+  legs: [
+    { id: "1", name: "Barbell Squats", sets: "4 sets x 8 reps" },
+    { id: "2", name: "Leg Press", sets: "3 sets x 10-12 reps" },
+    { id: "3", name: "Romanian Deadlifts", sets: "3 sets x 10 reps" },
+  ],
+  arms: [
+    { id: "1", name: "Overhead Press", sets: "4 sets x 8 reps" },
+    { id: "2", name: "Bicep Curls", sets: "3 sets x 12 reps" },
+    { id: "3", name: "Tricep Pushdowns", sets: "3 sets x 12 reps" },
+  ],
+  cardio: [
+    { id: "1", name: "Treadmill Intervals", sets: "15 mins (1min sprint/1min walk)" },
+    { id: "2", name: "Rowing Machine", sets: "10 mins steady pace" },
+  ],
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const pad = (n) => String(n).padStart(2, "0");
@@ -167,9 +203,7 @@ const CircularTimer = ({ seconds, totalSeconds = 5040, paused }) => {
         justifyContent: "center",
       }}
     >
-      {/* SVG arcs */}
       <Svg width={SIZE} height={SIZE} style={{ position: "absolute" }}>
-        {/* Track */}
         <Circle
           cx={CX}
           cy={CX}
@@ -178,7 +212,6 @@ const CircularTimer = ({ seconds, totalSeconds = 5040, paused }) => {
           strokeWidth={STROKE}
           fill="none"
         />
-        {/* Progress arc */}
         <Circle
           cx={CX}
           cy={CX}
@@ -193,8 +226,6 @@ const CircularTimer = ({ seconds, totalSeconds = 5040, paused }) => {
           origin={`${CX}, ${CX}`}
         />
       </Svg>
-
-      {/* Center text */}
       <View style={{ alignItems: "center" }}>
         <Text weight="700" style={arcStyles.digits}>
           {formatTime(seconds)}
@@ -226,8 +257,6 @@ const SearchScreen = ({ onBack, onSelect }) => {
   return (
     <View style={ss.screen}>
       <Header onBack={onBack} />
-
-      {/* Search bar */}
       <View style={ss.searchBar}>
         <Ionicons
           name="search-outline"
@@ -248,11 +277,9 @@ const SearchScreen = ({ onBack, onSelect }) => {
           </TouchableOpacity>
         )}
       </View>
-
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         {query.trim().length === 0 ? (
           <>
-            {/* Quick Daily Logs */}
             <Text weight="700" style={ss.sectionTitle}>
               Quick Daily Logs
             </Text>
@@ -284,7 +311,6 @@ const SearchScreen = ({ onBack, onSelect }) => {
             </View>
           </>
         ) : (
-          /* ── Search results ── */
           <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
             {filtered.map((item) => (
               <TouchableOpacity
@@ -313,10 +339,8 @@ const SearchScreen = ({ onBack, onSelect }) => {
             ))}
           </View>
         )}
-
-        {/* Not found row */}
         <Text weight="400" style={ss.notFoundText}>
-          Didn't Found, What you are looking for?
+          Didn't Found , What you are looking for?
         </Text>
         <TouchableOpacity activeOpacity={0.85} style={ss.addCustomWrap}>
           <LinearGradient
@@ -527,7 +551,6 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
           { featureType: "poi", stylers: [{ visibility: "off" }] },
         ]}
       >
-        {/* Live route polyline */}
         {routeCoords.length > 1 && (
           <Polyline
             coordinates={routeCoords}
@@ -535,8 +558,6 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
             strokeWidth={4}
           />
         )}
-
-        {/* Route preview polyline */}
         {routePreview && stopCoords.length > 0 && (
           <Polyline
             coordinates={[
@@ -547,8 +568,6 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
             strokeWidth={4}
           />
         )}
-
-        {/* User location dot */}
         {userLocation && (
           <Marker coordinate={userLocation}>
             <View style={ms.userDotOuter}>
@@ -556,8 +575,6 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
             </View>
           </Marker>
         )}
-
-        {/* Stop markers */}
         {routePreview &&
           stopCoords.map((s, i) => (
             <Marker key={i} coordinate={s}>
@@ -566,15 +583,12 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
           ))}
       </MapView>
 
-      {/* Translucent header overlay */}
       <View style={ms.headerOverlay}>
         <Header onBack={onBack} transparent />
       </View>
 
-      {/* Bottom sheet */}
       <View style={ms.sheet}>
         {routePreview ? (
-          /* ── Route preview state ── */
           <>
             {FAKE_STOPS.map((stop, i) => (
               <View key={i} style={ms.stopRow}>
@@ -620,9 +634,7 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
             </TouchableOpacity>
           </>
         ) : (
-          /* ── Initial state ── */
           <>
-            {/* Auto-Track toggle row */}
             <View style={ms.optionRow}>
               <View style={{ flex: 1 }}>
                 <Text weight="600" style={ms.optionTitle}>
@@ -643,7 +655,6 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
               />
             </View>
 
-            {/* GPS status indicator */}
             <View style={[ms.gpsRow, autoTrack && ms.gpsRowActive]}>
               <View style={[ms.gpsDot, autoTrack && ms.gpsDotActive]} />
               <Text
@@ -656,7 +667,6 @@ const MapRouteScreen = ({ activity, onBack, onContinue }) => {
               </Text>
             </View>
 
-            {/* Custom location row */}
             <View style={[ms.optionRow, { borderBottomWidth: 0 }]}>
               <View style={{ flex: 1 }}>
                 <Text weight="600" style={ms.optionTitle}>
@@ -766,7 +776,6 @@ const ms = StyleSheet.create({
     borderRadius: 12,
   },
   primaryBtnText: { fontSize: 15, color: "#FFFFFF" },
-  /* Stop rows */
   stopRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -782,7 +791,6 @@ const ms = StyleSheet.create({
   stopLabel: { fontSize: 13, color: "#1F2937" },
   tripTime: { fontSize: 14, color: "#1F2937", marginBottom: 2 },
   tripMeta: { fontSize: 11, color: "#9CA3AF", marginBottom: 4 },
-  /* Map markers */
   userDotOuter: {
     width: 22,
     height: 22,
@@ -807,6 +815,173 @@ const ms = StyleSheet.create({
   },
 });
 
+// ─── NEW Screen: Workout Planner ──────────────────────────────────────────────
+const WorkoutPlannerScreen = ({ activity, onBack, onContinue }) => {
+  const [selectedCat, setSelectedCat] = useState("chest");
+  
+  const currentPlan = WORKOUT_PLANS[selectedCat];
+
+  return (
+    <View style={wp.screen}>
+      <Header onBack={onBack} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+        
+        <View style={wp.headerRow}>
+          <View style={wp.activityIconCircle}>
+            <MaterialCommunityIcons name="dumbbell" size={26} color={ORANGE} />
+          </View>
+          <View>
+            <Text weight="700" style={wp.activityLabel}>Plan Your Workout</Text>
+            <Text weight="400" style={wp.activitySub}>Select a muscle group or equipment</Text>
+          </View>
+        </View>
+
+        {/* Categories / Chips */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={wp.chipScroll}
+          contentContainerStyle={{ gap: 8, paddingBottom: 16 }}
+        >
+          {WORKOUT_CATEGORIES.map((cat) => {
+            const active = selectedCat === cat.id;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                activeOpacity={0.8}
+                style={[wp.chip, active && wp.chipActive]}
+                onPress={() => setSelectedCat(cat.id)}
+              >
+                <Text weight="600" style={[wp.chipLabel, active && wp.chipLabelActive]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </ScrollView>
+
+        {/* Workout Plan List */}
+        <Text weight="700" style={wp.planTitle}>Suggested Routine</Text>
+        <View style={wp.planCard}>
+          {currentPlan.map((exercise, index) => (
+            <View key={exercise.id} style={[wp.exerciseRow, index !== currentPlan.length - 1 && wp.exerciseBorder]}>
+              <View style={wp.exerciseBullet}>
+                <Text weight="700" style={{color: ORANGE, fontSize: 12}}>{index + 1}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text weight="600" style={wp.exerciseName}>{exercise.name}</Text>
+                <Text weight="400" style={wp.exerciseSets}>{exercise.sets}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Continue Button */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={wp.btnWrap}
+          onPress={() => onContinue({ category: selectedCat, plan: currentPlan })}
+        >
+          <LinearGradient
+            colors={ORANGE_GRAD}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={wp.btn}
+          >
+            <Text weight="600" style={wp.btnText}>Proceed to Timer</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+      </ScrollView>
+    </View>
+  );
+};
+
+const wp = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#FFFFFF" },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  activityIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#FFF3E8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  activityLabel: { fontSize: 20, color: "#1F2937" },
+  activitySub: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  chipScroll: {
+    flexGrow: 0,
+    marginBottom: 8,
+  },
+  chip: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+  },
+  chipActive: {
+    borderColor: ORANGE,
+    backgroundColor: "#FFF7ED",
+  },
+  chipLabel: { fontSize: 13, color: "#6B7280" },
+  chipLabelActive: { color: ORANGE },
+  planTitle: {
+    fontSize: 16,
+    color: "#1F2937",
+    marginBottom: 12,
+  },
+  planCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#F0EEF8",
+    shadowColor: "#7C5CFC",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: 24,
+  },
+  exerciseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  exerciseBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  exerciseBullet: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FFF3E8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  exerciseName: { fontSize: 14, color: "#1F2937" },
+  exerciseSets: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  btnWrap: { borderRadius: 12, overflow: "hidden" },
+  btn: {
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+  },
+  btnText: { fontSize: 15, color: "#FFFFFF" },
+});
+
 // ─── Screen 3: Timer Setup ────────────────────────────────────────────────────
 const TimerSetupScreen = ({ activity, onBack, onStart }) => {
   const [pace, setPace] = useState("slow");
@@ -819,7 +994,6 @@ const TimerSetupScreen = ({ activity, onBack, onStart }) => {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Activity title row */}
         <View style={ts.activityRow}>
           <View style={ts.activityIconCircle}>
             <MaterialCommunityIcons
@@ -833,7 +1007,6 @@ const TimerSetupScreen = ({ activity, onBack, onStart }) => {
           </Text>
         </View>
 
-        {/* Pace chips */}
         <View style={ts.paceRow}>
           {PACE_OPTIONS.map((p) => {
             const active = pace === p.key;
@@ -861,7 +1034,6 @@ const TimerSetupScreen = ({ activity, onBack, onStart }) => {
           })}
         </View>
 
-        {/* Time input */}
         <Text weight="600" style={ts.timeLabel}>
           Time
         </Text>
@@ -879,7 +1051,6 @@ const TimerSetupScreen = ({ activity, onBack, onStart }) => {
           </Text>
         </View>
 
-        {/* Start Timer */}
         <TouchableOpacity
           activeOpacity={0.85}
           style={ts.startBtnWrap}
@@ -919,7 +1090,6 @@ const ts = StyleSheet.create({
     marginRight: 14,
   },
   activityLabel: { fontSize: 22, color: "#1F2937" },
-  /* Pace */
   paceRow: {
     flexDirection: "row",
     gap: 8,
@@ -943,7 +1113,6 @@ const ts = StyleSheet.create({
   paceLabelActive: { color: ORANGE },
   paceSpeed: { fontSize: 10, color: "#9CA3AF", marginTop: 2 },
   paceSpeedActive: { color: ORANGE },
-  /* Time input */
   timeLabel: { fontSize: 13, color: "#6B7280", marginBottom: 8 },
   timeRow: {
     flexDirection: "row",
@@ -958,7 +1127,6 @@ const ts = StyleSheet.create({
   },
   timeInput: { flex: 1, fontSize: 15, color: "#1F2937", paddingVertical: 0 },
   timeUnit: { fontSize: 13, color: "#9CA3AF" },
-  /* Start button */
   startBtnWrap: { borderRadius: 12, overflow: "hidden" },
   startBtn: {
     height: 50,
@@ -1011,14 +1179,12 @@ const ActiveTimerScreen = ({ activity, settings, onBack, onAddActivity }) => {
         }}
       />
 
-      {/* Timer card — fills most of the screen */}
       <LinearGradient
         colors={["#EDE8F8", "#F7EFF8"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={at.timerCard}
       >
-        {/* Activity badge */}
         <View style={at.activityBadge}>
           <View style={at.badgeIconWrap}>
             <MaterialCommunityIcons
@@ -1032,7 +1198,6 @@ const ActiveTimerScreen = ({ activity, settings, onBack, onAddActivity }) => {
           </Text>
         </View>
 
-        {/* Circular timer */}
         <View style={{ marginTop: 24, marginBottom: 20 }}>
           <CircularTimer
             seconds={seconds}
@@ -1041,7 +1206,6 @@ const ActiveTimerScreen = ({ activity, settings, onBack, onAddActivity }) => {
           />
         </View>
 
-        {/* Pause / Resume button */}
         <TouchableOpacity
           activeOpacity={0.85}
           style={at.pauseWrap}
@@ -1061,7 +1225,6 @@ const ActiveTimerScreen = ({ activity, settings, onBack, onAddActivity }) => {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Stats row */}
         <View style={at.statsRow}>
           <View style={at.statItem}>
             <Text weight="700" style={at.statValue}>
@@ -1092,7 +1255,6 @@ const ActiveTimerScreen = ({ activity, settings, onBack, onAddActivity }) => {
         </View>
       </LinearGradient>
 
-      {/* Add Activity button */}
       <View style={at.addWrap}>
         <TouchableOpacity
           activeOpacity={0.85}
@@ -1190,6 +1352,7 @@ function FitnessTimer({ onBack: onRootBack }) {
   const [screen, setScreen] = useState(SCREENS.SEARCH);
   const [activity, setActivity] = useState(null);
   const [timerSettings, setTimerSettings] = useState(null);
+  const [workoutPlan, setWorkoutPlan] = useState(null); // Optional: Store for later
 
   const goBack = useCallback(() => {
     switch (screen) {
@@ -1197,10 +1360,12 @@ function FitnessTimer({ onBack: onRootBack }) {
         onRootBack?.();
         break;
       case SCREENS.MAP_ROUTE:
+      case SCREENS.WORKOUT_PLAN:
         setScreen(SCREENS.SEARCH);
         break;
       case SCREENS.TIMER_SETUP:
-        setScreen(activity?.hasMap ? SCREENS.MAP_ROUTE : SCREENS.SEARCH);
+        if (activity?.id === "workout") setScreen(SCREENS.WORKOUT_PLAN);
+        else setScreen(activity?.hasMap ? SCREENS.MAP_ROUTE : SCREENS.SEARCH);
         break;
       case SCREENS.ACTIVE_TIMER:
         setScreen(SCREENS.TIMER_SETUP);
@@ -1212,10 +1377,19 @@ function FitnessTimer({ onBack: onRootBack }) {
 
   const handleSelect = (act) => {
     setActivity(act);
-    setScreen(act.hasMap ? SCREENS.MAP_ROUTE : SCREENS.TIMER_SETUP);
+    if (act.id === "workout") {
+      setScreen(SCREENS.WORKOUT_PLAN);
+    } else {
+      setScreen(act.hasMap ? SCREENS.MAP_ROUTE : SCREENS.TIMER_SETUP);
+    }
   };
 
   const handleMapContinue = () => setScreen(SCREENS.TIMER_SETUP);
+  
+  const handleWorkoutContinue = (planDetails) => {
+    setWorkoutPlan(planDetails);
+    setScreen(SCREENS.TIMER_SETUP);
+  };
 
   const handleStartTimer = (settings) => {
     setTimerSettings(settings);
@@ -1229,6 +1403,15 @@ function FitnessTimer({ onBack: onRootBack }) {
   switch (screen) {
     case SCREENS.SEARCH:
       return <SearchScreen onBack={goBack} onSelect={handleSelect} />;
+
+    case SCREENS.WORKOUT_PLAN:
+      return (
+        <WorkoutPlannerScreen 
+          activity={activity} 
+          onBack={goBack} 
+          onContinue={handleWorkoutContinue} 
+        />
+      );
 
     case SCREENS.MAP_ROUTE:
       return (

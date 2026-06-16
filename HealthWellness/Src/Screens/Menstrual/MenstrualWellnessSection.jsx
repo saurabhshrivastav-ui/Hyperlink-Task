@@ -180,7 +180,10 @@ const getPeriodState = (details) => {
     Math.round(Number(details?.periodDuration) || 5),
   );
   const today = normalizeDate(new Date());
-  const daysFromStart = diffInDays(today, startDate);
+  
+  const currentCycleStart = startDate;
+  const nextCycleStart = addDays(currentCycleStart, cycleLength);
+  const daysFromStart = diffInDays(today, currentCycleStart);
 
   if (daysFromStart < 0) {
     return {
@@ -188,25 +191,24 @@ const getPeriodState = (details) => {
       headline: `${-daysFromStart} days left`,
       statusColor: "#FF4E67",
       nextCycleStart: startDate,
-      currentCycleStart: addDays(startDate, -cycleLength),
+      currentCycleStart,
       cycleLength,
+      daysFromStart,
     };
   }
-  const cyclesElapsed = Math.floor(daysFromStart / cycleLength);
-  const currentCycleStart = addDays(startDate, cyclesElapsed * cycleLength);
-  const nextCycleStart = addDays(currentCycleStart, cycleLength);
-  const daysIntoCurrentCycle = diffInDays(today, currentCycleStart);
 
-  if (daysIntoCurrentCycle >= 0 && daysIntoCurrentCycle < periodWindow) {
+  if (daysFromStart >= 0 && daysFromStart < periodWindow) {
     return {
       type: "period-day",
-      headline: `Day ${daysIntoCurrentCycle + 1}`,
+      headline: `Day ${daysFromStart + 1}`,
       statusColor: "#FF5C6A",
       nextCycleStart,
       currentCycleStart,
       cycleLength,
+      daysFromStart,
     };
   }
+
   const daysUntilNext = diffInDays(nextCycleStart, today);
   if (daysUntilNext > 0) {
     return {
@@ -216,8 +218,10 @@ const getPeriodState = (details) => {
       nextCycleStart,
       currentCycleStart,
       cycleLength,
+      daysFromStart,
     };
   }
+  
   return {
     type: "days-late",
     headline: `${Math.abs(daysUntilNext)} days Late`,
@@ -225,6 +229,7 @@ const getPeriodState = (details) => {
     nextCycleStart,
     currentCycleStart,
     cycleLength,
+    daysFromStart,
   };
 };
 
@@ -315,10 +320,7 @@ const ActionCard = ({
   </TouchableOpacity>
 );
 
-// ─── Simplified Edit Modal Day Cell ───
-// Only highlights period (pink) days with an animated entrance.
-// All other days render as plain neutral cells.
-const EditDayCell = ({ cell, isToday, isSelected, onPress, animValue }) => {
+const EditDayCell = ({ cell, isToday, isSelected, isEndMode, onPress, animValue }) => {
   if (!cell.isCurrentMonth) {
     return (
       <View style={cellStyles.cell}>
@@ -337,8 +339,16 @@ const EditDayCell = ({ cell, isToday, isSelected, onPress, animValue }) => {
       onPress={() => onPress && onPress(cell)}
       style={cellStyles.cell}
     >
+      {/* If it's selected and in End Date Mode, we use a thicker border to "highlight it more" */}
       {isSelected && (
-        <View style={[cellStyles.selectionHalo, { borderColor: "#FF4D8D" }]} />
+        <View style={[
+          cellStyles.selectionHalo, 
+          { 
+            borderColor: "#FF4D8D", 
+            borderWidth: isEndMode ? 3.5 : 2, 
+            transform: [{ scale: isEndMode ? 1.05 : 1 }] 
+          }
+        ]} />
       )}
 
       {isPeriod ? (
@@ -471,7 +481,6 @@ export default function MenstrualWellnessSection({
     periodDuration,
   );
 
-  // ─── Cycle Bars: builds from history array + current entered date ───
   const cycleBars = useMemo(() => {
     if (!hasSavedDetails) return [];
 
@@ -528,16 +537,15 @@ export default function MenstrualWellnessSection({
 
   // ─── Interactive Draggable Modal State ───
   const [showEditModal, setShowEditModal] = useState(false);
+  const [trayMode, setTrayMode] = useState('calendar'); // 'calendar' | 'calendar-end' | 'late-info'
   const [isModalRendered, setIsModalRendered] = useState(false);
   const modalY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
-  const [draftStartDate, setDraftStartDate] = useState(
-    () => periodState.currentCycleStart,
-  );
-  const [editCalendarMonth, setEditCalendarMonth] = useState(
-    () => periodState.currentCycleStart,
-  );
+  // Track edits independently
+  const [draftStartDate, setDraftStartDate] = useState(() => periodState.currentCycleStart);
+  const [draftEndDate, setDraftEndDate] = useState(() => addDays(periodState.currentCycleStart, periodDuration - 1));
+  const [editCalendarMonth, setEditCalendarMonth] = useState(() => periodState.currentCycleStart);
 
   useEffect(() => {
     if (showEditModal) {
@@ -566,7 +574,10 @@ export default function MenstrualWellnessSection({
           duration: 250,
           useNativeDriver: true,
         }),
-      ]).start(() => setIsModalRendered(false));
+      ]).start(() => {
+        setIsModalRendered(false);
+        setTrayMode('calendar'); // Reset
+      });
     }
   }, [showEditModal]);
 
@@ -592,13 +603,20 @@ export default function MenstrualWellnessSection({
     }),
   ).current;
 
-  const handleOpenEdit = () => {
-    setDraftStartDate(periodState.currentCycleStart);
-    setEditCalendarMonth(periodState.currentCycleStart);
+  const openTray = (mode) => {
+    setTrayMode(mode);
+    if (mode === 'calendar') {
+      setDraftStartDate(periodState.currentCycleStart);
+      setEditCalendarMonth(periodState.currentCycleStart);
+    } else if (mode === 'calendar-end') {
+      const expectedEnd = addDays(periodState.currentCycleStart, periodDuration - 1);
+      setDraftEndDate(expectedEnd);
+      setEditCalendarMonth(expectedEnd);
+    }
     setShowEditModal(true);
   };
 
-  const handleSaveDraft = async () => {
+  const handleSaveSpecificDate = async (newDay, newMonth, newYear) => {
     const previousHistory = Array.isArray(localDetails?.history)
       ? localDetails.history
       : [];
@@ -606,10 +624,6 @@ export default function MenstrualWellnessSection({
     const oldDay = Number(localDetails?.day);
     const oldMonth = Number(localDetails?.month);
     const oldYear = Number(localDetails?.year);
-
-    const newDay = draftStartDate.getDate();
-    const newMonth = draftStartDate.getMonth() + 1;
-    const newYear = draftStartDate.getFullYear();
 
     const isSameDate =
       oldDay === newDay && oldMonth === newMonth && oldYear === newYear;
@@ -628,41 +642,68 @@ export default function MenstrualWellnessSection({
     };
 
     setLocalDetails(updatedDetails);
-    setShowEditModal(false);
 
-    // Persist to the shared key so MenstrualCalendarScreen and
-    // PeriodStatistics pick up the new start date when they next mount.
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDetails));
     } catch (e) {
-      console.warn("Failed to persist edited menstrual details", e);
+      console.warn("Failed to persist menstrual details", e);
     }
 
     if (typeof onSaveDetails === "function") onSaveDetails(updatedDetails);
   };
+
+  const handleSaveDraft = async () => {
+    if (trayMode === 'calendar-end') {
+      // User is saving a new END date. 
+      // Calculate new duration from current cycle start to selected end date
+      const newDuration = Math.max(1, diffInDays(draftEndDate, periodState.currentCycleStart) + 1);
+      const updatedDetails = { ...localDetails, periodDuration: newDuration };
+      setLocalDetails(updatedDetails);
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDetails)).catch(() => {});
+      if (typeof onSaveDetails === "function") onSaveDetails(updatedDetails);
+      setShowEditModal(false);
+    } else {
+      // Standard Save Start Date
+      await handleSaveSpecificDate(
+        draftStartDate.getDate(),
+        draftStartDate.getMonth() + 1,
+        draftStartDate.getFullYear()
+      );
+      setShowEditModal(false);
+    }
+  };
+
+  const handlePeriodStart = () => {
+    const todayDate = new Date();
+    handleSaveSpecificDate(todayDate.getDate(), todayDate.getMonth() + 1, todayDate.getFullYear());
+  };
+
+  // Determine dynamic length for the calendar visualization
+  const activeGridDuration = trayMode === 'calendar-end' 
+    ? Math.max(1, diffInDays(draftEndDate, periodState.currentCycleStart) + 1)
+    : periodDuration;
+    
+  const gridBaseDate = trayMode === 'calendar' ? draftStartDate : periodState.currentCycleStart;
 
   const editCalendarRows = useMemo(
     () =>
       buildGrid(
         editCalendarMonth.getFullYear(),
         editCalendarMonth.getMonth(),
-        draftStartDate,
+        gridBaseDate,
         periodState.cycleLength,
-        periodDuration,
+        activeGridDuration,
       ),
     [
       editCalendarMonth,
-      draftStartDate,
+      gridBaseDate,
       periodState.cycleLength,
-      periodDuration,
+      activeGridDuration,
     ],
   );
 
-  // ─── Period-day staggered entrance animation ───
-  // Single driving value; each period cell interpolates its own slice with delay.
   const calendarAnim = useRef(new Animated.Value(0)).current;
 
-  // Map of "rowIdx-cellIdx" -> sequential period index, plus total period count.
   const periodIndexMap = useMemo(() => {
     const map = {};
     let idx = 0;
@@ -676,10 +717,8 @@ export default function MenstrualWellnessSection({
     return { map, count: idx };
   }, [editCalendarRows]);
 
-  // Re-run the staggered animation whenever the modal opens, the user changes
-  // the visible month, or picks a different start date (which shifts pink days).
   useEffect(() => {
-    if (!isModalRendered) {
+    if (!isModalRendered || (trayMode !== 'calendar' && trayMode !== 'calendar-end')) {
       calendarAnim.setValue(0);
       return;
     }
@@ -689,7 +728,7 @@ export default function MenstrualWellnessSection({
       duration: 900,
       useNativeDriver: true,
     }).start();
-  }, [isModalRendered, editCalendarMonth, draftStartDate]);
+  }, [isModalRendered, editCalendarMonth, gridBaseDate, activeGridDuration, trayMode]);
 
   const handleChipPress = (label, index) => {
     flatListRef.current?.scrollToIndex({
@@ -705,6 +744,167 @@ export default function MenstrualWellnessSection({
       if (label === "Fitness" && onNavigateFitness) onNavigateFitness();
       if (label === "Medicine" && onNavigateMedicine) onNavigateMedicine();
     }
+  };
+
+  // ─── TRAY CONTENT RENDERER ───
+  const renderTrayContent = () => {
+    if (trayMode === 'late-info') {
+      return (
+        <View style={styles.infoTrayContainer}>
+          <MaterialCommunityIcons name="clock-alert-outline" size={56} color="#FF5A6A" />
+          <Text weight="700" style={styles.infoTrayTitle}>Period Expected</Text>
+          <Text weight="500" style={styles.infoTrayDesc}>
+            Based on your cycle logic, your period was expected on {formatDayMonth(periodState.nextCycleStart)}.
+          </Text>
+          <TouchableOpacity style={styles.confirmBtnInfo} onPress={() => setShowEditModal(false)}>
+            <Text weight="700" style={styles.confirmBtnText}>Okay</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
+    // Calendar View (Shared for both Start & End Modes)
+    return (
+      <View>
+        <View style={styles.sheetHeader}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              setEditCalendarMonth(
+                new Date(
+                  editCalendarMonth.getFullYear(),
+                  editCalendarMonth.getMonth() - 1,
+                  1,
+                ),
+              )
+            }
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="chevron-back" size={24} color="#1A1A1A" />
+          </TouchableOpacity>
+          <View style={styles.sheetMonthWrap}>
+            <MaterialCommunityIcons
+              name="calendar-month-outline"
+              size={20}
+              color="#1A1A1A"
+            />
+            <Text weight="700" style={styles.sheetMonthText}>
+              {editCalendarMonth.toLocaleDateString("en-GB", {
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() =>
+              setEditCalendarMonth(
+                new Date(
+                  editCalendarMonth.getFullYear(),
+                  editCalendarMonth.getMonth() + 1,
+                  1,
+                ),
+              )
+            }
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="chevron-forward" size={24} color="#1A1A1A" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.weekLabelContainer}>
+          {WEEK_LABELS.map((item, index) => (
+            <Text
+              key={`week-${item}-${index}`}
+              weight="600"
+              style={styles.weekLabel}
+            >
+              {item}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.calendarGrid}>
+          {editCalendarRows.map((row, rowIdx) => (
+            <View key={`week-${rowIdx}`} style={styles.calendarRow}>
+              {row.map((cell, cellIdx) => {
+                const isCellToday =
+                  cell.isCurrentMonth &&
+                  today.getFullYear() === editCalendarMonth.getFullYear() &&
+                  today.getMonth() === editCalendarMonth.getMonth() &&
+                  cell.day === today.getDate();
+                
+                const isSelectedDate = cell.isCurrentMonth && (
+                  trayMode === 'calendar-end' 
+                  ? draftEndDate.getFullYear() === editCalendarMonth.getFullYear() &&
+                    draftEndDate.getMonth() === editCalendarMonth.getMonth() &&
+                    cell.day === draftEndDate.getDate()
+                  : draftStartDate.getFullYear() === editCalendarMonth.getFullYear() &&
+                    draftStartDate.getMonth() === editCalendarMonth.getMonth() &&
+                    cell.day === draftStartDate.getDate()
+                );
+
+                const pIdx = periodIndexMap.map[`${rowIdx}-${cellIdx}`];
+                let cellAnim;
+                if (pIdx !== undefined && periodIndexMap.count > 0) {
+                  const startProgress =
+                    (pIdx / periodIndexMap.count) * 0.5;
+                  const endProgress = Math.min(startProgress + 0.5, 1);
+                  cellAnim = calendarAnim.interpolate({
+                    inputRange:
+                      endProgress > startProgress
+                        ? [startProgress, endProgress]
+                        : [startProgress, startProgress + 0.0001],
+                    outputRange: [0, 1],
+                    extrapolate: "clamp",
+                  });
+                }
+
+                return (
+                  <EditDayCell
+                    key={cellIdx}
+                    cell={cell}
+                    isToday={isCellToday}
+                    isSelected={isSelectedDate}
+                    isEndMode={trayMode === 'calendar-end'}
+                    onPress={(pressedCell) => {
+                      if (trayMode === 'calendar-end') {
+                        // Optional constraint: only allow end date to be >= start date
+                        if (pressedCell.date >= periodState.currentCycleStart) {
+                          setDraftEndDate(pressedCell.date);
+                        }
+                      } else {
+                        setDraftStartDate(pressedCell.date);
+                      }
+                    }}
+                    animValue={cellAnim}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.sheetFooter}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleSaveDraft}
+          >
+            <LinearGradient
+              colors={["#B148FF", "#F6339B", "#9914F9"]}
+              locations={[0, 0.5, 1]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.confirmBtn}
+            >
+              <Text weight="700" style={styles.confirmBtnText}>
+                {trayMode === 'calendar-end' ? "Save End Date" : "Save New Start Date"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -879,9 +1079,15 @@ export default function MenstrualWellnessSection({
                     <Text weight="600" style={styles.centerBadgeDate}>
                       {formatHeaderDate(today)}
                     </Text>
+                    
                     <Text weight="600" style={styles.centerBadgePeriodLabel}>
-                      Period
+                      {periodState.type === "period-day" 
+                        ? "Period Started" 
+                        : periodState.type === "days-late"
+                        ? "Period Late"
+                        : "Next Period"}
                     </Text>
+                    
                     <Text
                       weight="700"
                       adjustsFontSizeToFit
@@ -893,6 +1099,66 @@ export default function MenstrualWellnessSection({
                     >
                       {periodState.headline}
                     </Text>
+                    
+                    {/* DYNAMIC LOGIC-DRIVEN BUTTON ROW */}
+                    <View style={styles.innerBadgeBtnRow}>
+                      
+                      {/* Flow: LATE PERIOD */}
+                      {periodState.type === "days-late" && (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => openTray('late-info')}
+                          style={styles.innerBadgeButtonSolid}
+                        >
+                          <Text weight="700" style={styles.innerBadgeButtonSolidText}>
+                            Period Starts
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {/* Flow: UPCOMING PERIOD */}
+                      {periodState.type === "days-left" && (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => openTray('calendar')}
+                          style={styles.innerBadgeButtonSolid}
+                        >
+                          <Text weight="700" style={styles.innerBadgeButtonSolidText}>
+                            Edit Period
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {/* Flow: ACTIVE PERIOD */}
+                      {periodState.type === "period-day" && (
+                        <>
+                          {/* From Day 3 (daysFromStart >= 2) -> Show Edit Period Dates Calendar */}
+                          {periodState.daysFromStart >= 2 ? (
+                            <TouchableOpacity
+                              activeOpacity={0.8}
+                              onPress={() => openTray('calendar')}
+                              style={styles.innerBadgeButtonSolid}
+                            >
+                              <Text weight="700" style={styles.innerBadgeButtonSolidText}>
+                                Edit Period Dates
+                              </Text>
+                            </TouchableOpacity>
+                          ) : (
+                            /* Day 1 and 2 -> Show Period Ends Calendar highlighting End Date */
+                            <TouchableOpacity
+                              activeOpacity={0.8}
+                              onPress={() => openTray('calendar-end')}
+                              style={styles.innerBadgeButtonSolid}
+                            >
+                              <Text weight="700" style={styles.innerBadgeButtonSolidText}>
+                                Period Ends
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </>
+                      )}
+                    </View>
+
                   </View>
                 </View>
 
@@ -962,13 +1228,13 @@ export default function MenstrualWellnessSection({
                         color="#EC5669"
                       />
                     }
-                    title="Edit Details"
+                    title="Edit Period"
                     subtitle="Update your Period info"
                     titleColor="#EC5669"
                     subtitleColor="#E4767C"
                     gradientColors={["#FFFFFF", "#FCE6E7"]}
                     cardStyle={styles.editDetailsActionCard}
-                    onPress={handleOpenEdit}
+                    onPress={() => openTray('calendar')}
                   />
                   <ActionCard
                     icon={
@@ -1003,6 +1269,7 @@ export default function MenstrualWellnessSection({
                     onPress={onNavigateStatistics}
                   />
                 </View>
+
               </View>
             )}
           </Animated.View>
@@ -1125,7 +1392,7 @@ export default function MenstrualWellnessSection({
         </Animated.View>
       </ScrollView>
 
-      {/* ─── INTERACTIVE DRAGGABLE EDIT DETAILS MODAL ─── */}
+      {/* ─── INTERACTIVE MULTI-MODE TRAY (BOTTOM SHEET) ─── */}
       {isModalRendered && (
         <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
           <Animated.View
@@ -1156,135 +1423,7 @@ export default function MenstrualWellnessSection({
               showsVerticalScrollIndicator={false}
               bounces={false}
             >
-              <View style={styles.sheetHeader}>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={() =>
-                    setEditCalendarMonth(
-                      new Date(
-                        editCalendarMonth.getFullYear(),
-                        editCalendarMonth.getMonth() - 1,
-                        1,
-                      ),
-                    )
-                  }
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="chevron-back" size={24} color="#1A1A1A" />
-                </TouchableOpacity>
-                <View style={styles.sheetMonthWrap}>
-                  <MaterialCommunityIcons
-                    name="calendar-month-outline"
-                    size={20}
-                    color="#1A1A1A"
-                  />
-                  <Text weight="700" style={styles.sheetMonthText}>
-                    {editCalendarMonth.toLocaleDateString("en-GB", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={() =>
-                    setEditCalendarMonth(
-                      new Date(
-                        editCalendarMonth.getFullYear(),
-                        editCalendarMonth.getMonth() + 1,
-                        1,
-                      ),
-                    )
-                  }
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="chevron-forward" size={24} color="#1A1A1A" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.weekLabelContainer}>
-                {WEEK_LABELS.map((item, index) => (
-                  <Text
-                    key={`week-${item}-${index}`}
-                    weight="600"
-                    style={styles.weekLabel}
-                  >
-                    {item}
-                  </Text>
-                ))}
-              </View>
-
-              <View style={styles.calendarGrid}>
-                {editCalendarRows.map((row, rowIdx) => (
-                  <View key={`week-${rowIdx}`} style={styles.calendarRow}>
-                    {row.map((cell, cellIdx) => {
-                      const isCellToday =
-                        cell.isCurrentMonth &&
-                        today.getFullYear() ===
-                          editCalendarMonth.getFullYear() &&
-                        today.getMonth() === editCalendarMonth.getMonth() &&
-                        cell.day === today.getDate();
-                      const isSelectedDate =
-                        cell.isCurrentMonth &&
-                        draftStartDate.getFullYear() ===
-                          editCalendarMonth.getFullYear() &&
-                        draftStartDate.getMonth() ===
-                          editCalendarMonth.getMonth() &&
-                        cell.day === draftStartDate.getDate();
-
-                      // Build a per-period-cell interpolated value so they pop
-                      // in one after another in a stagger.
-                      const pIdx = periodIndexMap.map[`${rowIdx}-${cellIdx}`];
-                      let cellAnim;
-                      if (pIdx !== undefined && periodIndexMap.count > 0) {
-                        const startProgress =
-                          (pIdx / periodIndexMap.count) * 0.5;
-                        const endProgress = Math.min(startProgress + 0.5, 1);
-                        cellAnim = calendarAnim.interpolate({
-                          inputRange:
-                            endProgress > startProgress
-                              ? [startProgress, endProgress]
-                              : [startProgress, startProgress + 0.0001],
-                          outputRange: [0, 1],
-                          extrapolate: "clamp",
-                        });
-                      }
-
-                      return (
-                        <EditDayCell
-                          key={cellIdx}
-                          cell={cell}
-                          isToday={isCellToday}
-                          isSelected={isSelectedDate}
-                          onPress={(pressedCell) =>
-                            setDraftStartDate(pressedCell.date)
-                          }
-                          animValue={cellAnim}
-                        />
-                      );
-                    })}
-                  </View>
-                ))}
-              </View>
-
-              <View style={styles.sheetFooter}>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={handleSaveDraft}
-                >
-                  <LinearGradient
-                    colors={["#B148FF", "#F6339B", "#9914F9"]}
-                    locations={[0, 0.5, 1]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={styles.confirmBtn}
-                  >
-                    <Text weight="700" style={styles.confirmBtnText}>
-                      Save New Start Date
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+              {renderTrayContent()}
             </ScrollView>
           </Animated.View>
         </View>
@@ -1543,6 +1682,28 @@ const styles = StyleSheet.create({
     fontSize: 42,
     lineHeight: 46,
     textAlign: "center",
+  },
+  innerBadgeBtnRow: {
+    flexDirection: "row",
+    marginTop: 10,
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  innerBadgeButtonSolid: {
+    backgroundColor: '#FF4D8D', 
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    shadowColor: "#FF4D8D",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  innerBadgeButtonSolidText: {
+    color: '#FFFFFF', 
+    fontSize: 11,
   },
   dateSummaryCard: {
     marginTop: 20,
@@ -1829,5 +1990,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  confirmBtnInfo: {
+    backgroundColor: "#FF4D8D",
+    width: "100%",
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   confirmBtnText: { color: "#FFFFFF", fontSize: 16, lineHeight: 20 },
+  infoTrayContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  infoTrayTitle: {
+    fontSize: 22,
+    color: "#1F2937",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  infoTrayDesc: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 24,
+    lineHeight: 22,
+  },
 });

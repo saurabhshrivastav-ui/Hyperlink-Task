@@ -161,7 +161,7 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
   onNavigateMenstrual,
   onNavigateLogActivity,
   onNavigateSetGoal,
-  onNavigateHistory, // <--- ADDED NAVIGATION PROP
+  onNavigateHistory,
   goal,
   burned,
   hideHeader = false,
@@ -662,7 +662,8 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                   <PressableCard
                     style={styles.deviceLogBtnWrap}
                     onPress={
-                      isActivityActive ? handleStopActivity : handleLogActivity
+                      // UPDATED HERE to trigger handleStartActivity
+                      isActivityActive ? handleStopActivity : handleStartActivity
                     }
                   >
                     <LinearGradient
@@ -676,7 +677,8 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                       style={styles.deviceLogBtn}
                     >
                       <Text weight="600" style={styles.deviceLogBtnText}>
-                        {isActivityActive ? "Stop Activity" : "Log Activity"}
+                        {/* UPDATED LABEL to reflect the real action */}
+                        {isActivityActive ? "Stop Activity" : "Start Activity"}
                       </Text>
                     </LinearGradient>
                   </PressableCard>
@@ -700,7 +702,6 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                 <Text weight="700" style={styles.weeklyTitle}>
                   Weekly Trend
                 </Text>
-                {/* ── UPDATED NAVIGATION ONPRESS ── */}
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => {
