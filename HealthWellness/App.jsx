@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+
 import WellnessHeaderSection from "./Src/Screens/Wellness/WellnessHeaderSection";
 import SleepWellnessSection from "./Src/Screens/Sleep/SleepWellnessSection";
 import NutritionWellnessSection from "./Src/Screens/Nutrition/NutritionWellnessSection";
@@ -19,8 +20,11 @@ import MenstrualWellnessSection from "./Src/Screens/Menstrual/MenstrualWellnessS
 import MenstrualDetailsForm from "./Src/Screens/Menstrual/MenstrualDetailsForm";
 import PeriodStatistics from "./Src/Screens/Menstrual/PeriodStatistics";
 import MenstrualCalendarScreen from "./Src/Screens/Menstrual/MenstrualCalendarScreen";
-// Import the History Component
-import FitnessHistory from "./Src/Screens/Fitness/Fitnesshistory"; 
+import FitnessHistory from "./Src/Screens/Fitness/Fitnesshistory";
+
+// IMPORT YOUR NEW FITNESS TIMER COMPONENT HERE
+import FitnessTimer from "./Src/Screens/Fitness/Fitnesstimer"; // Make sure this path is correct!
+
 import { Text } from "./components/TextWrapper";
 
 export default function App() {
@@ -83,7 +87,6 @@ export default function App() {
       return (
         <FitnessWellnessSection
           hideHeader
-          // goal={fitnessData.goal}
           burned={fitnessData.burned}
           onBack={() => navigateTo("wellness")}
           onNavigateAll={() => navigateTo("wellness")}
@@ -93,13 +96,19 @@ export default function App() {
           onNavigateMenstrual={() => navigateTo("menstrual")}
           onNavigateLogActivity={() => navigateTo("logActivity")}
           onNavigateSetGoal={() => navigateTo("setFitnessGoal")}
-          // Handle navigation sent by the View Stats button
           onNavigateHistory={(params) => navigateTo("fitnessHistory", params)} 
+          onNavigateTimer={() => navigateTo("fitnessTimer")} // <-- Added Link to Timer
         />
       );
     }
 
-    // New render block handling History routing logic
+    // ── NEW: Render Fitness Timer ──
+    if (screen === "fitnessTimer") {
+      return (
+        <FitnessTimer onBack={() => navigateTo("fitness")} />
+      );
+    }
+
     if (screen === "fitnessHistory") {
       return (
         <FitnessHistory 
@@ -201,7 +210,8 @@ export default function App() {
         currentScreen !== "menstrualCalendar" &&
         currentScreen !== "logActivity" &&
         currentScreen !== "setFitnessGoal" &&
-        currentScreen !== "fitnessHistory" && ( // Ensure wrapper header hides when History is open
+        currentScreen !== "fitnessTimer" &&    // <-- Added fitnessTimer to hide header
+        currentScreen !== "fitnessHistory" && (
         <View style={[styles.headerBlock, { paddingTop: topOffset }]}>
           <View style={styles.headerRow}>
             <TouchableOpacity

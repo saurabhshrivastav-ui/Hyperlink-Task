@@ -10,8 +10,6 @@ import {
   Dimensions,
   Image,
   Animated,
-  Modal,
-  Pressable,
   PanResponder,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -51,41 +49,11 @@ const WEEK_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
 // ─── Phase Meta & Helpers ───
 const PHASE_META = {
-  period: {
-    label: "Menstruation",
-    icon: "water",
-    color: "#FF4D8D",
-    softColor: "#FFE4ED",
-    gradient: ["#FF8FB1", "#FF4D8D"],
-  },
-  fertile: {
-    label: "Fertile Window",
-    icon: "leaf",
-    color: "#7C3AED",
-    softColor: "#EDE9FE",
-    gradient: ["#A78BFA", "#7C3AED"],
-  },
-  ovulation: {
-    label: "Ovulation",
-    icon: "star-four-points",
-    color: "#9333EA",
-    softColor: "#DDD6FE",
-    gradient: ["#C084FC", "#9333EA"],
-  },
-  pms: {
-    label: "PMS Zone",
-    icon: "weather-cloudy",
-    color: "#D97706",
-    softColor: "#FEF3C7",
-    gradient: ["#FBBF24", "#D97706"],
-  },
-  safe: {
-    label: "Safe Period",
-    icon: "shield-check",
-    color: "#059669",
-    softColor: "#D1FAE5",
-    gradient: ["#34D399", "#059669"],
-  },
+  period: { label: "Menstruation", icon: "water", color: "#FF4D8D" },
+  fertile: { label: "Fertile Window", icon: "leaf", color: "#7C3AED" },
+  ovulation: { label: "Ovulation", icon: "star-four-points", color: "#9333EA" },
+  pms: { label: "PMS Zone", icon: "weather-cloudy", color: "#D97706" },
+  safe: { label: "Safe Period", icon: "shield-check", color: "#059669" },
 };
 
 const normalizeDate = (date) =>
@@ -339,7 +307,6 @@ const EditDayCell = ({ cell, isToday, isSelected, isEndMode, onPress, animValue 
       onPress={() => onPress && onPress(cell)}
       style={cellStyles.cell}
     >
-      {/* If it's selected and in End Date Mode, we use a thicker border to "highlight it more" */}
       {isSelected && (
         <View style={[
           cellStyles.selectionHalo, 
@@ -547,6 +514,35 @@ export default function MenstrualWellnessSection({
   const [draftEndDate, setDraftEndDate] = useState(() => addDays(periodState.currentCycleStart, periodDuration - 1));
   const [editCalendarMonth, setEditCalendarMonth] = useState(() => periodState.currentCycleStart);
 
+  // ─── NEW: Connected Device Tracker State ───
+  const [isTrackingDevice, setIsTrackingDevice] = useState(false);
+  // Starting at 1520 seconds (25 mins 20 secs) for visual preview matching your image exactly
+  const [deviceSecondsElapsed, setDeviceSecondsElapsed] = useState(1520);
+
+  useEffect(() => {
+    let interval;
+    if (isTrackingDevice) {
+      interval = setInterval(() => {
+        setDeviceSecondsElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isTrackingDevice]);
+
+  // Toggle Function (No navigation code here!)
+  const toggleDeviceTracking = () => {
+    setIsTrackingDevice(!isTrackingDevice);
+  };
+
+  const formatDeviceTime = (totalSeconds) => {
+    const hrs = Math.floor(totalSeconds / 3600).toString().padStart(2, "0");
+    const mins = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, "0");
+    const secs = (totalSeconds % 60).toString().padStart(2, "0");
+    return `${hrs > 0 && hrs !== "00" ? hrs + ":" : ""}${mins}:${secs}`;
+  };
+
   useEffect(() => {
     if (showEditModal) {
       setIsModalRendered(true);
@@ -654,8 +650,6 @@ export default function MenstrualWellnessSection({
 
   const handleSaveDraft = async () => {
     if (trayMode === 'calendar-end') {
-      // User is saving a new END date. 
-      // Calculate new duration from current cycle start to selected end date
       const newDuration = Math.max(1, diffInDays(draftEndDate, periodState.currentCycleStart) + 1);
       const updatedDetails = { ...localDetails, periodDuration: newDuration };
       setLocalDetails(updatedDetails);
@@ -663,7 +657,6 @@ export default function MenstrualWellnessSection({
       if (typeof onSaveDetails === "function") onSaveDetails(updatedDetails);
       setShowEditModal(false);
     } else {
-      // Standard Save Start Date
       await handleSaveSpecificDate(
         draftStartDate.getDate(),
         draftStartDate.getMonth() + 1,
@@ -673,12 +666,6 @@ export default function MenstrualWellnessSection({
     }
   };
 
-  const handlePeriodStart = () => {
-    const todayDate = new Date();
-    handleSaveSpecificDate(todayDate.getDate(), todayDate.getMonth() + 1, todayDate.getFullYear());
-  };
-
-  // Determine dynamic length for the calendar visualization
   const activeGridDuration = trayMode === 'calendar-end' 
     ? Math.max(1, diffInDays(draftEndDate, periodState.currentCycleStart) + 1)
     : periodDuration;
@@ -746,7 +733,6 @@ export default function MenstrualWellnessSection({
     }
   };
 
-  // ─── TRAY CONTENT RENDERER ───
   const renderTrayContent = () => {
     if (trayMode === 'late-info') {
       return (
@@ -763,7 +749,6 @@ export default function MenstrualWellnessSection({
       );
     }
     
-    // Calendar View (Shared for both Start & End Modes)
     return (
       <View>
         <View style={styles.sheetHeader}>
@@ -869,7 +854,6 @@ export default function MenstrualWellnessSection({
                     isEndMode={trayMode === 'calendar-end'}
                     onPress={(pressedCell) => {
                       if (trayMode === 'calendar-end') {
-                        // Optional constraint: only allow end date to be >= start date
                         if (pressedCell.date >= periodState.currentCycleStart) {
                           setDraftEndDate(pressedCell.date);
                         }
@@ -1100,10 +1084,7 @@ export default function MenstrualWellnessSection({
                       {periodState.headline}
                     </Text>
                     
-                    {/* DYNAMIC LOGIC-DRIVEN BUTTON ROW */}
                     <View style={styles.innerBadgeBtnRow}>
-                      
-                      {/* Flow: LATE PERIOD */}
                       {periodState.type === "days-late" && (
                         <TouchableOpacity
                           activeOpacity={0.8}
@@ -1116,7 +1097,6 @@ export default function MenstrualWellnessSection({
                         </TouchableOpacity>
                       )}
 
-                      {/* Flow: UPCOMING PERIOD */}
                       {periodState.type === "days-left" && (
                         <TouchableOpacity
                           activeOpacity={0.8}
@@ -1129,10 +1109,8 @@ export default function MenstrualWellnessSection({
                         </TouchableOpacity>
                       )}
 
-                      {/* Flow: ACTIVE PERIOD */}
                       {periodState.type === "period-day" && (
                         <>
-                          {/* From Day 3 (daysFromStart >= 2) -> Show Edit Period Dates Calendar */}
                           {periodState.daysFromStart >= 2 ? (
                             <TouchableOpacity
                               activeOpacity={0.8}
@@ -1144,7 +1122,6 @@ export default function MenstrualWellnessSection({
                               </Text>
                             </TouchableOpacity>
                           ) : (
-                            /* Day 1 and 2 -> Show Period Ends Calendar highlighting End Date */
                             <TouchableOpacity
                               activeOpacity={0.8}
                               onPress={() => openTray('calendar-end')}
@@ -1158,7 +1135,6 @@ export default function MenstrualWellnessSection({
                         </>
                       )}
                     </View>
-
                   </View>
                 </View>
 
@@ -1269,7 +1245,6 @@ export default function MenstrualWellnessSection({
                     onPress={onNavigateStatistics}
                   />
                 </View>
-
               </View>
             )}
           </Animated.View>
@@ -1389,6 +1364,97 @@ export default function MenstrualWellnessSection({
               </TouchableOpacity>
             </LinearGradient>
           </View>
+
+          {/* ─── DEVICE CONNECTED CARD (UPDATED WITH SVG CIRCLE) ─── */}
+          <View style={styles.deviceCardContainer}>
+            <View style={styles.deviceLeftColumn}>
+              <Text weight="700" style={styles.deviceTitle}>
+                Boat Abc1 Device Connected!
+              </Text>
+              <Text weight="500" style={styles.deviceSubtitle}>
+                {isTrackingDevice
+                  ? "Your connected device is detecting an activity."
+                  : "Your connected device detected an activity."}
+              </Text>
+
+              {isTrackingDevice ? (
+                // ACTIVE TIMER UI
+                <View style={styles.deviceActiveWrap}>
+                  <View style={styles.deviceTimerRow}>
+                    {/* Circular Progress Indicator */}
+                    <View style={styles.deviceProgressWrap}>
+                      <Svg width="48" height="48" viewBox="0 0 48 48">
+                        {/* Background Track */}
+                        <Circle cx="24" cy="24" r="20" stroke="#C6F6D5" strokeWidth="4.5" fill="none" />
+                        {/* Green Progress */}
+                        <Circle
+                          cx="24" cy="24" r="20"
+                          stroke="#16A34A"
+                          strokeWidth="4.5"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 20}`}
+                          strokeDashoffset={`${2 * Math.PI * 20 * 0.35}`}
+                          strokeLinecap="round"
+                          rotation="-90"
+                          origin="24, 24"
+                        />
+                      </Svg>
+                      <View style={styles.deviceProgressIcon}>
+                        <MaterialCommunityIcons name="run-fast" size={24} color="#3B82F6" />
+                      </View>
+                    </View>
+
+                    {/* Timer Text */}
+                    <View style={styles.deviceTimerTextWrap}>
+                      <Text weight="700" style={styles.deviceLargeTimer}>
+                        {formatDeviceTime(deviceSecondsElapsed)}
+                      </Text>
+                      <View style={styles.deviceTimerMetaRow}>
+                        <Text weight="500" style={styles.deviceTimerMetaText}>Walking</Text>
+                        <Text weight="500" style={styles.deviceTimerMetaText}>2.5 km</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* THIS BUTTON TOGGLES THE STATE - IT WILL NOT NAVIGATE */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.deviceActionBtn, { backgroundColor: "#F29339" }]}
+                    onPress={toggleDeviceTracking} 
+                  >
+                    <Text weight="600" style={styles.deviceActionBtnText}>Stop Activity</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                // INACTIVE STATS UI
+                <View style={styles.deviceInactiveWrap}>
+                  <Text weight="500" style={styles.deviceInactiveText}>Walking     Distance: 2.8 km</Text>
+                  <Text weight="500" style={styles.deviceInactiveText}>Duration: 25 min</Text>
+                  <Text weight="500" style={styles.deviceInactiveText}>Estimated Calories Burned: 120 kcal</Text>
+
+                  {/* THIS BUTTON TOGGLES THE STATE - IT WILL NOT NAVIGATE */}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.deviceActionBtn, { backgroundColor: "#F29339" }]}
+                    onPress={toggleDeviceTracking} 
+                  >
+                    <Text weight="600" style={styles.deviceActionBtnText}>Start Activity</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Right Column: Smartwatch Graphic */}
+            <View style={styles.deviceRightColumn}>
+              <Image
+                source={require("../../../assets/watch.webp")} // NOTE: ensure path matches your asset
+                style={styles.deviceWatchImage}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+          {/* ────────────────────────────────────────────────────── */}
+
         </Animated.View>
       </ScrollView>
 
@@ -1924,6 +1990,102 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   insightsBtnText: { fontSize: 12, color: "#FFFFFF", textAlign: "center" },
+
+  // ─── NEW: DEVICE CARD STYLES ───
+  deviceCardContainer: {
+    backgroundColor: "#B9CFF4",
+    borderRadius: 14,
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingLeft: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    flexDirection: "row",
+    overflow: "hidden",
+    position: "relative",
+  },
+  deviceLeftColumn: {
+    flex: 1,
+    paddingRight: 60,
+    zIndex: 2,
+  },
+  deviceTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+    color: "#000000",
+  },
+  deviceSubtitle: {
+    fontSize: 11,
+    color: "#000000",
+    marginTop: 2,
+    marginBottom: 12,
+  },
+  deviceActiveWrap: {
+    alignItems: "flex-start",
+  },
+  deviceTimerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  deviceProgressWrap: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  deviceProgressIcon: {
+    position: "absolute",
+  },
+  deviceTimerTextWrap: {
+    marginLeft: 12,
+  },
+  deviceLargeTimer: {
+    fontSize: 26,
+    lineHeight: 30,
+    color: "#000000",
+  },
+  deviceTimerMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 2,
+  },
+  deviceTimerMetaText: {
+    fontSize: 10,
+    color: "#000000",
+  },
+  deviceInactiveWrap: {
+    marginBottom: 4,
+  },
+  deviceInactiveText: {
+    fontSize: 9,
+    lineHeight: 14,
+    color: "#000000",
+  },
+  deviceActionBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    marginTop: 6,
+  },
+  deviceActionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+  },
+  deviceRightColumn: {
+    position: "absolute",
+    right: -20,
+    bottom: -10,
+    height: 140,
+    width: 100,
+    zIndex: 1,
+  },
+  deviceWatchImage: {
+    width: "100%",
+    height: "100%",
+  },
 
   // ─── Modal Specific Styles ───
   modalBackdrop: {

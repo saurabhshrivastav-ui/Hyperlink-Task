@@ -22,7 +22,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HORIZONTAL_PADDING = 10;
 const CHIP_GAP = 6;
 const TOTAL_GAPS_WIDTH = CHIP_GAP * 5;
-const AVAILABLE_WIDTH = SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - TOTAL_GAPS_WIDTH;
+const AVAILABLE_WIDTH =
+  SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - TOTAL_GAPS_WIDTH;
 const CHIP_WIDTH = Math.floor(AVAILABLE_WIDTH / 6);
 const CHIP_ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
 const CHIP_HEIGHT = 36;
@@ -96,10 +97,12 @@ const FitnessAction = ({
   containerStyle,
   onPress,
 }) => {
+  // Added the new "timer" variant to match your design system
   const gradientMap = {
     log: ["#FFFFFF", "#FDEEE2"],
     start: ["#FFFFFF", "#FDE7F1"],
     devices: ["#F8F4FF", "#E7EDFC"],
+    timer: ["#FFFFFF", "#F3E8FF"],
   };
 
   if (variant !== "default") {
@@ -162,6 +165,8 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
   onNavigateLogActivity,
   onNavigateSetGoal,
   onNavigateHistory,
+  onNavigateStartActivity,
+  onNavigateTimer,
   goal,
   burned,
   hideHeader = false,
@@ -169,11 +174,12 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
   navigation,
 }) {
   const CURRENT_CATEGORY = "Fitness";
-  const topOffset = Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
+  const topOffset =
+    Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 18;
   const [active, setActive] = useState("Fitness");
 
   const [hasLoggedActivity, setHasLoggedActivity] = useState(false);
-  
+
   const [currentGoal, setCurrentGoal] = useState(800);
   const [currentBurned, setCurrentBurned] = useState(240);
 
@@ -212,8 +218,6 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
 
   const handleLogActivity = () => {
     setIsActivityActive(false);
-    
-    // Trigger the navigation up to App.jsx
     if (typeof onNavigateLogActivity === "function") {
       onNavigateLogActivity();
     } else if (navigation) {
@@ -224,6 +228,11 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
   const handleStartActivity = () => {
     setHasLoggedActivity(true);
     setIsActivityActive(true);
+    if (typeof onNavigateStartActivity === "function") {
+      onNavigateStartActivity();
+    } else if (navigation) {
+      navigation.navigate("fitnessTimer");
+    }
   };
 
   const handleStopActivity = () => {
@@ -260,11 +269,16 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
       viewPosition: 0.5,
     });
     if (label !== CURRENT_CATEGORY) {
-      if (label === "All" && typeof onNavigateAll === "function") onNavigateAll();
-      if (label === "Sleep" && typeof onNavigateSleep === "function") onNavigateSleep();
-      if (label === "Nutrition" && typeof onNavigateNutrition === "function") onNavigateNutrition();
-      if (label === "Medicine" && typeof onNavigateMedicine === "function") onNavigateMedicine();
-      if (label === "Menstrual" && typeof onNavigateMenstrual === "function") onNavigateMenstrual();
+      if (label === "All" && typeof onNavigateAll === "function")
+        onNavigateAll();
+      if (label === "Sleep" && typeof onNavigateSleep === "function")
+        onNavigateSleep();
+      if (label === "Nutrition" && typeof onNavigateNutrition === "function")
+        onNavigateNutrition();
+      if (label === "Medicine" && typeof onNavigateMedicine === "function")
+        onNavigateMedicine();
+      if (label === "Menstrual" && typeof onNavigateMenstrual === "function")
+        onNavigateMenstrual();
       return;
     }
     setActive(CURRENT_CATEGORY);
@@ -495,32 +509,67 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                 transform: [{ translateY: contentSlideAnim }],
               }}
             >
-              <View style={styles.actionsRow}>
-                <FitnessAction
-                  icon={<MaterialCommunityIcons name="run" size={14} color="#E67E22" />}
-                  title="Log Activity"
-                  subtitle="Last :45min walk"
-                  titleColor="#E67E22"
-                  variant="log"
-                  containerStyle={styles.actionItemSpacing}
-                  onPress={handleLogActivity}
-                />
-                <FitnessAction
-                  icon={<MaterialCommunityIcons name="timer-refresh" size={14} color="#EF4444" />}
-                  title="Start Activity"
-                  subtitle="Last :45min walk"
-                  titleColor="#EF4444"
-                  variant="start"
-                  containerStyle={styles.actionItemSpacing}
-                  onPress={handleStartActivity}
-                />
-                <FitnessAction
-                  icon={<Feather name="link" size={14} color="#2563EB" />}
-                  title="Devices"
-                  subtitle="1 Connected"
-                  titleColor="#2563EB"
-                  variant="devices"
-                />
+              {/* ── 2x2 Actions Grid (Fully uniform design) ── */}
+              <View style={styles.actionsGrid}>
+                {/* Top Row */}
+                <View style={styles.actionsRowInner}>
+                  <FitnessAction
+                    icon={
+                      <MaterialCommunityIcons
+                        name="run"
+                        size={14}
+                        color="#E67E22"
+                      />
+                    }
+                    title="Log Activity"
+                    subtitle="Last :45min walk"
+                    titleColor="#E67E22"
+                    variant="log"
+                    containerStyle={styles.actionItemSpacing}
+                    onPress={handleLogActivity}
+                  />
+                  <FitnessAction
+                    icon={
+                      <MaterialCommunityIcons
+                        name="timer-refresh"
+                        size={14}
+                        color="#EF4444"
+                      />
+                    }
+                    title="Start Activity"
+                    subtitle="Last :45min walk"
+                    titleColor="#EF4444"
+                    variant="start"
+                    onPress={handleStartActivity}
+                  />
+                </View>
+                {/* Bottom Row */}
+                <View style={styles.actionsRowInner}>
+                  <FitnessAction
+                    icon={
+                      <Ionicons name="stopwatch" size={14} color="#8B5CF6" />
+                    }
+                    title="Fitness Timer"
+                    subtitle="Dynamic workouts"
+                    titleColor="#8B5CF6"
+                    variant="timer"
+                    containerStyle={styles.actionItemSpacing}
+                    onPress={() => {
+                      if (typeof onNavigateTimer === "function") {
+                        onNavigateTimer();
+                      } else if (navigation) {
+                        navigation.navigate("fitnessTimer");
+                      }
+                    }}
+                  />
+                  <FitnessAction
+                    icon={<Feather name="link" size={14} color="#2563EB" />}
+                    title="Devices"
+                    subtitle="1 Connected"
+                    titleColor="#2563EB"
+                    variant="devices"
+                  />
+                </View>
               </View>
             </Animated.View>
           </View>
@@ -662,8 +711,9 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                   <PressableCard
                     style={styles.deviceLogBtnWrap}
                     onPress={
-                      // UPDATED HERE to trigger handleStartActivity
-                      isActivityActive ? handleStopActivity : handleStartActivity
+                      isActivityActive
+                        ? handleStopActivity
+                        : handleStartActivity
                     }
                   >
                     <LinearGradient
@@ -677,7 +727,6 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                       style={styles.deviceLogBtn}
                     >
                       <Text weight="600" style={styles.deviceLogBtnText}>
-                        {/* UPDATED LABEL to reflect the real action */}
                         {isActivityActive ? "Stop Activity" : "Start Activity"}
                       </Text>
                     </LinearGradient>
@@ -708,7 +757,9 @@ const FitnessWellnessSection = React.memo(function FitnessWellnessSection({
                     if (typeof onNavigateHistory === "function") {
                       onNavigateHistory({ initialTab: "Week" });
                     } else if (navigation) {
-                      navigation.navigate("FitnessHistory", { initialTab: "Week" });
+                      navigation.navigate("FitnessHistory", {
+                        initialTab: "Week",
+                      });
                     }
                   }}
                   style={{ flexDirection: "row", alignItems: "center" }}
@@ -1009,12 +1060,17 @@ const styles = StyleSheet.create({
     borderColor: "#F9E3BA",
     borderStyle: "dashed",
   },
-  actionsRow: {
+
+  /* ── UPDATED: Actions Grid Styles ── */
+  actionsGrid: {
     marginTop: 12,
     paddingHorizontal: 16,
+  },
+  actionsRowInner: {
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "stretch",
+    marginBottom: 8,
   },
   actionItemSpacing: { marginRight: 8 },
   logActionWrap: {
@@ -1062,6 +1118,7 @@ const styles = StyleSheet.create({
   actionIcon: { marginBottom: 2 },
   actionTitle: { fontSize: 13, lineHeight: 17 },
   actionSub: { fontSize: 9, lineHeight: 12, color: "#6B7280" },
+
   activitySection: {
     marginTop: 14,
     paddingHorizontal: 16,
